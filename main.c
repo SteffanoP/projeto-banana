@@ -25,7 +25,7 @@ int main()
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 800;
+    const int screenWidth = 800; //amem
     const int screenHeight = 450;
 
     //fim ao compilador
