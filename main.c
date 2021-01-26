@@ -43,6 +43,9 @@ typedef struct EnvItem
     int colisao;
     Color cor;
 } EnvItem;
+
+//Protótipo das funções
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 int main()
 {
     // Inicialização do Jogo
@@ -80,6 +83,8 @@ int main()
         // Update
         //----------------------------------------------------------------------------------
         float deltaTime = GetFrameTime();
+
+        UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -110,4 +115,44 @@ int main()
     //--------------------------------------------------------------------------------------
 
     return 0;
+} 
+
+
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
+{
+    if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
+        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
+    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+
+    if (IsKeyDown(KEY_UP) && jogador->podePular)
+    {
+        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
+        jogador->podePular = false;
+    }
+
+    int colisaoObjeto = 0;
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da áre dos pixels dos objetos colidiveis
+    {
+        EnvItem *objeto = envItems + i;
+        Vector2 *j = &(jogador->posicao);
+        if (objeto->colisao &&                                             
+            objeto->retangulo.x <= j->x &&                                      //
+            objeto->retangulo.x + objeto->retangulo.width >= j->x &&            // Definindo a invasão da área do player com a área do objeto(área de colisão)   
+            objeto->retangulo.y >= j->y &&                    
+            objeto->retangulo.y < j->y + jogador->velocidade * delta)
+        {
+            colisaoObjeto = 1; 
+            jogador->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele             
+            j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+        }
+    }
+
+    if (!colisaoObjeto) //Se não há colisão com objeto
+    {
+        jogador->posicao.y += jogador->velocidade * delta; //Aumentar a posição do Y do jogador
+        jogador->velocidade += GRAVIDADE * delta; //Vai sofrer com a Gravidade
+        jogador->podePular = false; //Não pode pular no ar
+    } else
+        jogador->podePular = true;
 }
