@@ -1,24 +1,3 @@
-/*******************************************************************************************
-*
-*   raylib [core] example - Basic 3d example
-*
-*   Welcome to raylib!
-*
-*   To compile example, just press F5.
-*   Note that compiled executable is placed in the same folder as .c file
-*
-*   You can find all basic examples on C:\raylib\raylib\examples folder or
-*   raylib official webpage: www.raylib.com
-*
-*   Enjoy using raylib. :)
-*
-*   This example has been created using raylib 1.0 (www.raylib.com)
-*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
-*
-*   Copyright (c) 2013-2020 Ramon Santamaria (@raysan5)
-*
-********************************************************************************************/
-
 #include "raylib.h"
 
 #define screenWidth 1024
@@ -76,7 +55,6 @@ int main()
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
-    SetCameraMode(camera, CAMERA_ORBITAL);
 
     //O Jogo
     //--------------------------------------------------------------------------------------
@@ -110,7 +88,6 @@ int main()
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
-
     // De-Initialization
     //--------------------------------------------------------------------------------------
     CloseWindow();        // Close window and OpenGL context
@@ -118,7 +95,6 @@ int main()
 
     return 0;
 } 
-
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
