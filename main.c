@@ -95,19 +95,17 @@ int main()
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
+        ClearBackground(LIGHTGRAY);
 
-            BeginMode3D(camera);
+        BeginMode2D(camera);
 
-                DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
-                DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
-                DrawGrid(10, 1.0f);
+        for (int i = 0; i < envItemsLength; i++)
+            DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
-            EndMode3D();
+        Rectangle playerRect = {jogador.posicao.x - 20, jogador.posicao.y - 40, 40, 40}; //Desenho do jogador
+        DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
-            DrawText("This is a raylib example", 10, 40, 20, DARKGRAY);
-
-            DrawFPS(10, 10);
+        EndMode2D();
 
         EndDrawing();
         //----------------------------------------------------------------------------------
