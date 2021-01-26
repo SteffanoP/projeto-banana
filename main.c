@@ -46,6 +46,8 @@ typedef struct EnvItem
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
+
 int main()
 {
     // Inicialização do Jogo
@@ -85,6 +87,8 @@ int main()
         float deltaTime = GetFrameTime();
 
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
+
+        UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -155,4 +159,10 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
+}
+
+void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
+{
+    camera->offset = (Vector2){width / 2, height / 2};
+    camera->target = jogador->posicao;
 }
