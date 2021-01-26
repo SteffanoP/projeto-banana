@@ -21,39 +21,65 @@
 
 #include "raylib.h"
 
-int main() 
+#define screenWidth 1024
+#define screenHeight 768
+
+#define NOME_JOGO "O JOGO"
+
+#define GRAVIDADE 500
+#define JOGADOR_PULO_VELOCIDADE 500.0f
+#define JOGADOR_MOVIMENTO_VELOCIDADE 500.0f
+
+typedef struct Jogador
 {
-    // Initialization
+    Vector2 posicao;
+    float velocidade;
+    bool podePular;
+} Jogador;
+
+typedef struct EnvItem
+{
+    Rectangle retangulo;
+    int colisao;
+    Color cor;
+} EnvItem;
+int main()
+{
+    // Inicialização do Jogo
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 800; //amem
-    const int screenHeight = 450;
 
-    //fim ao compilador
+    InitWindow(screenWidth, screenHeight, NOME_JOGO);
 
-    InitWindow(screenWidth, screenHeight, "raylib");
+    //Configurações Iniciais do jogador
+    Jogador jogador = {0};
+    jogador.posicao = (Vector2){400, 280}; //Posição Inicial
+    jogador.velocidade = 0; //Velocidade Inicial
+    jogador.podePular = false; //Habilitação de pulo
 
-    //EU CONSEGUIIIII \O/
+    //Configurações Iniciais do Cenário
+    EnvItem envItems[] = {
+        {{0, 0, 1000, 400}, 0, LIGHTGRAY},
+        {{0, 400, 1000, 200}, 1, GRAY},
+        {{300, 200, 400, 10}, 1, GRAY},
+        {{250, 300, 100, 10}, 1, GRAY},
+        {{650, 300, 100, 10}, 1, GRAY}};
+    int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
-    Camera camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 10.0f, 8.0f };
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
-    camera.fovy = 60.0f;
-    camera.type = CAMERA_PERSPECTIVE;
-    
+    //Configurações Iniciais de Câmera
+    Camera2D camera = {0};
+    camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
+    camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
     SetCameraMode(camera, CAMERA_ORBITAL);
 
-    Vector3 cubePosition = { 0 };
-
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    //O Jogo
     //--------------------------------------------------------------------------------------
-
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
+    while (!WindowShouldClose())
     {
         // Update
         //----------------------------------------------------------------------------------
-        UpdateCamera(&camera); //Steffano eh lindo
+        float deltaTime = GetFrameTime();
         //----------------------------------------------------------------------------------
 
         // Draw
