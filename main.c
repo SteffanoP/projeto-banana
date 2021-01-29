@@ -3,7 +3,7 @@
 #define screenWidth 1024
 #define screenHeight 768
 
-#define NOME_JOGO "O JOGO"
+#define NOME_JOGO "É o jogo de Steffano agora"
 
 #define GRAVIDADE 500
 #define JOGADOR_PULO_VELOCIDADE 500.0f
