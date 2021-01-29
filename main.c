@@ -1,7 +1,7 @@
 #include "raylib.h"
 
-#define screenWidth 1024
-#define screenHeight 768
+#define screenWidth 1024 
+#define screenHeight 768 
 
 #define NOME_JOGO "O JOGO"
 
@@ -98,6 +98,10 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
+
+    //Limite da area do jogador na vertical
+    int limiteTelaSuperior = 40;
+
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -107,6 +111,23 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
     {
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->podePular = false;
+    }
+
+    //Limites do jogador para a direita, esquerda e para cima
+    if ((jogador->posicao.x + 44) >= GetScreenWidth())
+    {
+        jogador->posicao.x = GetScreenWidth() - 44; 
+    } else if (jogador->posicao.x <= 20)
+    {
+        jogador->posicao.x = 20;
+    }
+    
+    if ((jogador->posicao.y + 200) >= GetScreenHeight())
+    {
+        jogador->posicao.y = GetScreenHeight() - 200;
+    } else if (jogador->posicao.y <= limiteTelaSuperior)
+    {
+        jogador->posicao.y = limiteTelaSuperior;
     }
 
     int colisaoObjeto = 0;
