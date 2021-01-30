@@ -9,6 +9,9 @@
 #define JOGADOR_PULO_VELOCIDADE 500.0f
 #define JOGADOR_MOVIMENTO_VELOCIDADE 500.0f
 
+#define TAMANHO_X_JOGADOR 40
+#define TAMANHO_Y_JOGADOR 40
+
 typedef struct Jogador
 {
     Vector2 posicao;
@@ -80,7 +83,7 @@ int main()
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
-        Rectangle playerRect = {jogador.posicao.x - 20, jogador.posicao.y - 40, 40, 40}; //Desenho do jogador
+        Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
         EndMode2D();
