@@ -12,6 +12,9 @@
 #define TAMANHO_X_JOGADOR 40
 #define TAMANHO_Y_JOGADOR 40
 
+#define TAMANHO_X_CENARIO 2000
+#define TAMANHO_Y_CENARIO 400
+
 typedef struct Jogador
 {
     Vector2 posicao;
@@ -45,11 +48,16 @@ int main()
 
     //Configurações Iniciais do Cenário
     EnvItem envItems[] = {
-        {{0, 0, 1000, 400}, 0, LIGHTGRAY},
-        {{0, 400, 1000, 200}, 1, GRAY},
+        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE},
+        {{0, 400, 2000, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
-        {{650, 300, 100, 10}, 1, GRAY}};
+        {{650, 300, 100, 10}, 1, GRAY},
+        {{900, 350,  50, 50}, 1, PURPLE},
+        {{1050, 311,  50, 50}, 1, PURPLE},
+        {{1200, 309,  50, 50}, 1, PURPLE},
+        {{1350, 330,  50, 50}, 1, PURPLE}
+    };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
     //Configurações Iniciais de Câmera
@@ -85,6 +93,8 @@ int main()
 
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
+
+        DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
         EndMode2D();
 
