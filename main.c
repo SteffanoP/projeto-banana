@@ -111,10 +111,6 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
-
-    //Limite da area do jogador na vertical
-    int limiteTelaSuperior = 40;
-
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -127,20 +123,20 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
     }
 
     //Limites do jogador para a direita, esquerda e para cima
-    if ((jogador->posicao.x + 44) >= GetScreenWidth())
+    if ((jogador->posicao.x + TAMANHO_X_JOGADOR) > TAMANHO_X_CENARIO)
     {
-        jogador->posicao.x = GetScreenWidth() - 44; 
-    } else if (jogador->posicao.x <= 20)
+        jogador->posicao.x = TAMANHO_X_CENARIO - TAMANHO_X_JOGADOR / 2; 
+    } else if (jogador->posicao.x < TAMANHO_X_JOGADOR / 2)
     {
-        jogador->posicao.x = 20;
+        jogador->posicao.x = TAMANHO_X_JOGADOR / 2;
     }
     
     if ((jogador->posicao.y + 200) >= GetScreenHeight())
     {
         jogador->posicao.y = GetScreenHeight() - 200;
-    } else if (jogador->posicao.y <= limiteTelaSuperior)
+    } else if (jogador->posicao.y <= TAMANHO_Y_JOGADOR)
     {
-        jogador->posicao.y = limiteTelaSuperior;
+        jogador->posicao.y = TAMANHO_Y_JOGADOR;
     }
 
     int colisaoObjeto = 0;
