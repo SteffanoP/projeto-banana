@@ -15,6 +15,8 @@
 #define TAMANHO_X_CENARIO 2000
 #define TAMANHO_Y_CENARIO 400
 
+bool colisaoJogador;
+
 typedef struct Jogador
 {
     Vector2 posicao;
@@ -139,20 +141,33 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->posicao.y = TAMANHO_Y_JOGADOR;
     }
 
+    colisaoJogador = 0;
     int colisaoObjeto = 0;
     for (int i = 0; i < envItemsLength; i++) //Preechimento da áre dos pixels dos objetos colidiveis
     {
         EnvItem *objeto = envItems + i;
         Vector2 *j = &(jogador->posicao);
+        
+        //Condição de colisão para pulo e andar encima de plataformas
         if (objeto->colisao &&                                             
-            objeto->retangulo.x <= j->x &&                                      //
-            objeto->retangulo.x + objeto->retangulo.width >= j->x &&            // Definindo a invasão da área do player com a área do objeto(área de colisão)   
+            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x &&                                      //
+            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x &&            // Definindo a invasão da área do player com a área do objeto(área de colisão)   
             objeto->retangulo.y >= j->y &&                    
             objeto->retangulo.y < j->y + jogador->velocidade * delta)
         {
             colisaoObjeto = 1; 
             jogador->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele             
             j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+        }
+        
+        //Condição de colisão em objetos Universais
+        if (objeto->colisao && //Detecta se o objeto é colidível
+            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x && //Detecta a borda esquerda do objeto
+            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x && //Detecta a borda direita do objeto
+            objeto->retangulo.y < j->y && //Detecta colisão acima do objeto
+            objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta colisão abaixo do objeto
+        {
+            colisaoJogador = 1;
         }
     }
 
