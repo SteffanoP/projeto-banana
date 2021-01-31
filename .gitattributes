@@ -1,2 +1,2 @@
-Makefile -linguist-vendored
-Makefile.Android -linguist-vendored
+Makefile -linguist-detectable=false
+Makefile.Android -linguist-detectable=false
