@@ -123,20 +123,20 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->podePular = false;
     }
-
-    //Limites do jogador para a direita, esquerda e para cima
-    if ((jogador->posicao.x + TAMANHO_X_JOGADOR) > TAMANHO_X_CENARIO)
+    
+    //Limites da area de movimentação do jogador
+    if ((jogador->posicao.x + TAMANHO_X_JOGADOR / 2) > TAMANHO_X_CENARIO)
     {
-        jogador->posicao.x = TAMANHO_X_CENARIO - TAMANHO_X_JOGADOR / 2; 
+        jogador->posicao.x = TAMANHO_X_CENARIO - TAMANHO_X_JOGADOR / 2; //Limites para direita
     } else if (jogador->posicao.x < TAMANHO_X_JOGADOR / 2)
     {
-        jogador->posicao.x = TAMANHO_X_JOGADOR / 2;
+        jogador->posicao.x = TAMANHO_X_JOGADOR / 2; //Limites para a esquerda
     }
     
-    if ((jogador->posicao.y + 200) >= GetScreenHeight())
+    if ((jogador->posicao.y) > TAMANHO_Y_CENARIO)  //Limites na vertical
     {
-        jogador->posicao.y = GetScreenHeight() - 200;
-    } else if (jogador->posicao.y <= TAMANHO_Y_JOGADOR)
+        jogador->posicao.y = TAMANHO_Y_CENARIO; 
+    } else if (jogador->posicao.y < TAMANHO_Y_JOGADOR)
     {
         jogador->posicao.y = TAMANHO_Y_JOGADOR;
     }
