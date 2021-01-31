@@ -167,6 +167,20 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
             objeto->retangulo.y < j->y && //Detecta colisão acima do objeto
             objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta colisão abaixo do objeto
         {
+            if (objeto->retangulo.x - TAMANHO_X_JOGADOR / 2 <= j->x &&
+                objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+            {
+                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
+            }
+            else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2 >= j->x &&
+                     objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+            {
+                jogador->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2;
+            }
+            else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta a colisão abaixo do objeto
+            {
+                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR;
+            }
             colisaoJogador = 1;
         }
     }
