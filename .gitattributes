@@ -1,2 +1,2 @@
-Makefile -linguist-detectable=false
-Makefile.Android -linguist-detectable=false
+Makefile linguist-generated=true
+Makefile.Android linguist-generated=true
