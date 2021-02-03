@@ -180,6 +180,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
             else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta a colisão abaixo do objeto
             {
                 jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR;
+                jogador->velocidade = GRAVIDADE * delta;
             }
             colisaoJogador = 1;
         }
