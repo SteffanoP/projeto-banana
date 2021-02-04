@@ -53,6 +53,13 @@ int main()
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
 
+    //Configurações Iniciais dos inimigos
+    Inimigo inimigos[] = {
+        { 1, {1700, 360, 40, 40}, 0, 2, YELLOW},
+        { 1, {1850, 360, 40, 40}, 0, 2, YELLOW}
+    };
+    int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
+
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
         {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
@@ -102,6 +109,10 @@ int main()
         //Desenho dos Retângulos referentes aos obstáculos de EnvItems
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+
+        //Desenho dos Retângulos referentes aos inimigos
+        for (int i = 0; i < inimigosTamanho; i++)
+            DrawRectangleRec(inimigos[i].hitbox, inimigos[i].cor);
 
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
