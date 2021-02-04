@@ -10,6 +10,25 @@ typedef struct Jogador
     bool podePular;
 } Jogador;
 
+/* Sobre os inimigos:
+tipo: Tipo de inimigos
+tipo = 1 = minion
+tipo = 2 = gado
+
+posicao: Refere-se a posicao dele no cenário
+velocidade: velocidade de movimentação
+vida: quantidade de vidas do inimigo
+cor: Cor do inimigo
+*/
+typedef struct Inimigo
+{
+    int tipo;
+    Rectangle hitbox;
+    float velocidade;
+    int vida;
+    Color cor;
+} Inimigo;
+
 typedef struct EnvItem
 {
     Rectangle retangulo;
