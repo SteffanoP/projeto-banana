@@ -15,7 +15,7 @@ tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
 
-posicao: Refere-se a posicao dele no cenário
+Hitbox: Retângulo do Minion no cenário
 velocidade: velocidade de movimentação
 vida: quantidade de vidas do inimigo
 cor: Cor do inimigo
@@ -38,6 +38,7 @@ typedef struct EnvItem
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdateInimigos(Inimigo *inimigo, int inimigosTamanho, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -55,8 +56,9 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigos[] = {
-        { 1, {1700, 360, 40, 40}, 0, 2, YELLOW},
-        { 1, {1850, 360, 40, 40}, 0, 2, YELLOW}
+        { 0, {0, 0, 0, 0}, 0, 0, BLANK},
+        { 1, {1850, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW},
+        { 1, {1950, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW}
     };
     int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
 
@@ -92,6 +94,9 @@ int main()
         
         //Atualiza os dados do jogador
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
+
+        //Atualiza os dados dos inimigos
+        UpdateInimigos(inimigos, inimigosTamanho, deltaTime);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -215,6 +220,15 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
+}
+
+void UpdateInimigos(Inimigo *inimigos, int inimigosTamanho, float delta) {
+    for (int i = -1; i < inimigosTamanho; i++)
+    {
+        Inimigo *minion = inimigos + i;
+        minion->hitbox.x -= VELOCIDADE_INIMIGO_MINION * delta;
+        inimigos->hitbox.x = minion->hitbox.x;
+    }
 }
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)

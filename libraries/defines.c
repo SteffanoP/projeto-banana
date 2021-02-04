@@ -12,3 +12,11 @@
 
 #define TAMANHO_X_CENARIO 2000
 #define TAMANHO_Y_CENARIO 400
+
+//Constantes referentes aos inimigos:
+
+//Minions:
+#define TAMANHO_MINION_X 40
+#define TAMANHO_MINION_Y 40
+
+#define VELOCIDADE_INIMIGO_MINION 50.0f
