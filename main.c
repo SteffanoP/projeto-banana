@@ -34,9 +34,9 @@ int main()
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
 
-    //Configurações Iniciais do Cenário
+    //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
-        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE},
+        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
         {{0, 400, 2000, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
@@ -54,6 +54,7 @@ int main()
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
+    //--------------------------------------------------------------------------------------
 
     //O Jogo
     //--------------------------------------------------------------------------------------
@@ -62,9 +63,11 @@ int main()
         // Update
         //----------------------------------------------------------------------------------
         float deltaTime = GetFrameTime();
-
+        
+        //Atualiza os dados do jogador
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
 
+        //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
 
@@ -72,13 +75,16 @@ int main()
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
+        //Desenho do Background do restante da Janela que não é objeto
         ClearBackground(LIGHTGRAY);
 
         BeginMode2D(camera);
 
+        //Desenho dos Retângulos referentes aos obstáculos de EnvItems
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
+        //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
