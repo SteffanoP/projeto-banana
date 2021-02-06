@@ -17,6 +17,7 @@ tipo = 2 = gado
 
 posicao: Posição do Minion no cenário
 velocidade: velocidade de movimentação
+direcao_movimento: direção em que se movimenta
 vida: quantidade de vidas do inimigo
 cor: Cor do inimigo
 */
@@ -25,6 +26,7 @@ typedef struct Inimigo
     int tipo;
     Vector2 posicao;
     float velocidade;
+    bool direcao_movimento;
     int vida;
     Color cor;
 } Inimigo;
@@ -38,7 +40,7 @@ typedef struct EnvItem
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
-void UpdateInimigos(Inimigo *inimigo, int inimigosTamanho, float delta);
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -97,8 +99,8 @@ int main()
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
 
         //Atualiza os dados dos inimigos
-        UpdateInimigos(inimigos, inimigosTamanho, deltaTime);
-
+        UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
+        
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
@@ -227,12 +229,82 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = true;
 }
 
-void UpdateInimigos(Inimigo *inimigos, int inimigosTamanho, float delta) {
-    for (int i = -1; i < inimigosTamanho; i++)
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
+{
+    for (int i = 0; i < tamanhoInimigos; i++)
     {
-        Inimigo *minion = inimigos + i;
-        minion->hitbox.x -= VELOCIDADE_INIMIGO_MINION * delta;
-        inimigos->hitbox.x = minion->hitbox.x;
+        inimigo += i;
+
+        if (inimigo->tipo == 1)
+        {
+            if (inimigo->direcao_movimento == 0)
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
+            else if (inimigo->direcao_movimento == 1)
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
+        }
+
+        //Limites da area de movimentação do inimigo no cenário
+        if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+        {
+            inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+        else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+        {
+            inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+
+        int colisaoObjeto = 0;
+        for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+        {
+            EnvItem *objeto = envItems + i;
+            Vector2 *j = &(inimigo->posicao);
+
+            //Condição de colisão para andar encima de plataformas
+            if (objeto->colisao &&
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
+                objeto->retangulo.y >= j->y &&
+                objeto->retangulo.y < j->y + inimigo->velocidade * delta)
+            {
+                colisaoObjeto = 1;
+                inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+                j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+            }
+
+            //Condição de colisão em objetos Universais
+            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
+                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
+                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
+            {
+                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
+                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 0;
+                }
+                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
+                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 1;
+                }
+                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
+                {
+                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
+                    inimigo->velocidade = GRAVIDADE * delta;
+                }
+            }
+        }
+
+        if (!colisaoObjeto) //Se não há colisão com objeto
+        {
+            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
+            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+        }
     }
 }
 
