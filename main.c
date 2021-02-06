@@ -71,7 +71,9 @@ int main()
         {{900, 350,  50, 50}, 1, PURPLE},
         {{1050, 311,  50, 50}, 1, PURPLE},
         {{1200, 309,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE}
+        {{1350, 330,  50, 50}, 1, PURPLE},
+        {{1450, 340,  30, 60}, 1, GREEN},
+        {{1970, 340,  30, 60}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -125,6 +127,8 @@ int main()
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
+
+        DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
 
         EndMode2D();
 
