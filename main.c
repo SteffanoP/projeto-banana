@@ -15,7 +15,7 @@ tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
 
-Hitbox: Retângulo do Minion no cenário
+posicao: Posição do Minion no cenário
 velocidade: velocidade de movimentação
 vida: quantidade de vidas do inimigo
 cor: Cor do inimigo
@@ -23,7 +23,7 @@ cor: Cor do inimigo
 typedef struct Inimigo
 {
     int tipo;
-    Rectangle hitbox;
+    Vector2 posicao;
     float velocidade;
     int vida;
     Color cor;
@@ -55,12 +55,11 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
 
     //Configurações Iniciais dos inimigos
-    Inimigo inimigos[] = {
-        { 0, {0, 0, 0, 0}, 0, 0, BLANK},
-        { 1, {1850, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW},
-        { 1, {1950, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW}
+    Inimigo inimigo[] = {
+        {1, {1850, 280}, 0, 0, 2, 0},
+        {1, {1950, 280}, 0, 0, 2, 0}
     };
-    int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
+    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
