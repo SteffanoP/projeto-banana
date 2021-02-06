@@ -114,9 +114,11 @@ int main()
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
-        //Desenho dos Retângulos referentes aos inimigos
-        for (int i = 0; i < inimigosTamanho; i++)
-            DrawRectangleRec(inimigos[i].hitbox, inimigos[i].cor);
+        for (int i = 0; i < tamanhoInimigo; i++)
+        {
+            Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
+            DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+        }
 
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
