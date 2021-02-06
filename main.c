@@ -8,6 +8,7 @@ typedef struct Jogador
     Vector2 posicao;
     float velocidade;
     bool podePular;
+    //Poder Poder; //Especificar qual o poder que um jogador tem
 } Jogador;
 
 /* Sobre os inimigos:
@@ -29,6 +30,25 @@ typedef struct Inimigo
     Color cor;
 } Inimigo;
 
+/* Sobre o poder:
+
+posicao: posicao do poder ao jogador
+velocidade: velocidade da movimentação
+raio: raio (o poder tem forma de círculo)
+
+poder_ativo: verificação se está ativo ou não
+vida_util: vida útil do poder no jogo
+cor: cor do poder */
+typedef struct Poder
+{
+    Vector2 posicao;
+    float velocidade;
+    float raio;
+    bool poder_ativo;
+    int vida_util;
+    Color cor;
+} Poder;
+
 typedef struct EnvItem
 {
     Rectangle retangulo;
@@ -39,6 +59,7 @@ typedef struct EnvItem
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigos(Inimigo *inimigo, int inimigosTamanho, float delta);
+void UpdatePoder(Poder *poderes, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -47,6 +68,7 @@ int main()
     //--------------------------------------------------------------------------------------
 
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
+    SetTargetFPS(60);
 
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
@@ -61,6 +83,11 @@ int main()
         { 1, {1950, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW}
     };
     int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
+
+    //Configurações iniciais do poder
+    Poder poderes[PODER_MAX_PERSONAGEM] = {
+        {{0, 0}, 0, 10, false, 0, BLACK}
+    };
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -98,6 +125,9 @@ int main()
         //Atualiza os dados dos inimigos
         UpdateInimigos(inimigos, inimigosTamanho, deltaTime);
 
+        //Atualiza os poderes do jogador
+        UpdatePoder(poderes, &jogador, envItems, envItemsLength, deltaTime);
+
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
@@ -114,6 +144,15 @@ int main()
         //Desenho dos Retângulos referentes aos obstáculos de EnvItems
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+        
+        //Desenho do poder bola
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (poderes[p].poder_ativo)
+            {
+                DrawCircleV(poderes[p].posicao, poderes[p].raio, BLACK);
+            }
+        }
 
         //Desenho dos Retângulos referentes aos inimigos
         for (int i = 0; i < inimigosTamanho; i++)
@@ -170,7 +209,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
 
     colisaoJogador = 0;
     int colisaoObjeto = 0;
-    for (int i = 0; i < envItemsLength; i++) //Preechimento da áre dos pixels dos objetos colidiveis
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
     {
         EnvItem *objeto = envItems + i;
         Vector2 *j = &(jogador->posicao);
@@ -228,6 +267,51 @@ void UpdateInimigos(Inimigo *inimigos, int inimigosTamanho, float delta) {
         Inimigo *minion = inimigos + i;
         minion->hitbox.x -= VELOCIDADE_INIMIGO_MINION * delta;
         inimigos->hitbox.x = minion->hitbox.x;
+    }
+}
+
+void UpdatePoder(Poder *poderes, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta) {
+    
+    if (IsKeyDown(KEY_SPACE))  //Usando o poder
+    {
+        if (!poderes->poder_ativo) //Caso não haja poder ativo, seta as configurações abaixo
+        { 
+            poderes->posicao = (Vector2){jogador->posicao.x - TAMANHO_X_JOGADOR/2 + 10, jogador->posicao.y - TAMANHO_Y_JOGADOR/2};
+            poderes->velocidade = JOGADOR_MOVIMENTO_VELOCIDADE;
+            poderes->poder_ativo = true;
+        }
+    }
+
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (poderes->poder_ativo) //Caso haja poder ativo
+        {
+            poderes->vida_util++; //Sua "vida" é incrementada
+            poderes->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é incrementada
+        }
+        for (int i = 0; i < envItemsLength; i++)
+        {
+            EnvItem *objeto = envItems + i;
+            if (objeto->colisao && CheckCollisionCircleRec(poderes->posicao, poderes->raio, objeto->retangulo)) //Havendo colisão, a bola atirada desaparece
+            {
+                poderes->poder_ativo = false;
+                poderes->vida_util = 0;
+            }
+            if (!CheckCollisionCircleRec(poderes->posicao, poderes->raio, objeto->retangulo)) //Não houver confirmação de colisão
+            {
+                if (poderes->vida_util >= 200) //A vida útil da bola atirada é limitada, após isso a bola desaparece
+                {
+                    poderes->posicao = (Vector2){0,0}; 
+                    poderes->velocidade = 0;
+                    poderes->vida_util = 0;
+                    poderes->poder_ativo = false;
+                }
+                if (poderes->posicao.x >= TAMANHO_X_CENARIO) //Movimentação da bola atirada é limitada até o fim do cenário, então desaparece
+                {
+                    poderes->poder_ativo = false;
+                }
+            }
+        }
     }
 }
 
