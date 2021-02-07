@@ -3,11 +3,17 @@
 
 bool colisaoJogador;
 
+/* Sobre o jogador:
+posicao: Posição X e Y
+velocidade: velocidade de movimento do jogador
+podePular: condição em que pode pular
+vida: quantidade de vidas do jogador */
 typedef struct Jogador
 {
     Vector2 posicao;
     float velocidade;
     bool podePular;
+    int vida;
 } Jogador;
 
 /* Sobre os inimigos:
@@ -55,6 +61,7 @@ int main()
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
+    jogador.vida = 1;
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
@@ -131,6 +138,7 @@ int main()
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
         DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
+        DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 1650, 475, 20, BLACK);
 
         EndMode2D();
 
