@@ -45,7 +45,7 @@ typedef struct EnvItem
 } EnvItem;
 
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
@@ -103,8 +103,11 @@ int main()
         float deltaTime = GetFrameTime();
         
         //Atualiza os dados do jogador
-        UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
-
+        if (jogador.vida > 0)
+        {
+            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+        }
+        
         //Atualiza os dados dos inimigos
         UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
         
@@ -127,8 +130,11 @@ int main()
 
         for (int i = 0; i < tamanhoInimigo; i++)
         {
-            Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
-            DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+            if (inimigo[i].tipo > 0)
+            {
+                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
+                DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+            }
         }
 
         //Criação e Desenho do jogador
@@ -153,8 +159,8 @@ int main()
     return 0;
 } 
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
-{
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+{  
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -235,6 +241,36 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
+    
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        inimigo += i;
+        if (inimigo->tipo > 0)
+        {
+            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
+                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+            }
+            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
+                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                inimigo->tipo = 0; 
+            } 
+        }
+    }
+    
 }
 
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
