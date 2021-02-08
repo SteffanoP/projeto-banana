@@ -96,6 +96,7 @@ int main()
         // Update
         //----------------------------------------------------------------------------------
         float deltaTime = GetFrameTime();
+        SetTargetFPS(60);
         
         //Atualiza os dados do jogador
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
