@@ -47,11 +47,18 @@ int main()
 
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
 
+    Texture2D personagem = LoadTexture("sprites/companheiro-da-silva.png");
+
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
+
+    float personagem_frameWidth = (float)(personagem.width / 4);
+    float personagem_frameHeight = (float)(personagem.height / 4);
+    float personagem_x, personagem_y;
+    Rectangle personagem_frameRect = {2*personagem_frameWidth, 0.0f, personagem_frameWidth, personagem_frameHeight};
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigos[] = {
@@ -81,7 +88,7 @@ int main()
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     //--------------------------------------------------------------------------------------
-
+    SetTargetFPS(10);
     //O Jogo
     //--------------------------------------------------------------------------------------
     while (!WindowShouldClose())
@@ -117,6 +124,64 @@ int main()
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
+        
+        personagem_x = jogador.posicao.x - (3.2* TAMANHO_X_JOGADOR);
+        personagem_y = jogador.posicao.y - (4.65* TAMANHO_Y_JOGADOR);
+
+        if (IsKeyDown(KEY_LEFT)){
+            personagem_frameRect.x = 2*personagem_frameWidth;
+            personagem_frameRect.y = 2*personagem_frameHeight;
+            if (jogador.velocidade == 0)
+            {
+                personagem_frameRect.x = 0.0f;
+                personagem_frameRect.y = 3*personagem_frameHeight;
+            }
+        }  
+        if (IsKeyDown(KEY_RIGHT)){
+            personagem_frameRect.x = 0.0f;
+            personagem_frameRect.y = personagem_frameHeight;
+            if (jogador.velocidade == 0){
+                personagem_frameRect.x = 2*personagem_frameWidth;
+                personagem_frameRect.y = personagem_frameHeight;
+            }
+        }
+        if (IsKeyDown(KEY_UP) && 
+            ((personagem_frameRect.x == 0.0f && personagem_frameRect.y == 2*personagem_frameHeight) ||
+            (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 2*personagem_frameHeight) ||
+            (personagem_frameRect.x == 0.0f && personagem_frameRect.y == 3*personagem_frameHeight))){
+            personagem_frameRect.x = 2*personagem_frameWidth;
+            personagem_frameRect.y = 2*personagem_frameHeight;
+        }//Pulo esquerda
+        if (IsKeyDown(KEY_UP) && 
+            ((personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 0.0f) ||
+            (personagem_frameRect.x == 0.0f && personagem_frameRect.y == personagem_frameHeight) ||
+            (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == personagem_frameHeight))){
+            personagem_frameRect.x = 0.0f;
+            personagem_frameRect.y = personagem_frameHeight;
+        }//Pulo direita
+                
+        DrawTextureRec(personagem, personagem_frameRect, (Vector2){personagem_x, personagem_y}, RAYWHITE);
+        
+        if (jogador.podePular == true &&
+            (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 2*personagem_frameHeight))
+        {
+            personagem_frameRect.x = 0.0f;
+            personagem_frameRect.y = 2*personagem_frameHeight;
+        }
+        if (jogador.podePular == true &&
+            (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 0.0f))
+        {
+            personagem_frameRect.x = 2*personagem_frameWidth;
+            personagem_frameRect.y = 0.0f;
+        }
+        if (IsKeyDown(KEY_LEFT) && jogador.podePular == true){
+            personagem_frameRect.x = 0.0f;
+            personagem_frameRect.y = 2*personagem_frameHeight;
+        }
+        if (IsKeyDown(KEY_RIGHT) && jogador.podePular == true){
+            personagem_frameRect.x = 2*personagem_frameWidth;
+            personagem_frameRect.y = 0.0f;
+        }
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
@@ -127,6 +192,9 @@ int main()
     }
     // De-Initialization
     //--------------------------------------------------------------------------------------
+
+    UnloadTexture(personagem);
+
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
