@@ -88,15 +88,14 @@ int main()
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     //--------------------------------------------------------------------------------------
-    SetTargetFPS(10);
     //O Jogo
     //--------------------------------------------------------------------------------------
     while (!WindowShouldClose())
     {
         // Update
         //----------------------------------------------------------------------------------
-        float deltaTime = GetFrameTime();
         SetTargetFPS(60);
+        float deltaTime = GetFrameTime();
         
         //Atualiza os dados do jogador
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
