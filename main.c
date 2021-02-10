@@ -3,11 +3,17 @@
 
 bool colisaoJogador;
 
+/* Sobre o jogador:
+posicao: Posição X e Y
+velocidade: velocidade de movimento do jogador
+podePular: condição em que pode pular
+vida: quantidade de vidas do jogador */
 typedef struct Jogador
 {
     Vector2 posicao;
     float velocidade;
     bool podePular;
+    int vida;
 } Jogador;
 
 /* Sobre os inimigos:
@@ -15,16 +21,18 @@ tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
 
-posicao: Refere-se a posicao dele no cenário
+posicao: Posição do Minion no cenário
 velocidade: velocidade de movimentação
+direcao_movimento: direção em que se movimenta
 vida: quantidade de vidas do inimigo
 cor: Cor do inimigo
 */
 typedef struct Inimigo
 {
     int tipo;
-    Rectangle hitbox;
+    Vector2 posicao;
     float velocidade;
+    bool direcao_movimento;
     int vida;
     Color cor;
 } Inimigo;
@@ -37,7 +45,8 @@ typedef struct EnvItem
 } EnvItem;
 
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -52,13 +61,14 @@ int main()
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
+    jogador.vida = 1;
 
     //Configurações Iniciais dos inimigos
-    Inimigo inimigos[] = {
-        { 1, {1700, 360, 40, 40}, 0, 2, YELLOW},
-        { 1, {1850, 360, 40, 40}, 0, 2, YELLOW}
+    Inimigo inimigo[] = {
+        {1, {1850, 280}, 0, 0, 2, 0},
+        {1, {1950, 280}, 0, 0, 2, 0}
     };
-    int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
+    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -70,7 +80,9 @@ int main()
         {{900, 350,  50, 50}, 1, PURPLE},
         {{1050, 311,  50, 50}, 1, PURPLE},
         {{1200, 309,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE}
+        {{1350, 330,  50, 50}, 1, PURPLE},
+        {{1450, 340,  30, 60}, 1, GREEN},
+        {{1970, 340,  30, 60}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -91,8 +103,14 @@ int main()
         float deltaTime = GetFrameTime();
         
         //Atualiza os dados do jogador
-        UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
-
+        if (jogador.vida > 0)
+        {
+            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+        }
+        
+        //Atualiza os dados dos inimigos
+        UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
+        
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
@@ -110,15 +128,23 @@ int main()
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
-        //Desenho dos Retângulos referentes aos inimigos
-        for (int i = 0; i < inimigosTamanho; i++)
-            DrawRectangleRec(inimigos[i].hitbox, inimigos[i].cor);
+        for (int i = 0; i < tamanhoInimigo; i++)
+        {
+            if (inimigo[i].tipo > 0)
+            {
+                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
+                DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+            }
+        }
 
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
+
+        DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
+        DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 1650, 475, 20, BLACK);
 
         EndMode2D();
 
@@ -133,8 +159,8 @@ int main()
     return 0;
 } 
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
-{
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+{  
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -215,6 +241,115 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
+    
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        inimigo += i;
+        if (inimigo->tipo > 0)
+        {
+            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
+                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+            }
+            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
+                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                inimigo->tipo = 0; 
+            } 
+        }
+    }
+    
+}
+
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
+{
+    for (int i = 0; i < tamanhoInimigos; i++)
+    {
+        inimigo += i;
+
+        if (inimigo->tipo == 1)
+        {
+            if (inimigo->direcao_movimento == 0)
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
+            else if (inimigo->direcao_movimento == 1)
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
+        }
+
+        //Limites da area de movimentação do inimigo no cenário
+        if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+        {
+            inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+        else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+        {
+            inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+
+        int colisaoObjeto = 0;
+        for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+        {
+            EnvItem *objeto = envItems + i;
+            Vector2 *j = &(inimigo->posicao);
+
+            //Condição de colisão para andar encima de plataformas
+            if (objeto->colisao &&
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
+                objeto->retangulo.y >= j->y &&
+                objeto->retangulo.y < j->y + inimigo->velocidade * delta)
+            {
+                colisaoObjeto = 1;
+                inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+                j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+            }
+
+            //Condição de colisão em objetos Universais
+            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
+                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
+                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
+            {
+                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
+                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 0;
+                }
+                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
+                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 1;
+                }
+                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
+                {
+                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
+                    inimigo->velocidade = GRAVIDADE * delta;
+                }
+            }
+        }
+
+        if (!colisaoObjeto) //Se não há colisão com objeto
+        {
+            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
+            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+        }
+    }
 }
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
