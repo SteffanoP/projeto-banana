@@ -64,6 +64,8 @@ int main()
     float personagem_frameWidth = (float)(personagem.width / 4);
     float personagem_frameHeight = (float)(personagem.height / 4);
     Rectangle personagem_frameRect = {2*personagem_frameWidth, 0.0f, personagem_frameWidth, personagem_frameHeight};
+    float controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
+    float controleTamanho_y = 190 - TAMANHO_Y_JOGADOR;
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigos[] = {
@@ -117,21 +119,25 @@ int main()
 
             if (IsKeyDown(KEY_LEFT) && jogador.podePular == true && currentFrame == 1)
             {
+                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 2*personagem_frameWidth;
                 personagem_frameRect.y = 2*personagem_frameHeight;
             }
             if (IsKeyDown(KEY_LEFT) && jogador.podePular == true && currentFrame == 2)
             {
+                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 0.0f;
                 personagem_frameRect.y = 3*personagem_frameHeight;
             }
             if (IsKeyDown(KEY_RIGHT) && jogador.podePular == true && currentFrame == 1)
             {
+                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 0.0f;
                 personagem_frameRect.y = personagem_frameHeight;
             }
             if (IsKeyDown(KEY_RIGHT) && jogador.podePular == true && currentFrame == 2)
             {
+                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 2*personagem_frameWidth;
                 personagem_frameRect.y = personagem_frameHeight;
             }
@@ -141,6 +147,7 @@ int main()
                 (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 2*personagem_frameHeight) ||
                 (personagem_frameRect.x == 0.0f && personagem_frameRect.y == 3*personagem_frameHeight))) ||
                 ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_LEFT))) || ((jogador.podePular == false) && (IsKeyDown(KEY_LEFT)))){
+                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 2*personagem_frameWidth;
                 personagem_frameRect.y = 2*personagem_frameHeight;
             }//Pulo esquerda
@@ -149,10 +156,13 @@ int main()
                 (personagem_frameRect.x == 0.0f && personagem_frameRect.y == personagem_frameHeight) ||
                 (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == personagem_frameHeight))) ||
                 ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_RIGHT))) || ((jogador.podePular == false) && (IsKeyDown(KEY_RIGHT)))){
+                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
                 personagem_frameRect.x = 0.0f;
                 personagem_frameRect.y = personagem_frameHeight;
             }//Pulo direita
         }
+
+        
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -181,7 +191,7 @@ int main()
 
         //Animacao(framesCounter, framesSpeed, currentFrame, &jogador, personagem, personagem_frameRect, personagem_frameWidth, personagem_frameHeight);
 
-        DrawTextureRec(personagem, personagem_frameRect, (Vector2){jogador.posicao.x - (3.2* TAMANHO_X_JOGADOR), jogador.posicao.y - (4.65* TAMANHO_Y_JOGADOR)}, RAYWHITE);
+        DrawTextureRec(personagem, personagem_frameRect, (Vector2){jogador.posicao.x - (controleTamanho_x + TAMANHO_X_JOGADOR), jogador.posicao.y - (controleTamanho_y + TAMANHO_Y_JOGADOR)}, RAYWHITE);
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
@@ -197,6 +207,7 @@ int main()
         jogador.podePular == true)) 
         && (jogador.posicao.x == jogador.posicaoAnterior.x))
         {
+            controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
             personagem_frameRect.x = 0.0f;
             personagem_frameRect.y = 2*personagem_frameHeight;
         }
@@ -207,10 +218,10 @@ int main()
         jogador.podePular == true)) 
         && (jogador.posicao.x == jogador.posicaoAnterior.x))
         {
+            controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
             personagem_frameRect.x = 2*personagem_frameWidth;
             personagem_frameRect.y = 0.0f;
         }
-
     }
     // De-Initialization
     //--------------------------------------------------------------------------------------
