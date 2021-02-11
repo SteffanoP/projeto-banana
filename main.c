@@ -47,6 +47,28 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
+//Configurações Iniciais dos inimigos
+Inimigo inimigo[] = {
+    {1, {1850, 280}, 0, 0, 2, 0}
+};
+int tamanhoInimigos = sizeof(inimigo) / sizeof(inimigo[0]);
+
+//Configurações Iniciais dos Elementos do Cenário
+EnvItem objetosCenario[] = {
+    {0, {0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, SKYBLUE}, //Background
+    {1, {0, 400, 2000, 200}, GRAY},
+    {1, {300, 200, 400, 10}, GRAY},
+    {1, {250, 300, 100, 10}, GRAY},
+    {1, {650, 300, 100, 10}, GRAY},
+    {1, {900, 350, 50, 50}, PURPLE},
+    {1, {1050, 311, 50, 50}, PURPLE},
+    {1, {1200, 309, 50, 50}, PURPLE},
+    {1, {1350, 330, 50, 50}, PURPLE},
+    {1, {1450, 340, 30, 60}, GREEN},
+    {1, {1970, 340, 30, 60}, GREEN}
+};
+const int tamanho_objetosCenario = sizeof(objetosCenario) / sizeof(objetosCenario[0]);
+
 //Protótipo das funções
 PhysicsBody CriaObjetoCenario(EnvItem envItem);
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
@@ -77,22 +99,6 @@ int main()
             cenario[i]->enabled = false;
         }
     }
-
-    //Configurações Iniciais dos Elementos do Cenário
-    EnvItem envItems[] = {
-        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 2000, 200}, 1, GRAY},
-        {{300, 200, 400, 10}, 1, GRAY},
-        {{250, 300, 100, 10}, 1, GRAY},
-        {{650, 300, 100, 10}, 1, GRAY},
-        {{900, 350,  50, 50}, 1, PURPLE},
-        {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 309,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE},
-        {{1450, 340,  30, 60}, 1, GREEN},
-        {{1970, 340,  30, 60}, 1, GREEN}
-    };
-    int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
     //Criação de Corpos dos inimigos
     PhysicsBody corpo_inimigo[tamanhoInimigos];
