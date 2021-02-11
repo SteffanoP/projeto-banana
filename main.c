@@ -70,6 +70,7 @@ EnvItem objetosCenario[] = {
 const int tamanho_objetosCenario = sizeof(objetosCenario) / sizeof(objetosCenario[0]);
 
 //Protótipo das funções
+void UpdateJogador(Jogador *jogador, PhysicsBody corpo);
 PhysicsBody CriaObjetoCenario(EnvItem envItem);
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
 void ConfiguraJogador(Jogador *jogador);
@@ -132,7 +133,7 @@ int main()
         //Atualiza os dados do jogador
         if (jogador.vida > 0)
         {
-            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+            UpdateJogador(&jogador, corpo_jogador);
         }
         
         //Atualiza os dados dos inimigos
@@ -206,7 +207,7 @@ int main()
     return 0;
 } 
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+void UpdateJogador(Jogador *jogador,PhysicsBody corpo)
 {  
     if (IsKeyDown(KEY_LEFT))
     {
@@ -252,18 +253,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
     //     }
     // }
     
-        //Condição de colisão para pulo e andar encima de plataformas
-        if (objeto->colisao &&                                             
-            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x &&                                      //
-            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x &&            // Definindo a invasão da área do player com a área do objeto(área de colisão)   
-            objeto->retangulo.y >= j->y &&                    
-            objeto->retangulo.y < j->y + jogador->velocidade * delta)
-        {
-            colisaoObjeto = 1; 
-            jogador->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele             
-            j->y = objeto->retangulo.y; //Atualiza a variável do movimento
-        }
-        
+}
         //Condição de colisão em objetos Universais
         if (objeto->colisao && //Detecta se o objeto é colidível
             objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x && //Detecta a borda esquerda do objeto
