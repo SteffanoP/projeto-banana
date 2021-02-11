@@ -37,9 +37,26 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
+typedef struct Personagem
+{
+    Vector2 posicao;
+    Texture2D texture;
+    float frameWidth;
+    float frameHeight;
+    Rectangle frameRect;
+} Personagem;
+
+typedef struct FPS_Animacao
+{
+    int counter;
+    int speed;
+    int currentFrame;
+} FPS_Animacao;
+
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
-//void Animacao(int framesCounter, int framesSpeed, int currentFrame, Jogador *jogador, Texture2D personagem, Rectangle personagem_frameRect, float personagem_frameWidth, float personagem_frameHeight);
+void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem);
+void AnimacaoParado(Jogador *jogador, Personagem *personagem);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -49,8 +66,6 @@ int main()
 
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
 
-    Texture2D personagem = LoadTexture("sprites/companheiro-da-silva.png");
-
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
@@ -58,14 +73,18 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
     
     //Configurações Iniciais da animação
-    int framesCounter = 0;
-    int framesSpeed = 10; 
-    int currentFrame = 0;
-    float personagem_frameWidth = (float)(personagem.width / 4);
-    float personagem_frameHeight = (float)(personagem.height / 4);
-    Rectangle personagem_frameRect = {2*personagem_frameWidth, 0.0f, personagem_frameWidth, personagem_frameHeight};
-    float controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
-    float controleTamanho_y = 190 - TAMANHO_Y_JOGADOR;
+    FPS_Animacao frames;
+    frames.counter = 0; //Conta as FPS
+    frames.speed = 10;  //FPS da animação
+    frames.currentFrame = 0; //Controla a passagem de frames
+    Personagem personagem;
+    Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
+    personagem.texture = (Texture2D)spritesPersonagem;
+    personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
+    personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
+    personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
+    personagem.posicao.x = 116 - TAMANHO_X_JOGADOR; //Posiçâo x do personagem em relação à posição x do jogador
+    personagem.posicao.y = 190 - TAMANHO_Y_JOGADOR; //Posiçâo y do personagem em relação à posição y do jogador
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigos[] = {
@@ -109,60 +128,8 @@ int main()
         //Atualiza os dados do jogador
         UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
 
-        framesCounter++;
-
-        if (framesCounter >= (60/framesSpeed))
-        {
-            framesCounter = 0;
-            currentFrame++;
-            if (currentFrame > 2) currentFrame = 1;
-
-            if (IsKeyDown(KEY_LEFT) && jogador.podePular == true && currentFrame == 1)
-            {
-                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 2*personagem_frameWidth;
-                personagem_frameRect.y = 2*personagem_frameHeight;
-            }
-            if (IsKeyDown(KEY_LEFT) && jogador.podePular == true && currentFrame == 2)
-            {
-                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 0.0f;
-                personagem_frameRect.y = 3*personagem_frameHeight;
-            }
-            if (IsKeyDown(KEY_RIGHT) && jogador.podePular == true && currentFrame == 1)
-            {
-                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 0.0f;
-                personagem_frameRect.y = personagem_frameHeight;
-            }
-            if (IsKeyDown(KEY_RIGHT) && jogador.podePular == true && currentFrame == 2)
-            {
-                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 2*personagem_frameWidth;
-                personagem_frameRect.y = personagem_frameHeight;
-            }
-
-            if ((IsKeyDown(KEY_UP) && 
-                ((personagem_frameRect.x == 0.0f && personagem_frameRect.y == 2*personagem_frameHeight) ||
-                (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 2*personagem_frameHeight) ||
-                (personagem_frameRect.x == 0.0f && personagem_frameRect.y == 3*personagem_frameHeight))) ||
-                ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_LEFT))) || ((jogador.podePular == false) && (IsKeyDown(KEY_LEFT)))){
-                controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 2*personagem_frameWidth;
-                personagem_frameRect.y = 2*personagem_frameHeight;
-            }//Pulo esquerda
-            if ((IsKeyDown(KEY_UP) && 
-                ((personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 0.0f) ||
-                (personagem_frameRect.x == 0.0f && personagem_frameRect.y == personagem_frameHeight) ||
-                (personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == personagem_frameHeight))) ||
-                ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_RIGHT))) || ((jogador.podePular == false) && (IsKeyDown(KEY_RIGHT)))){
-                controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
-                personagem_frameRect.x = 0.0f;
-                personagem_frameRect.y = personagem_frameHeight;
-            }//Pulo direita
-        }
-
-        
+        //Atualiza a animação quando o jogador está em Movimento
+        AnimacaoMovimento(&frames, &jogador, &personagem);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -189,9 +156,7 @@ int main()
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
-        //Animacao(framesCounter, framesSpeed, currentFrame, &jogador, personagem, personagem_frameRect, personagem_frameWidth, personagem_frameHeight);
-
-        DrawTextureRec(personagem, personagem_frameRect, (Vector2){jogador.posicao.x - (controleTamanho_x + TAMANHO_X_JOGADOR), jogador.posicao.y - (controleTamanho_y + TAMANHO_Y_JOGADOR)}, RAYWHITE);
+        DrawTextureRec(personagem.texture, personagem.frameRect, (Vector2){jogador.posicao.x - (personagem.posicao.x + TAMANHO_X_JOGADOR), jogador.posicao.y - (personagem.posicao.y + TAMANHO_Y_JOGADOR)}, RAYWHITE);
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
@@ -199,34 +164,13 @@ int main()
 
         EndDrawing();
         //----------------------------------------------------------------------------------
-
-        if ((((IsKeyDown(KEY_LEFT) && jogador.podePular == true) || 
-        ((personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == 2*personagem_frameHeight)
-        && jogador.podePular == true)) ||
-        ((personagem_frameRect.x == 0.0f && personagem_frameRect.y == 3*personagem_frameHeight) && 
-        jogador.podePular == true)) 
-        && (jogador.posicao.x == jogador.posicaoAnterior.x))
-        {
-            controleTamanho_x = 139 - TAMANHO_X_JOGADOR;
-            personagem_frameRect.x = 0.0f;
-            personagem_frameRect.y = 2*personagem_frameHeight;
-        }
-        if ((((IsKeyDown(KEY_RIGHT) && jogador.podePular == true) || 
-        ((personagem_frameRect.x == 0.0f && personagem_frameRect.y == personagem_frameHeight) && 
-        jogador.podePular == true)) ||
-        ((personagem_frameRect.x == 2*personagem_frameWidth && personagem_frameRect.y == personagem_frameHeight) && 
-        jogador.podePular == true)) 
-        && (jogador.posicao.x == jogador.posicaoAnterior.x))
-        {
-            controleTamanho_x = 117 - TAMANHO_X_JOGADOR;
-            personagem_frameRect.x = 2*personagem_frameWidth;
-            personagem_frameRect.y = 0.0f;
-        }
+        //Atualiza a animação quando o jogador está parado
+        AnimacaoParado(&jogador, &personagem);
     }
     // De-Initialization
     //--------------------------------------------------------------------------------------
 
-    UnloadTexture(personagem);
+    UnloadTexture(personagem.texture); //Descarregamento da sprite sheet
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -319,11 +263,89 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
 
 }
 
-//void Animacao(int framesCounter, int framesSpeed, int currentFrame, Jogador *jogador, Texture2D personagem, Rectangle personagem_frameRect,
-//float personagem_frameWidth, float personagem_frameHeight)
-//{
-    
-//}
+void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador, Personagem *personagem)
+{
+    frames->counter++; //Armazena o valor da frame do jogo 
+
+    if (frames->counter >= (60/frames->speed)) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    {
+        frames->counter = 0;
+        frames->currentFrame++;
+        if (frames->currentFrame > 2) frames->currentFrame = 1; //Controle da alternância dos passos
+
+        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 1) //Passo 1 esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 2) //Passo 2 esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = 3*personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 1) //Passo 1 direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 2) //Passo 2 direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+
+        if ((IsKeyDown(KEY_UP) && 
+        ((personagem->frameRect.x == 0.0f && personagem->frameRect.y == 2*personagem->frameHeight) ||
+        (personagem->frameRect.x == 2*personagem->frameWidth && personagem->frameRect.y == 2*personagem->frameHeight) ||
+        (personagem->frameRect.x == 0.0f && personagem->frameRect.y == 3*personagem->frameHeight))) ||
+        ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_LEFT))) || ((jogador->podePular == false) && (IsKeyDown(KEY_LEFT)))) //Pulo esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if ((IsKeyDown(KEY_UP) && 
+        ((personagem->frameRect.x == 2*personagem->frameWidth && personagem->frameRect.y == 0.0f) ||
+        (personagem->frameRect.x == 0.0f && personagem->frameRect.y == personagem->frameHeight) ||
+        (personagem->frameRect.x == 2*personagem->frameWidth && personagem->frameRect.y == personagem->frameHeight))) ||
+        ((IsKeyDown(KEY_UP)) && (IsKeyDown(KEY_RIGHT))) || ((jogador->podePular == false) && (IsKeyDown(KEY_RIGHT)))) //Pulo direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+    }
+}
+
+void AnimacaoParado(Jogador *jogador, Personagem *personagem)
+{
+    if ((((IsKeyDown(KEY_LEFT) && jogador->podePular == true) || 
+    ((personagem->frameRect.x == 2*personagem->frameWidth && personagem->frameRect.y == 2*personagem->frameHeight)
+    && jogador->podePular == true)) ||
+    ((personagem->frameRect.x == 0.0f && personagem->frameRect.y == 3*personagem->frameHeight) && 
+    jogador->podePular == true)) 
+    && (jogador->posicao.x == jogador->posicaoAnterior.x)) //Parado esquerda
+    {
+        personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+        personagem->frameRect.x = 0.0f;
+        personagem->frameRect.y = 2*personagem->frameHeight;
+    }
+    if ((((IsKeyDown(KEY_RIGHT) && jogador->podePular == true) || 
+    ((personagem->frameRect.x == 0.0f && personagem->frameRect.y == personagem->frameHeight) && 
+    jogador->podePular == true)) ||
+    ((personagem->frameRect.x == 2*personagem->frameWidth && personagem->frameRect.y == personagem->frameHeight) && 
+    jogador->podePular == true)) 
+    && (jogador->posicao.x == jogador->posicaoAnterior.x)) //Parado direita
+    {
+        personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+        personagem->frameRect.x = 2*personagem->frameWidth;
+        personagem->frameRect.y = 0.0f;
+    }
+}
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
 {
