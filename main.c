@@ -1,6 +1,10 @@
 #include "raylib.h"
 #include "libraries/defines.c"
 
+//Ativação da Biblioteca Physac.h
+#define PHYSAC_IMPLEMENTATION
+#include "physac.h"
+
 bool colisaoJogador;
 
 /* Sobre o jogador:
@@ -12,7 +16,6 @@ typedef struct Jogador
 {
     Vector2 posicao;
     float velocidade;
-    bool podePular;
     int vida;
 } Jogador;
 
@@ -39,22 +42,24 @@ typedef struct Inimigo
 
 typedef struct EnvItem
 {
+    bool colisao;
     Rectangle retangulo;
-    int colisao;
     Color cor;
 } EnvItem;
 
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
+PhysicsBody CriaObjetoCenario(EnvItem envItem);
+PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
 
 int main()
 {
     // Inicialização do Jogo
     //--------------------------------------------------------------------------------------
-
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
+
+    //Iniciar Física da Physac
+    InitPhysics();
+    SetPhysicsGravity(0,5.0f);
 
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
@@ -63,12 +68,15 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
     jogador.vida = 1;
 
-    //Configurações Iniciais dos inimigos
-    Inimigo inimigo[] = {
-        {1, {1850, 280}, 0, 0, 2, 0},
-        {1, {1950, 280}, 0, 0, 2, 0}
-    };
-    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
+    //Criação de Corpos/Objetos Fixos   
+    PhysicsBody cenario[tamanho_objetosCenario];
+    for (int i = 0; i < tamanho_objetosCenario; i++)
+    {
+        if (objetosCenario[i].colisao > 0) {
+            cenario[i] = CriaObjetoCenario(objetosCenario[i]);
+            cenario[i]->enabled = false;
+        }
+    }
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -86,6 +94,20 @@ int main()
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
+    //Criação de Corpos dos inimigos
+    PhysicsBody corpo_inimigo[tamanhoInimigos];
+    for (int i = 0; i < tamanhoInimigos; i++)
+    {
+        corpo_inimigo[i] = CriaCorpoInimigo(inimigo[i]);
+        corpo_inimigo[i]->freezeOrient = true;
+        corpo_inimigo[i]->inertia = 0;
+    }
+    
+    //Corpo do jogador
+    PhysicsBody corpo_jogador = (PhysicsBody)PHYSAC_MALLOC(sizeof(PhysicsBody));
+    corpo_jogador = CreatePhysicsBodyRectangle(jogador.posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, 10);
+    corpo_jogador->freezeOrient = true;
+
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
     camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
@@ -100,6 +122,7 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
+        SetTargetFPS(60);
         float deltaTime = GetFrameTime();
         
         //Atualiza os dados do jogador
@@ -112,7 +135,7 @@ int main()
         UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
         
         //Atualiza a Câmera focada no jogador
-        UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
+        UpdateCameraCenter(&camera, &jogador, objetosCenario, tamanho_objetosCenario, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -140,6 +163,26 @@ int main()
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
+        
+        //Desenho do corpo do jogador
+        int quantidadeCorpos = GetPhysicsBodiesCount();
+        for (int i = 0; i < quantidadeCorpos; i++)
+        {
+            PhysicsBody corpos = GetPhysicsBody(i);
+
+            int vertexCount = GetPhysicsShapeVerticesCount(i);
+            for (int j = 0; j < vertexCount; j++)
+            {
+                // Get physics bodies shape vertices to draw lines
+                // Note: GetPhysicsShapeVertex() already calculates rotation transformations
+                Vector2 vertexA = GetPhysicsShapeVertex(corpos, j);
+
+                int jj = (((j + 1) < vertexCount) ? (j + 1) : 0); // Get next vertex or first to close the shape
+                Vector2 vertexB = GetPhysicsShapeVertex(corpos, jj);
+
+                DrawLineV(vertexA, vertexB, BLUE); // Draw a line between two vertex positions
+            }
+        }
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
@@ -161,33 +204,20 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
 {  
-    if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
-        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
-        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+    if (IsKeyDown(KEY_LEFT))
+    {
+        corpo->velocity.x = -JOGADOR_MOVIMENTO_VELOCIDADE;
+    }
+    if (IsKeyDown(KEY_RIGHT))
+    {
+        corpo->velocity.x = JOGADOR_MOVIMENTO_VELOCIDADE; //Decrementa o valor da posição do player
+    }
 
-    if (IsKeyDown(KEY_UP) && jogador->podePular)
+    if (IsKeyDown(KEY_UP) && corpo->isGrounded)
     {
-        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
-        jogador->podePular = false;
+        corpo->velocity.y = -JOGADOR_PULO_VELOCIDADE;
     }
-    
-    //Limites da area de movimentação do jogador
-    if ((jogador->posicao.x + TAMANHO_X_JOGADOR / 2) > TAMANHO_X_CENARIO)
-    {
-        jogador->posicao.x = TAMANHO_X_CENARIO - TAMANHO_X_JOGADOR / 2; //Limites para direita
-    } else if (jogador->posicao.x < TAMANHO_X_JOGADOR / 2)
-    {
-        jogador->posicao.x = TAMANHO_X_JOGADOR / 2; //Limites para a esquerda
-    }
-    
-    if ((jogador->posicao.y) > TAMANHO_Y_CENARIO)  //Limites na vertical
-    {
-        jogador->posicao.y = TAMANHO_Y_CENARIO; 
-    } else if (jogador->posicao.y < TAMANHO_Y_JOGADOR)
-    {
-        jogador->posicao.y = TAMANHO_Y_JOGADOR;
-    }
+    jogador->posicao = corpo->position;
 
     colisaoJogador = 0;
     int colisaoObjeto = 0;
@@ -273,19 +303,11 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
     
 }
 
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
+void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *objetosCenario, int envItemsLength, float delta, int width, int height)
 {
-    for (int i = 0; i < tamanhoInimigos; i++)
-    {
-        inimigo += i;
-
-        if (inimigo->tipo == 1)
-        {
-            if (inimigo->direcao_movimento == 0)
-                inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
-            else if (inimigo->direcao_movimento == 1)
-                inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
-        }
+    camera->offset = (Vector2){width / 2, height / 2};
+    camera->target = jogador->posicao;
+}
 
         //Limites da area de movimentação do inimigo no cenário
         if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
@@ -299,50 +321,19 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
             inimigo->direcao_movimento = !inimigo->direcao_movimento;
         }
 
-        int colisaoObjeto = 0;
-        for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
-        {
-            EnvItem *objeto = envItems + i;
-            Vector2 *j = &(inimigo->posicao);
-
-            //Condição de colisão para andar encima de plataformas
-            if (objeto->colisao &&
-                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
-                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
-                objeto->retangulo.y >= j->y &&
-                objeto->retangulo.y < j->y + inimigo->velocidade * delta)
-            {
-                colisaoObjeto = 1;
-                inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
-                j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+PhysicsBody CriaObjetoCenario(EnvItem envItem) {
+    PhysicsBody objeto = CreatePhysicsBodyRectangle((Vector2){envItem.retangulo.x + (envItem.retangulo.width / 2),envItem.retangulo.y + (envItem.retangulo.height / 2)}, envItem.retangulo.width, envItem.retangulo.height, 1);
+    return objeto;
+} 
             }
+} 
 
-            //Condição de colisão em objetos Universais
-            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
-                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
-                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
-                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
-                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
-            {
-                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
-                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
-                {
-                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
-                    inimigo->direcao_movimento = 0;
-                }
-                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
-                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
-                {
-                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
-                    inimigo->direcao_movimento = 1;
-                }
-                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
-                {
-                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
-                    inimigo->velocidade = GRAVIDADE * delta;
-                }
-            }
+PhysicsBody CriaCorpoInimigo(Inimigo inimigo) {
+    PhysicsBody objeto = CreatePhysicsBodyRectangle(inimigo.posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, 1);
+    return objeto;
+} 
         }
+} 
 
         if (!colisaoObjeto) //Se não há colisão com objeto
         {
@@ -350,10 +341,4 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
             inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
         }
     }
-}
-
-void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
-{
-    camera->offset = (Vector2){width / 2, height / 2};
-    camera->target = jogador->posicao;
 }
