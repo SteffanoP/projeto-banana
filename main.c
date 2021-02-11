@@ -72,6 +72,7 @@ const int tamanho_objetosCenario = sizeof(objetosCenario) / sizeof(objetosCenari
 //Protótipo das funções
 PhysicsBody CriaObjetoCenario(EnvItem envItem);
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
+void ConfiguraJogador(Jogador *jogador);
 
 int main()
 {
@@ -85,10 +86,7 @@ int main()
 
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
-    jogador.posicao = (Vector2){400, 280}; //Posição Inicial
-    jogador.velocidade = 0; //Velocidade Inicial
-    jogador.podePular = false; //Habilitação de pulo
-    jogador.vida = 1;
+    ConfiguraJogador(&jogador);
 
     //Criação de Corpos/Objetos Fixos   
     PhysicsBody cenario[tamanho_objetosCenario];
