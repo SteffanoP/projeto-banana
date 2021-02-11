@@ -71,6 +71,7 @@ const int tamanho_objetosCenario = sizeof(objetosCenario) / sizeof(objetosCenari
 
 //Protótipo das funções
 void UpdateJogador(Jogador *jogador, PhysicsBody corpo);
+void UpdateInimigo(Inimigo *inimigo, PhysicsBody corpo);
 PhysicsBody CriaObjetoCenario(EnvItem envItem);
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
 void ConfiguraJogador(Jogador *jogador);
@@ -137,7 +138,10 @@ int main()
         }
         
         //Atualiza os dados dos inimigos
-        UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
+        for (int i = 0; i < tamanhoInimigos; i++)
+        {
+            UpdateInimigo(&inimigo[i],corpo_inimigo[i]);
+        }
         
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, objetosCenario, tamanho_objetosCenario, deltaTime, screenWidth, screenHeight);
