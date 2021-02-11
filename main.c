@@ -218,14 +218,36 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         corpo->velocity.y = -JOGADOR_PULO_VELOCIDADE;
     }
     jogador->posicao = corpo->position;
-
-    colisaoJogador = 0;
-    int colisaoObjeto = 0;
-    for (int i = 0; i < envItemsLength; i++) //Preechimento da áre dos pixels dos objetos colidiveis
-    {
-        EnvItem *objeto = envItems + i;
-        Vector2 *j = &(jogador->posicao);
-        
+    
+    // for (int i = 0; i < tamanhoInimigo; i++)
+    // {
+    //     inimigo += i;
+    //     if (inimigo->tipo > 0)
+    //     {
+    //         if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+    //             inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+    //             inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
+    //             inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+    //         {
+    //             if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
+    //             {
+    //                 jogador->vida -= 1;
+    //             }
+    //             else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
+    //             {
+    //                 jogador->vida -= 1;
+    //             }
+    //         }
+    //         else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+    //                  inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+    //                  inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
+    //                  inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+    //         {
+    //             inimigo->tipo = 0; 
+    //         } 
+    //     }
+    // }
+    
         //Condição de colisão para pulo e andar encima de plataformas
         if (objeto->colisao &&                                             
             objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x &&                                      //
@@ -264,43 +286,20 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         }
     }
 
-    if (!colisaoObjeto) //Se não há colisão com objeto
+    for (int i = 0; i < tamanho_objetosCenario; i++)
     {
-        jogador->posicao.y += jogador->velocidade * delta; //Aumentar a posição do Y do jogador
-        jogador->velocidade += GRAVIDADE * delta; //Vai sofrer com a Gravidade
-        jogador->podePular = false; //Não pode pular no ar
-    } else
-        jogador->podePular = true;
-    
-    for (int i = 0; i < tamanhoInimigo; i++)
-    {
-        inimigo += i;
-        if (inimigo->tipo > 0)
+        if (objetosCenario[i].colisao)
         {
-            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
-                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            if (ColisaoInimigoObjeto(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,objetosCenario[i].retangulo))
             {
-                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
-                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
+                inimigo->direcao_movimento = !inimigo->direcao_movimento;
+                if (inimigo->direcao_movimento > 0)
+                    corpo->velocity.x = VELOCIDADE_INIMIGO_MINION;
+                else 
+                    corpo->velocity.x = -VELOCIDADE_INIMIGO_MINION;
             }
-            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
-                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
-            {
-                inimigo->tipo = 0; 
-            } 
         }
     }
-    
 }
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *objetosCenario, int envItemsLength, float delta, int width, int height)
@@ -332,13 +331,22 @@ PhysicsBody CriaCorpoInimigo(Inimigo inimigo) {
     PhysicsBody objeto = CreatePhysicsBodyRectangle(inimigo.posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, 1);
     return objeto;
 } 
-        }
-} 
 
-        if (!colisaoObjeto) //Se não há colisão com objeto
-        {
-            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
-            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
-        }
+bool ColisaoInimigoObjeto(Vector2 inimigo,float tamanhoInimigo_x, float tamanhoInimigo_y,Rectangle objeto) {
+    Vector2 ponto_superior_esquerdo = (Vector2){inimigo.x - tamanhoInimigo_x / 2,inimigo.y};
+    Vector2 ponto_inferior_esquerdo = (Vector2){inimigo.x - tamanhoInimigo_x / 2,inimigo.y + (tamanhoInimigo_y / 2) - 1};
+    Vector2 ponto_superior_direito = (Vector2){inimigo.x + tamanhoInimigo_x / 2, inimigo.y};
+    Vector2 ponto_inferior_direito = (Vector2){inimigo.x + tamanhoInimigo_x / 2, inimigo.y + (tamanhoInimigo_y / 2) - 1};
+
+    if (CheckCollisionPointRec(ponto_superior_esquerdo, objeto) ||
+        CheckCollisionPointRec(ponto_inferior_esquerdo, objeto) ||
+        CheckCollisionPointRec(ponto_superior_direito, objeto) ||
+        CheckCollisionPointRec(ponto_inferior_direito, objeto))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
     }
 }
