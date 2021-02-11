@@ -258,30 +258,19 @@ void UpdateJogador(Jogador *jogador,PhysicsBody corpo)
     // }
     
 }
-        //Condição de colisão em objetos Universais
-        if (objeto->colisao && //Detecta se o objeto é colidível
-            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x && //Detecta a borda esquerda do objeto
-            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x && //Detecta a borda direita do objeto
-            objeto->retangulo.y < j->y && //Detecta colisão acima do objeto
-            objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta colisão abaixo do objeto
-        {
-            if (objeto->retangulo.x - TAMANHO_X_JOGADOR / 2 <= j->x &&
-                objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
-            {
-                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
-            }
-            else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2 >= j->x &&
-                     objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
-            {
-                jogador->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2;
-            }
-            else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta a colisão abaixo do objeto
-            {
-                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR;
-                jogador->velocidade = GRAVIDADE * delta;
-            }
-            colisaoJogador = 1;
+
+void UpdateInimigo(Inimigo *inimigo, PhysicsBody corpo)
+{
+
+    if (inimigo->tipo == 1)
+    {
+        if (inimigo->direcao_movimento == 0) {
+            corpo->velocity.x = -VELOCIDADE_INIMIGO_MINION;
         }
+        else if (inimigo->direcao_movimento == 1) {
+            corpo->velocity.x = VELOCIDADE_INIMIGO_MINION;
+        }
+        inimigo->posicao = corpo->position;
     }
 
     for (int i = 0; i < tamanho_objetosCenario; i++)
@@ -316,8 +305,6 @@ void ConfiguraJogador(Jogador *jogador) {
 PhysicsBody CriaObjetoCenario(EnvItem envItem) {
     PhysicsBody objeto = CreatePhysicsBodyRectangle((Vector2){envItem.retangulo.x + (envItem.retangulo.width / 2),envItem.retangulo.y + (envItem.retangulo.height / 2)}, envItem.retangulo.width, envItem.retangulo.height, 1);
     return objeto;
-} 
-            }
 } 
 
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo) {
