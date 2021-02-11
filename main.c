@@ -314,17 +314,12 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *objetosCena
     camera->target = jogador->posicao;
 }
 
-        //Limites da area de movimentação do inimigo no cenário
-        if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
-        {
-            inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
-            inimigo->direcao_movimento = !inimigo->direcao_movimento;
-        }
-        else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
-        {
-            inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
-            inimigo->direcao_movimento = !inimigo->direcao_movimento;
-        }
+void ConfiguraJogador(Jogador *jogador) {
+    //Configurações do jogador
+    jogador->posicao = (Vector2){400, 280}; //Posição Inicial
+    jogador->velocidade = 0;                //Velocidade Inicial
+    jogador->vida = 1;                      //Define a quantidade de vidas iniciais
+}
 
 PhysicsBody CriaObjetoCenario(EnvItem envItem) {
     PhysicsBody objeto = CreatePhysicsBodyRectangle((Vector2){envItem.retangulo.x + (envItem.retangulo.width / 2),envItem.retangulo.y + (envItem.retangulo.height / 2)}, envItem.retangulo.width, envItem.retangulo.height, 1);
