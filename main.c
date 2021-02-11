@@ -72,9 +72,11 @@ const int tamanho_objetosCenario = sizeof(objetosCenario) / sizeof(objetosCenari
 //Protótipo das funções
 void UpdateJogador(Jogador *jogador, PhysicsBody corpo);
 void UpdateInimigo(Inimigo *inimigo, PhysicsBody corpo);
+void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *objetosCenario, int envItemsLength, float delta, int width, int height);
 PhysicsBody CriaObjetoCenario(EnvItem envItem);
 PhysicsBody CriaCorpoInimigo(Inimigo inimigo);
 void ConfiguraJogador(Jogador *jogador);
+bool ColisaoInimigoObjeto(Vector2 inimigo,float tamanhoInimigo_x, float tamanhoInimigo_y,Rectangle objeto);
 
 int main()
 {
@@ -156,21 +158,21 @@ int main()
 
         BeginMode2D(camera);
 
-        //Desenho dos Retângulos referentes aos obstáculos de EnvItems
-        for (int i = 0; i < envItemsLength; i++)
-            DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+        //Desenho dos Retângulos referentes aos obstáculos de objetosCenario
+        for (int i = 0; i < tamanho_objetosCenario; i++)
+            DrawRectangleRec(objetosCenario[i].retangulo, objetosCenario[i].cor);
 
-        for (int i = 0; i < tamanhoInimigo; i++)
+        for (int i = 0; i < tamanhoInimigos; i++)
         {
             if (inimigo[i].tipo > 0)
             {
-                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
+                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y/2, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
                 DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
             }
         }
 
         //Criação e Desenho do jogador
-        Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
+        Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR/2, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
         
         //Desenho do corpo do jogador
