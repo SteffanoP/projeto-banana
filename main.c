@@ -8,6 +8,7 @@ typedef struct Jogador
     Vector2 posicao;
     float velocidade;
     bool podePular;
+    int vida;
     //Poder Poder; //Especificar qual o poder que um jogador tem
 } Jogador;
 
@@ -24,30 +25,41 @@ cor: Cor do inimigo
 typedef struct Inimigo
 {
     int tipo;
-    Rectangle hitbox;
+    Vector2 posicao;
     float velocidade;
+    bool direcao_movimento;
     int vida;
     Color cor;
 } Inimigo;
 
-/* Sobre o poder:
+/* Sobre os poderes:
 
-posicao: posicao do poder ao jogador
+posicao: posicao em relação ao jogador
 velocidade: velocidade da movimentação
-raio: raio (o poder tem forma de círculo)
+raio: raio da forma (o poder representa um círculo)
 
 poder_ativo: verificação se está ativo ou não
-vida_util: vida útil do poder no jogo
 cor: cor do poder */
+
+//Struct relacionada ao poder à direita do jogador
 typedef struct Poder
 {
     Vector2 posicao;
     float velocidade;
     float raio;
     bool poder_ativo;
-    int vida_util;
     Color cor;
 } Poder;
+
+//Struct relacionada ao poder à esquerda do jogador
+typedef struct PoderEsq
+{
+    Vector2 posicao_Esq;
+    float velocidade_Esq;
+    float raio_Esq;
+    bool poder_ativo_Esq;
+    Color cor_Esq;
+} PoderEsq;
 
 typedef struct EnvItem
 {
@@ -56,10 +68,13 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
+static Poder poderes[PODER_MAX_PERSONAGEM] = {0};
+static PoderEsq poderesEsq[PODER_MAX_PERSONAGEM] = {0};
+
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
-void UpdateInimigos(Inimigo *inimigo, int inimigosTamanho, float delta);
-void UpdatePoder(Poder *poderes, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
+void UpdatePoder(Poder *poderes, PoderEsq *poderesEsq, Inimigo *inimigo, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 
 int main()
@@ -75,19 +90,34 @@ int main()
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
+    jogador.vida = 1;
 
     //Configurações Iniciais dos inimigos
-    Inimigo inimigos[] = {
-        { 0, {0, 0, 0, 0}, 0, 0, BLANK},
-        { 1, {1850, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW},
-        { 1, {1950, 360, TAMANHO_MINION_X, TAMANHO_MINION_Y}, 0, 2, YELLOW}
+    Inimigo inimigo[] = {
+        {1, {1850, 280}, 0, 0, 2, 0},
+        {1, {1950, 280}, 0, 0, 2, 0}
     };
-    int inimigosTamanho = sizeof(inimigos) / sizeof(inimigos[0]);
+    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
-    //Configurações iniciais do poder
-    Poder poderes[PODER_MAX_PERSONAGEM] = {
-        {{0, 0}, 0, 10, false, 0, BLACK}
-    };
+    //Configurações iniciais do poder à direita
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        poderes[p].posicao = (Vector2){0,0}; 
+        poderes[p].velocidade = 0;
+        poderes[p].raio = 10;
+        poderes[p].poder_ativo = false;
+        poderes[p].cor = BLACK;
+    }
+
+    //Configurações iniciais do poder à esquerda
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        poderesEsq[p].posicao_Esq = (Vector2){0,0}; 
+        poderesEsq[p].velocidade_Esq = 0;
+        poderesEsq[p].raio_Esq = 10;
+        poderesEsq[p].poder_ativo_Esq = false;
+        poderesEsq[p].cor_Esq = BLACK;
+    }
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -99,7 +129,10 @@ int main()
         {{900, 350,  50, 50}, 1, PURPLE},
         {{1050, 311,  50, 50}, 1, PURPLE},
         {{1200, 309,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE}
+        {{1350, 330,  50, 50}, 1, PURPLE},
+        {{1350, 330,  50, 50}, 1, PURPLE},
+        {{1450, 340,  30, 60}, 1, GREEN},
+        {{1970, 340,  30, 60}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -120,13 +153,16 @@ int main()
         float deltaTime = GetFrameTime();
         
         //Atualiza os dados do jogador
-        UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
+        if (jogador.vida > 0)
+        {
+            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+        }
 
         //Atualiza os dados dos inimigos
-        UpdateInimigos(inimigos, inimigosTamanho, deltaTime);
+        UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
 
-        //Atualiza os poderes do jogador
-        UpdatePoder(poderes, &jogador, envItems, envItemsLength, deltaTime);
+        //Atualiza o poder do jogador
+        UpdatePoder(poderes, poderesEsq, inimigo, &jogador, envItems, envItemsLength, deltaTime);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -144,8 +180,8 @@ int main()
         //Desenho dos Retângulos referentes aos obstáculos de EnvItems
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
-        
-        //Desenho do poder bola
+
+        //Desenho do poder à direita
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
         {
             if (poderes[p].poder_ativo)
@@ -154,9 +190,24 @@ int main()
             }
         }
 
+        //Desenho do poder à esquerda
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (poderesEsq[p].poder_ativo_Esq)
+            {
+                DrawCircleV(poderesEsq[p].posicao_Esq, poderesEsq[p].raio_Esq, BLACK);
+            }
+        }
+
         //Desenho dos Retângulos referentes aos inimigos
-        for (int i = 0; i < inimigosTamanho; i++)
-            DrawRectangleRec(inimigos[i].hitbox, inimigos[i].cor);
+        for (int i = 0; i < tamanhoInimigo; i++)
+        {
+            if (inimigo[i].tipo > 0)
+            {
+                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
+                DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+            }
+        }
 
         //Criação e Desenho do jogador
         Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
@@ -177,8 +228,7 @@ int main()
     return 0;
 } 
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
-{
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta){
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -259,57 +309,188 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
-}
 
-void UpdateInimigos(Inimigo *inimigos, int inimigosTamanho, float delta) {
-    for (int i = -1; i < inimigosTamanho; i++)
+    for (int i = 0; i < tamanhoInimigo; i++)
     {
-        Inimigo *minion = inimigos + i;
-        minion->hitbox.x -= VELOCIDADE_INIMIGO_MINION * delta;
-        inimigos->hitbox.x = minion->hitbox.x;
+        inimigo += i;
+        if (inimigo->tipo > 0)
+        {
+            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
+                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
+                {
+                    jogador->vida -= 1;
+                }
+            }
+            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
+                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
+                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
+                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            {
+                inimigo->tipo = 0; 
+            } 
+        }
     }
 }
 
-void UpdatePoder(Poder *poderes, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta) {
-    
-    if (IsKeyDown(KEY_SPACE))  //Usando o poder
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
+{
+    for (int i = 0; i < tamanhoInimigos; i++)
     {
-        if (!poderes->poder_ativo) //Caso não haja poder ativo, seta as configurações abaixo
-        { 
-            poderes->posicao = (Vector2){jogador->posicao.x - TAMANHO_X_JOGADOR/2 + 10, jogador->posicao.y - TAMANHO_Y_JOGADOR/2};
-            poderes->velocidade = JOGADOR_MOVIMENTO_VELOCIDADE;
-            poderes->poder_ativo = true;
+        inimigo += i;
+
+        if (inimigo->tipo == 1)
+        {
+            if (inimigo->direcao_movimento == 0)
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
+            else if (inimigo->direcao_movimento == 1)
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
+        }
+
+        //Limites da area de movimentação do inimigo no cenário
+        if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+        {
+            inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+        else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+        {
+            inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
+            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+        }
+
+        int colisaoObjeto = 0;
+        for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+        {
+            EnvItem *objeto = envItems + i;
+            Vector2 *j = &(inimigo->posicao);
+
+            //Condição de colisão para andar encima de plataformas
+            if (objeto->colisao &&
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
+                objeto->retangulo.y >= j->y &&
+                objeto->retangulo.y < j->y + inimigo->velocidade * delta)
+            {
+                colisaoObjeto = 1;
+                inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+                j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+            }
+
+            //Condição de colisão em objetos Universais
+            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
+                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
+                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
+                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
+                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
+            {
+                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
+                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 0;
+                }
+                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
+                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+                {
+                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
+                    inimigo->direcao_movimento = 1;
+                }
+                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
+                {
+                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
+                    inimigo->velocidade = GRAVIDADE * delta;
+                }
+            }
+        }
+
+        if (!colisaoObjeto) //Se não há colisão com objeto
+        {
+            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
+            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+        }
+    }
+}
+
+void UpdatePoder(Poder *poderes, PoderEsq *poderesEsq, Inimigo *inimigo, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta) {
+
+    //Usando o poder na DIREITA
+    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x < inimigo->posicao.x)
+    {
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (!poderes[p].poder_ativo) //Caso não haja poder ativo, seta as configurações abaixo
+            { 
+                poderes[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 10, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderes[p].poder_ativo = true;
+                poderes[p].velocidade = JOGADOR_MOVIMENTO_VELOCIDADE;
+                break;
+            }
         }
     }
 
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        if (poderes->poder_ativo) //Caso haja poder ativo
+        if (poderes[p].poder_ativo) //Caso haja poder ativo
         {
-            poderes->vida_util++; //Sua "vida" é incrementada
-            poderes->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é incrementada
-        }
-        for (int i = 0; i < envItemsLength; i++)
-        {
-            EnvItem *objeto = envItems + i;
-            if (objeto->colisao && CheckCollisionCircleRec(poderes->posicao, poderes->raio, objeto->retangulo)) //Havendo colisão, a bola atirada desaparece
+            poderes[p].posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é incrementada
+
+            for (int i = 0; i < envItemsLength; i++)
             {
-                poderes->poder_ativo = false;
-                poderes->vida_util = 0;
+                EnvItem *objeto = envItems + 1;
+                if (objeto[i].colisao && CheckCollisionCircleRec(poderes[p].posicao, poderes[p].raio, objeto[i].retangulo))
+                {
+                    poderes[p].poder_ativo = false;
+                }
             }
-            if (!CheckCollisionCircleRec(poderes->posicao, poderes->raio, objeto->retangulo)) //Não houver confirmação de colisão
+            
+            if (poderes[p].posicao.x > TAMANHO_X_CENARIO + poderes[p].raio) //Movimentação da bola atirada é limitada até o fim do cenário
+            {                                                               //no lado direito, então desaparece
+                poderes[p].poder_ativo = false;
+            }
+        }
+    }
+
+    //Usando o poder na ESQUERDA
+    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x > inimigo->posicao.x) 
+    {
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (!poderesEsq[p].poder_ativo_Esq) //Caso não haja poder ativo, seta as configurações abaixo
+            { 
+                poderesEsq[p].posicao_Esq = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderesEsq[p].poder_ativo_Esq = true;
+                poderesEsq[p].velocidade_Esq = JOGADOR_MOVIMENTO_VELOCIDADE;
+                break;
+            }
+        }
+    }
+
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (poderesEsq[p].poder_ativo_Esq) //Caso haja poder ativo
+        {
+            poderesEsq[p].posicao_Esq.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é decrementada  
+
+            for (int i = 0; i < envItemsLength; i++)
             {
-                if (poderes->vida_util >= 200) //A vida útil da bola atirada é limitada, após isso a bola desaparece
+                EnvItem *objeto = envItems + 1;
+                if (objeto[i].colisao && CheckCollisionCircleRec(poderesEsq[p].posicao_Esq, poderesEsq[p].raio_Esq, objeto[i].retangulo))
                 {
-                    poderes->posicao = (Vector2){0,0}; 
-                    poderes->velocidade = 0;
-                    poderes->vida_util = 0;
-                    poderes->poder_ativo = false;
+                    poderesEsq[p].poder_ativo_Esq = false;
                 }
-                if (poderes->posicao.x >= TAMANHO_X_CENARIO) //Movimentação da bola atirada é limitada até o fim do cenário, então desaparece
-                {
-                    poderes->poder_ativo = false;
-                }
+            }
+
+            if (poderesEsq[p].posicao_Esq.x < 0 - poderesEsq[p].raio_Esq) //Lado esquerdo do cenário é o limite do poder, então este desaparece
+            {
+                poderesEsq[p].poder_ativo_Esq = false;
             }
         }
     }

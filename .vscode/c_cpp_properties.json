@@ -3,6 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
+                "C:\\raylib\\mingw\\lib\\gcc\\i686-w64-mingw32\\8.1.0\\include",
+                "C:\\raylib\\mingw\\i686-w64-mingw32\\include/**",
                 "C:/raylib/raylib/src/**",
                 "${workspaceFolder}/**"
             ],
@@ -56,7 +58,6 @@
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"
-
         }
     ],
     "version": 4
