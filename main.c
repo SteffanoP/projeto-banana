@@ -48,6 +48,7 @@ typedef struct EnvItem
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
+int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 
 int main()
 {
@@ -207,30 +208,18 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
             jogador->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele             
             j->y = objeto->retangulo.y; //Atualiza a variável do movimento
         }
-        
+
         //Condição de colisão em objetos Universais
-        if (objeto->colisao && //Detecta se o objeto é colidível
-            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x && //Detecta a borda esquerda do objeto
-            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x && //Detecta a borda direita do objeto
-            objeto->retangulo.y < j->y && //Detecta colisão acima do objeto
-            objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta colisão abaixo do objeto
+        if (objeto->colisao)
         {
-            if (objeto->retangulo.x - TAMANHO_X_JOGADOR / 2 <= j->x &&
-                objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
-            {
-                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
-            }
-            else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2 >= j->x &&
-                     objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+            if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 1)
             {
                 jogador->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2;
             }
-            else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta a colisão abaixo do objeto
+            else if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 2)
             {
-                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR;
-                jogador->velocidade = GRAVIDADE * delta;
+                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
             }
-            colisaoJogador = 1;
         }
     }
 
@@ -318,28 +307,15 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
             }
 
             //Condição de colisão em objetos Universais
-            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
-                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
-                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
-                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
-                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
+            if (objeto->colisao)
             {
-                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
-                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+                if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 1)
                 {
-                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
-                    inimigo->direcao_movimento = 0;
-                }
-                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
-                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
-                {
-                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
                     inimigo->direcao_movimento = 1;
                 }
-                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
+                else if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 2)
                 {
-                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
-                    inimigo->velocidade = GRAVIDADE * delta;
+                    inimigo->direcao_movimento = 0;
                 }
             }
         }
@@ -356,4 +332,26 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
 {
     camera->offset = (Vector2){width / 2, height / 2};
     camera->target = jogador->posicao;
+}
+
+int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
+    Vector2 ponto_superior_esquerdo = (Vector2){entidade.x - (tamanho_entidade_x / 2), entidade.y - tamanho_entidade_y + 1};
+    Vector2 ponto_inferior_esquerdo = (Vector2){entidade.x - (tamanho_entidade_x / 2), entidade.y - 1};
+    Vector2 ponto_superior_direito = (Vector2){entidade.x + (tamanho_entidade_x / 2), entidade.y - tamanho_entidade_y + 1};
+    Vector2 ponto_inferior_direito = (Vector2){entidade.x + (tamanho_entidade_x / 2), entidade.y - 1};
+
+    if (CheckCollisionPointRec(ponto_superior_esquerdo, objeto) ||
+        CheckCollisionPointRec(ponto_inferior_esquerdo, objeto))
+    {
+        return 1;
+    }
+    else if (CheckCollisionPointRec(ponto_superior_direito, objeto) ||
+             CheckCollisionPointRec(ponto_inferior_direito, objeto))
+    {
+        return 2;
+    }
+    else
+    {
+        return 0;
+    }
 }
