@@ -340,18 +340,27 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
     camera->target = jogador->posicao;
 }
 
+/*
+Verifica se há colisão com as bordas Esquerda e Direita de uma Entidade com um objeto
+Retorna 0 se não há colisão
+Retorna 1 se há colisão com borda esquerda
+Retorna 2 se há colisão com borda direita
+*/
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
     float ponto_superior_esquerda = entidade.x - (tamanho_entidade_x / 2);
     float ponto_superior_direita = entidade.x + (tamanho_entidade_x / 2);
     float ponto_superior = entidade.y - tamanho_entidade_y + 1;
     float ponto_inferior = entidade.y - 1;
 
+    //Verifica a reta (conjunto de ~infinitos~ pontos) do ponto superior ao inferior
     for (float ponto = ponto_superior; ponto <= ponto_inferior; ponto++)
     {
+        //Verifica se há colisão com borda/reta esquerda
         if (CheckCollisionPointRec((Vector2){ponto_superior_esquerda,ponto},objeto))
         {
             return 1;
         }
+        //Verifica se há colisão com borda/reta direita
         if (CheckCollisionPointRec((Vector2){ponto_superior_direita,ponto},objeto))
         {
             return 2;
@@ -361,10 +370,16 @@ int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float ta
     return 0;
 }
 
+/*
+Verifica se há colisão com a borda superior de uma Entidade com um objeto
+Retorna 0 se não há colisão
+Retorna 1 se há colisão com borda superior
+*/
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
     Vector2 ponto_superior_esquerda = (Vector2){entidade.x - (tamanho_entidade_x / 2) + 5, entidade.y - tamanho_entidade_y - 1};
     Vector2 ponto_superior_direita = (Vector2){entidade.x + (tamanho_entidade_x / 2) - 5, entidade.y - tamanho_entidade_y - 1};
 
+    //Verifica a colisão entre 2 pontos superiores da entidade
     if (CheckCollisionPointRec(ponto_superior_esquerda,objeto) ||
         CheckCollisionPointRec(ponto_superior_direita,objeto))
     {
