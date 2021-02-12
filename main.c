@@ -340,10 +340,10 @@ Retorna 1 se há colisão com borda esquerda
 Retorna 2 se há colisão com borda direita
 */
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
-    float ponto_superior_esquerda = entidade.x - (tamanho_entidade_x / 2);
-    float ponto_superior_direita = entidade.x + (tamanho_entidade_x / 2);
-    float ponto_superior = entidade.y - tamanho_entidade_y + 1;
-    float ponto_inferior = entidade.y - 1;
+    const float ponto_superior_esquerda = entidade.x - (tamanho_entidade_x / 2);
+    const float ponto_superior_direita = entidade.x + (tamanho_entidade_x / 2);
+    const float ponto_superior = entidade.y - tamanho_entidade_y + 1;
+    const float ponto_inferior = entidade.y - 1;
 
     //Verifica a reta (conjunto de ~infinitos~ pontos) do ponto superior ao inferior
     for (float ponto = ponto_superior; ponto <= ponto_inferior; ponto++)
