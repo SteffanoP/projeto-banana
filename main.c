@@ -49,6 +49,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envI
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 
 int main()
 {
@@ -80,7 +81,7 @@ int main()
         {{650, 300, 100, 10}, 1, GRAY},
         {{900, 350,  50, 50}, 1, PURPLE},
         {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 309,  50, 50}, 1, PURPLE},
+        {{1200, 308,  50, 50}, 1, PURPLE},
         {{1350, 330,  50, 50}, 1, PURPLE},
         {{1450, 340,  30, 60}, 1, GREEN},
         {{1970, 340,  30, 60}, 1, GREEN}
@@ -212,7 +213,12 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         //Condição de colisão em objetos Universais
         if (objeto->colisao)
         {
-            if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 1)
+            if (VerificaColisaoBordaS(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo))
+            {
+                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR + 1;
+                jogador->velocidade = GRAVIDADE * delta;
+            } 
+            else if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 1)
             {
                 jogador->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2;
             }
@@ -350,6 +356,21 @@ int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float ta
     {
         return 2;
     }
+    else
+    {
+        return 0;
+    }
+}
+
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
+    Vector2 ponto_superior_esquerda = (Vector2){entidade.x - (tamanho_entidade_x / 2) + 5, entidade.y - tamanho_entidade_y - 1};
+    Vector2 ponto_superior_direita = (Vector2){entidade.x + (tamanho_entidade_x / 2) - 5, entidade.y - tamanho_entidade_y - 1};
+
+    if (CheckCollisionPointRec(ponto_superior_esquerda,objeto) ||
+        CheckCollisionPointRec(ponto_superior_direita,objeto))
+    {
+        return 1;
+    } 
     else
     {
         return 0;
