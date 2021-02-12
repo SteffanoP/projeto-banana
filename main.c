@@ -341,25 +341,24 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
 }
 
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
-    Vector2 ponto_superior_esquerdo = (Vector2){entidade.x - (tamanho_entidade_x / 2), entidade.y - tamanho_entidade_y + 1};
-    Vector2 ponto_inferior_esquerdo = (Vector2){entidade.x - (tamanho_entidade_x / 2), entidade.y - 1};
-    Vector2 ponto_superior_direito = (Vector2){entidade.x + (tamanho_entidade_x / 2), entidade.y - tamanho_entidade_y + 1};
-    Vector2 ponto_inferior_direito = (Vector2){entidade.x + (tamanho_entidade_x / 2), entidade.y - 1};
+    float ponto_superior_esquerda = entidade.x - (tamanho_entidade_x / 2);
+    float ponto_superior_direita = entidade.x + (tamanho_entidade_x / 2);
+    float ponto_superior = entidade.y - tamanho_entidade_y + 1;
+    float ponto_inferior = entidade.y - 1;
 
-    if (CheckCollisionPointRec(ponto_superior_esquerdo, objeto) ||
-        CheckCollisionPointRec(ponto_inferior_esquerdo, objeto))
+    for (float ponto = ponto_superior; ponto <= ponto_inferior; ponto++)
     {
-        return 1;
+        if (CheckCollisionPointRec((Vector2){ponto_superior_esquerda,ponto},objeto))
+        {
+            return 1;
+        }
+        if (CheckCollisionPointRec((Vector2){ponto_superior_direita,ponto},objeto))
+        {
+            return 2;
+        }
     }
-    else if (CheckCollisionPointRec(ponto_superior_direito, objeto) ||
-             CheckCollisionPointRec(ponto_inferior_direito, objeto))
-    {
-        return 2;
-    }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
