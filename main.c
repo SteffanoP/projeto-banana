@@ -237,35 +237,28 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
     } else
         jogador->podePular = true;
     
-    for (int i = 0; i < tamanhoInimigo; i++)
+    //Verifica colisão entre jogador e inimigo
+    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
+    for (int i = 0; i < tamanhoInimigo; i++) //Passa por todos os inimigos
     {
         inimigo += i;
-        if (inimigo->tipo > 0)
+        
+        Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+        //Verifica colisão entre minion e jogador
+        if (inimigo->tipo == 1)
         {
-            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
-                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            //Verifica se jogador encosta nas bordas do objeto minion
+            if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
             {
-                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
-                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
-            }
-            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
-                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
-            {
-                inimigo->tipo = 0; 
+                jogador->vida -= 1; //Jogador encosta em minion e perde vida
             } 
+            //Verifica se borda superior de minion encosta em objeto jogador
+            else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
+            {
+                inimigo->tipo = 0; //Jogador mata o minion
+            }
         }
     }
-    
 }
 
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
