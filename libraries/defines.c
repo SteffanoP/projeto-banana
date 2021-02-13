@@ -15,7 +15,7 @@
 
 //Constantes referentes aos inimigos:
 
-//Minions:
+//Minions
 #define TAMANHO_MINION_X 40 //56
 #define TAMANHO_MINION_Y 40 //81
 
