@@ -46,7 +46,7 @@ typedef struct EnvItem
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
@@ -113,8 +113,8 @@ int main()
         }
         
         //Atualiza os dados dos inimigos
-        UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
-        
+        UpdateInimigos(inimigo, envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
+
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
         //----------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         
         Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
         //Verifica colisão entre minion e jogador
-        if (inimigo->tipo == 1)
+        if (inimigo->tipo > 0)
         {
             //Verifica se jogador encosta nas bordas do objeto minion
             if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
@@ -264,8 +264,9 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
     }
 }
 
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta)
+void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta)
 {
+    Rectangle jogador_ret = {jogador->posicao.x,jogador->posicao.y,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR};
     for (int i = 0; i < tamanhoInimigos; i++)
     {
         inimigo += i;
@@ -280,10 +281,31 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
 
         if (inimigo->tipo == 2)
         {
-            if (inimigo->direcao_movimento == 0)
-                inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
-            else if (inimigo->direcao_movimento == 1)
-                inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+            if (inimigo->direcao_movimento == 0) {
+                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 1)
+                {
+                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta;
+                    jogadorRange = 1;
+                } 
+                else
+                {
+                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+                    jogadorRange = 0;
+                }
+            }
+            else if (inimigo->direcao_movimento == 1) 
+            {
+                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 2)
+                {
+                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta;
+                    jogadorRange = 2;
+                } 
+                else
+                {
+                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+                    jogadorRange = 0;
+                }    
+            }
         }
 
         //Limites da area de movimentação do inimigo no cenário
