@@ -249,18 +249,18 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         inimigo += i;
         
         Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
-        //Verifica colisão entre minion e jogador
+        //Verifica colisão entre inimigo e jogador
         if (inimigo->tipo > 0)
         {
-            //Verifica se jogador encosta nas bordas do objeto minion
+            //Verifica se jogador encosta nas bordas do objeto inimigo
             if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
             {
-                jogador->vida -= 1; //Jogador encosta em minion e perde vida
+                jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
             } 
-            //Verifica se borda superior de minion encosta em objeto jogador
+            //Verifica se borda superior do inimigo encosta em objeto jogador
             else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
             {
-                inimigo->tipo = 0; //Jogador mata o minion
+                inimigo->tipo = 0; //Jogador mata o inimigo
             }
         }
     }
@@ -273,6 +273,7 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
     {
         inimigo += i;
 
+        //Verifica se o inimigo é do tipo: minion
         if (inimigo->tipo == 1)
         {
             if (inimigo->direcao_movimento == 0)
@@ -281,27 +282,29 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
                 inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
         }
 
+        //Verifica se o inimigo é do tipo: gado
         if (inimigo->tipo == 2)
         {
+            //Verifica se o inimigo está andando para a esquerda
             if (inimigo->direcao_movimento == 0) {
-                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 1)
+                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
                 {
-                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta;
+                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
                 } 
-                else
+                else //Se não há nenhum inimigo no range a esquerda
                 {
-                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
                 }
             }
-            else if (inimigo->direcao_movimento == 1) 
+            else if (inimigo->direcao_movimento == 1) //Verifica se o inimigo está andando para a esquerda
             {
-                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 2)
+                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 2) //Verifica o range do gado a direita
                 {
-                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta;
+                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
                 } 
-                else
+                else //Se não há nenhum inimigo no range a direita
                 {
-                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
                 }    
             }
         }
