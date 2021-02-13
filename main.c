@@ -2,7 +2,6 @@
 #include "libraries/defines.c"
 
 bool colisaoJogador;
-int jogadorRange;
 
 /* Sobre o jogador:
 posicao: Posição X e Y
@@ -288,12 +287,10 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
                 if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 1)
                 {
                     inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta;
-                    jogadorRange = 1;
                 } 
                 else
                 {
                     inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
-                    jogadorRange = 0;
                 }
             }
             else if (inimigo->direcao_movimento == 1) 
@@ -301,12 +298,10 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
                 if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 2)
                 {
                     inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta;
-                    jogadorRange = 2;
                 } 
                 else
                 {
                     inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
-                    jogadorRange = 0;
                 }    
             }
         }
