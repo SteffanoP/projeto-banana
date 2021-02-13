@@ -10,7 +10,7 @@
 #define TAMANHO_X_JOGADOR 40
 #define TAMANHO_Y_JOGADOR 40
 
-#define TAMANHO_X_CENARIO 2000
+#define TAMANHO_X_CENARIO 3000
 #define TAMANHO_Y_CENARIO 400
 
 //Constantes referentes aos inimigos:
@@ -20,3 +20,13 @@
 #define TAMANHO_MINION_Y 40
 
 #define VELOCIDADE_INIMIGO_MINION 10.0f
+
+//Gado:
+#define TAMANHO_GADO_X 40
+#define TAMANHO_GADO_Y 40
+
+#define VELOCIDADE_INIMIGO_GADO_NORMAL 15.0f
+#define VELOCIDADE_INIMIGO_GADO_STRESS 30.0f
+
+//Habilidades:
+#define RANGE_GADO 100

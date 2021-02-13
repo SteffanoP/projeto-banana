@@ -67,8 +67,8 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
-        {1, {1850, 280}, 0, 0, 2, 0},
-        {1, {1950, 280}, 0, 0, 2, 0}
+        {1, {1850, 280}, 0, 0, 2, YELLOW},
+        {2, {2150, 280}, 0, 1, 2, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
@@ -135,7 +135,7 @@ int main()
             if (inimigo[i].tipo > 0)
             {
                 Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
-                DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+                DrawRectangleRec(inimigoRect, inimigo[i].cor);                                                                                                                  //Desenha o desenho do inimigo
             }
         }
 
@@ -148,6 +148,7 @@ int main()
         DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
         DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 1650, 475, 20, BLACK);
 
+        DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
         EndMode2D();
 
         EndDrawing();
@@ -273,6 +274,14 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
                 inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
             else if (inimigo->direcao_movimento == 1)
                 inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
+        }
+
+        if (inimigo->tipo == 2)
+        {
+            if (inimigo->direcao_movimento == 0)
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
+            else if (inimigo->direcao_movimento == 1)
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta;
         }
 
         //Limites da area de movimentação do inimigo no cenário
