@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "libraries/defines.c"
+#include "time.h"
 
 bool colisaoJogador;
 
@@ -67,16 +68,17 @@ typedef struct Minions
 typedef struct FPS_Animacao
 {
     int counter;
-    int speed;
+    float speed;
     int currentFrame;
 } FPS_Animacao;
 
 int updateplayer;
+clock_t t;
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
-void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos);
+void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoParado(Jogador *jogador, Personagem *personagem, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
@@ -102,7 +104,7 @@ int main()
     //Configurações Iniciais da animação do joagdor
     FPS_Animacao frames;
     frames.counter = 0; //Conta as FPS
-    frames.speed = 10;  //FPS da animação
+    frames.speed = 8;  //FPS da animação
     frames.currentFrame = 0; //Controla a passagem de frames
     Personagem personagem;
     Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
@@ -159,10 +161,10 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
-        SetTargetFPS(60);
         float deltaTime = GetFrameTime();
+        t = clock(); //Armazena o tempo
 
-        jogador.posicaoAnterior = jogador.posicao;
+        jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
 
         //Atualiza os dados do jogador
         if(updateplayer == 1)
@@ -174,7 +176,7 @@ int main()
         UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
 
         //Atualiza a animação quando o jogador e os inimigos estão em Movimento
-        AnimacaoMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo);
+        AnimacaoMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -403,15 +405,18 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
     }
 }
 
-void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador, Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos)
+void AnimacaoMovimento(FPS_Animacao *frames, Jogador *jogador, Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime)
 {
-    frames->counter++; //Armazena o valor da frame do jogo 
+    frames->counter++; //Atualiza o valor da frame do jogo
 
-    if (frames->counter >= (60/frames->speed)) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    if (frames->counter % 2 == 0) frames->currentFrame = 1;
+    else frames->currentFrame = 2; //Controle da alternância dos passos
+
+    if ((frames->counter >= (t/frames->speed)) && frames ->counter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
     {
         frames->counter = 0;
-        frames->currentFrame++;
-        if (frames->currentFrame > 2) frames->currentFrame = 1; //Controle da alternância dos passos
+        frames->speed += 0.5;
+        
         //Jogador
         if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
         {
