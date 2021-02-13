@@ -2,6 +2,7 @@
 #include "libraries/defines.c"
 
 bool colisaoJogador;
+int jogadorRange;
 
 /* Sobre o jogador:
 posicao: Posição X e Y
@@ -151,6 +152,8 @@ int main()
         DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 1650, 475, 20, BLACK);
 
         DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
+        DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 2050, 475, 20, BLACK);
+
         EndMode2D();
 
         EndDrawing();
@@ -424,7 +427,7 @@ Retorna 1 se há jogador no range a esquerda
 Retorna 2 se há jogador no range a direita
 */
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range) {
-    const float ponto_inicial_range_y = posicao_inicial.y - tamanho_gado_y; //Pega a posição superior do retângulo do gadinho
+    const float ponto_inicial_range_y = posicao_inicial.y + (tamanho_gado_y / 2); //Pega a posição central do retângulo do gadinho
     const float ponto_inicial_range_x_esquerda = posicao_inicial.x - (tamanho_gado_x / 2);
     const float ponto_inicial_range_x_direita = posicao_inicial.x + (tamanho_gado_x / 2);
 
