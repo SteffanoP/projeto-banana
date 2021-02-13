@@ -50,6 +50,7 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 
 int main()
 {
@@ -392,4 +393,33 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
     {
         return 0;
     }
+}
+
+/*
+Verifica se o jogador entra no range superior do Gado
+Retorna 0 se não há jogador no range
+Retorna 1 se há jogador no range a esquerda
+Retorna 2 se há jogador no range a direita
+*/
+int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range) {
+    const float ponto_inicial_range_y = posicao_inicial.y - tamanho_gado_y; //Pega a posição superior do retângulo do gadinho
+    const float ponto_inicial_range_x_esquerda = posicao_inicial.x - (tamanho_gado_x / 2);
+    const float ponto_inicial_range_x_direita = posicao_inicial.x + (tamanho_gado_x / 2);
+
+    //Verifica a reta que sai do ponto até o range
+    for (float ponto = 0; ponto <= range; ponto++)
+    {
+        //Verifica se há colisão no range a esquerda do jogador
+        if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_esquerda - ponto, ponto_inicial_range_y},jogador))
+        {
+            return 1;
+        }
+        //Verifica se há colisão no range a direita do jogador
+        if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_direita + ponto, ponto_inicial_range_y},jogador))
+        {
+            return 2;
+        }
+    }
+
+    return 0;
 }
