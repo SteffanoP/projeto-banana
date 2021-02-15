@@ -199,15 +199,18 @@ int main()
         {
             if (inimigo[i].tipo > 0)
             {
-                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
-                DrawRectangleRec(inimigoRect, YELLOW);   //Desenha o desenho do inimigo
+                //Desenho da hitbox do inimigo
+                DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y, YELLOW);
+                //Desenho da textura do inimigo
                 DrawTextureRec(minions.texture, minions.frameRect, (Vector2){inimigo[i].posicao.x - (minions.posicao.x - TAMANHO_MINION_X), inimigo[i].posicao.y - (minions.posicao.y - TAMANHO_MINION_X)}, RAYWHITE);
             }
         }
 
         //Criação e Desenho do jogador
-        Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
-        DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
+
+        //Desenho da hitbox do jogador
+        DrawRectangleLines(jogador.posicao.x - TAMANHO_X_JOGADOR / 2,jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, RED);
+        //Desenho da textura do jogador
         DrawTextureRec(personagem.texture, personagem.frameRect, (Vector2){jogador.posicao.x - (personagem.posicao.x + TAMANHO_X_JOGADOR), jogador.posicao.y - (personagem.posicao.y + TAMANHO_Y_JOGADOR)}, RAYWHITE);
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
