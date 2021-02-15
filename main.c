@@ -2,23 +2,28 @@
 #include "libraries/defines.c"
 
 bool colisaoJogador;
+bool colisaoPoderInimigo;
 
+/* Sobre o jogador:
+posicao: Posição X e Y
+velocidade: velocidade de movimento do jogador
+podePular: condição em que pode pular
+vida: quantidade de vidas do jogador */
 typedef struct Jogador
 {
     Vector2 posicao;
     float velocidade;
     bool podePular;
     int vida;
-    //Poder Poder; //Especificar qual o poder que um jogador tem
 } Jogador;
 
 /* Sobre os inimigos:
 tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
-
-Hitbox: Retângulo do Minion no cenário
+posicao: Posição do Minion no cenário
 velocidade: velocidade de movimentação
+direcao_movimento: direção em que se movimenta
 vida: quantidade de vidas do inimigo
 cor: Cor do inimigo
 */
@@ -37,11 +42,9 @@ typedef struct Inimigo
 posicao: posicao em relação ao jogador
 velocidade: velocidade da movimentação
 raio: raio da forma (o poder representa um círculo)
-
 poder_ativo: verificação se está ativo ou não
 cor: cor do poder */
 
-//Struct relacionada ao poder à direita do jogador
 typedef struct Poder
 {
     Vector2 posicao;
@@ -51,16 +54,6 @@ typedef struct Poder
     Color cor;
 } Poder;
 
-//Struct relacionada ao poder à esquerda do jogador
-typedef struct PoderEsq
-{
-    Vector2 posicao_Esq;
-    float velocidade_Esq;
-    float raio_Esq;
-    bool poder_ativo_Esq;
-    Color cor_Esq;
-} PoderEsq;
-
 typedef struct EnvItem
 {
     Rectangle retangulo;
@@ -68,14 +61,17 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
-static Poder poderes[PODER_MAX_PERSONAGEM] = {0};
-static PoderEsq poderesEsq[PODER_MAX_PERSONAGEM] = {0};
+static Poder poderDR[PODER_MAX_PERSONAGEM] = {0};
+static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdatePoder(Poder *poderes, PoderEsq *poderesEsq, Inimigo *inimigo, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
+int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+bool VerificaColisaoPoderInimigo(Poder *poder,Inimigo *inimigo);
 
 int main()
 {
@@ -83,7 +79,6 @@ int main()
     //--------------------------------------------------------------------------------------
 
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
-    SetTargetFPS(60);
 
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
@@ -99,24 +94,21 @@ int main()
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
-    //Configurações iniciais do poder à direita
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        poderes[p].posicao = (Vector2){0,0}; 
-        poderes[p].velocidade = 0;
-        poderes[p].raio = 10;
-        poderes[p].poder_ativo = false;
-        poderes[p].cor = BLACK;
-    }
-
-    //Configurações iniciais do poder à esquerda
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        poderesEsq[p].posicao_Esq = (Vector2){0,0}; 
-        poderesEsq[p].velocidade_Esq = 0;
-        poderesEsq[p].raio_Esq = 10;
-        poderesEsq[p].poder_ativo_Esq = false;
-        poderesEsq[p].cor_Esq = BLACK;
+        //Configurações Iniciais do poder na DIREITA
+        poderDR[p].posicao = (Vector2){0,0};
+        poderDR[p].velocidade = 0;
+        poderDR[p].raio = 10;
+        poderDR[p].poder_ativo = false;
+        poderDR[p].cor = BLACK;
+        
+        //Configurações Iniciais do poder na ESQUERDA
+        poderES[p].posicao = (Vector2){0,0};
+        poderES[p].velocidade = 0;
+        poderES[p].raio = 10;
+        poderES[p].poder_ativo = false;
+        poderES[p].cor = BLACK;
     }
 
     //Configurações Iniciais dos Elementos do Cenário
@@ -128,8 +120,7 @@ int main()
         {{650, 300, 100, 10}, 1, GRAY},
         {{900, 350,  50, 50}, 1, PURPLE},
         {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 309,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE},
+        {{1200, 308,  50, 50}, 1, PURPLE},
         {{1350, 330,  50, 50}, 1, PURPLE},
         {{1450, 340,  30, 60}, 1, GREEN},
         {{1970, 340,  30, 60}, 1, GREEN}
@@ -157,12 +148,13 @@ int main()
         {
             UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
         }
-
+        
         //Atualiza os dados dos inimigos
         UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
 
-        //Atualiza o poder do jogador
-        UpdatePoder(poderes, poderesEsq, inimigo, &jogador, envItems, envItemsLength, deltaTime);
+        //Atualiza os dados do poder
+        UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, tamanhoInimigo, deltaTime);
+        colisaoPoderInimigo = VerificaColisaoPoderInimigo(&(poderDR[0]), &(inimigo[0]));
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -181,31 +173,29 @@ int main()
         for (int i = 0; i < envItemsLength; i++)
             DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
 
-        //Desenho do poder à direita
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            if (poderes[p].poder_ativo)
-            {
-                DrawCircleV(poderes[p].posicao, poderes[p].raio, BLACK);
-            }
-        }
-
-        //Desenho do poder à esquerda
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            if (poderesEsq[p].poder_ativo_Esq)
-            {
-                DrawCircleV(poderesEsq[p].posicao_Esq, poderesEsq[p].raio_Esq, BLACK);
-            }
-        }
-
-        //Desenho dos Retângulos referentes aos inimigos
         for (int i = 0; i < tamanhoInimigo; i++)
         {
             if (inimigo[i].tipo > 0)
             {
-                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
-                DrawRectangleRec(inimigoRect, YELLOW);                                                                                                                  //Desenha o desenho do inimigo
+                //Desenho do inimigo
+                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; 
+                
+                DrawRectangleRec(inimigoRect, YELLOW); //Desenha o desenho do inimigo
+            }
+        }
+
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            //Desenho do poder a direita
+            if (poderDR[p].poder_ativo)
+            {
+                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
+            }
+
+            //Desenho do poder a esquerda
+            if (poderES[p].poder_ativo)
+            {
+                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
             }
         }
 
@@ -214,6 +204,9 @@ int main()
         DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
 
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
+
+        DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
+        DrawText(FormatText("Colisão PoderInimigo: %01i",colisaoPoderInimigo), 1650, 475, 20, BLACK);
 
         EndMode2D();
 
@@ -226,9 +219,10 @@ int main()
     //--------------------------------------------------------------------------------------
 
     return 0;
-} 
+}
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta){
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+{  
     if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
@@ -275,30 +269,23 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
             jogador->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele             
             j->y = objeto->retangulo.y; //Atualiza a variável do movimento
         }
-        
+
         //Condição de colisão em objetos Universais
-        if (objeto->colisao && //Detecta se o objeto é colidível
-            objeto->retangulo.x - TAMANHO_X_JOGADOR/2 <= j->x && //Detecta a borda esquerda do objeto
-            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR/2 >= j->x && //Detecta a borda direita do objeto
-            objeto->retangulo.y < j->y && //Detecta colisão acima do objeto
-            objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta colisão abaixo do objeto
+        if (objeto->colisao)
         {
-            if (objeto->retangulo.x - TAMANHO_X_JOGADOR / 2 <= j->x &&
-                objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+            if (VerificaColisaoBordaS(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo))
             {
-                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
-            }
-            else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2 >= j->x &&
-                     objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
+                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR + 1;
+                jogador->velocidade = GRAVIDADE * delta;
+            } 
+            else if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 1)
             {
                 jogador->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_X_JOGADOR / 2;
             }
-            else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR > j->y) //Detecta a colisão abaixo do objeto
+            else if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 2)
             {
-                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR;
-                jogador->velocidade = GRAVIDADE * delta;
+                jogador->posicao.x = objeto->retangulo.x - TAMANHO_X_JOGADOR / 2;
             }
-            colisaoJogador = 1;
         }
     }
 
@@ -309,33 +296,27 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
-
-    for (int i = 0; i < tamanhoInimigo; i++)
+    
+    //Verifica colisão entre jogador e inimigo
+    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
+    for (int i = 0; i < tamanhoInimigo; i++) //Passa por todos os inimigos
     {
         inimigo += i;
-        if (inimigo->tipo > 0)
+        
+        Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+        //Verifica colisão entre minion e jogador
+        if (inimigo->tipo == 1)
         {
-            if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                inimigo->posicao.y - TAMANHO_MINION_Y < jogador->posicao.y &&
-                inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
+            //Verifica se jogador encosta nas bordas do objeto minion
+            if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
             {
-                if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
-                else if (inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x)
-                {
-                    jogador->vida -= 1;
-                }
-            }
-            else if (inimigo->posicao.x - (TAMANHO_MINION_X / 2) - (TAMANHO_X_JOGADOR / 2) < jogador->posicao.x &&
-                     inimigo->posicao.x + (TAMANHO_MINION_X / 2) + (TAMANHO_X_JOGADOR / 2) >= jogador->posicao.x &&
-                     inimigo->posicao.y - TAMANHO_MINION_Y - 1 <= jogador->posicao.y &&
-                     inimigo->posicao.y + TAMANHO_Y_JOGADOR > jogador->posicao.y)
-            {
-                inimigo->tipo = 0; 
+                jogador->vida -= 1; //Jogador encosta em minion e perde vida
             } 
+            //Verifica se borda superior de minion encosta em objeto jogador
+            else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
+            {
+                inimigo->tipo = 0; //Jogador mata o minion
+            }
         }
     }
 }
@@ -348,9 +329,9 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
 
         if (inimigo->tipo == 1)
         {
-            if (inimigo->direcao_movimento == 0)
+            if (inimigo->direcao_movimento == 0) //Movimento para a ESQUERDA
                 inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
-            else if (inimigo->direcao_movimento == 1)
+            else if (inimigo->direcao_movimento == 1) //Movimento para a DIREITA
                 inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
         }
 
@@ -385,31 +366,37 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
             }
 
             //Condição de colisão em objetos Universais
-            if (objeto->colisao &&                                                               //Detecta se o objeto é colidível
-                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           //Detecta a borda esquerda do objeto
-                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && //Detecta a borda direita do objeto
-                objeto->retangulo.y < j->y &&                                                    //Detecta colisão acima do objeto
-                objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y)       //Detecta colisão abaixo do objeto
+            if (objeto->colisao)
             {
-                if (objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&
-                    objeto->retangulo.x > j->x) //Detecta a colisão com a esquerda do objeto
+                if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 1)
                 {
-                    inimigo->posicao.x = objeto->retangulo.x - TAMANHO_MINION_X / 2;
-                    inimigo->direcao_movimento = 0;
-                }
-                else if (objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x &&
-                        objeto->retangulo.x + objeto->retangulo.width < j->x) //Detecta a colisão a direita do objeto
-                {
-                    inimigo->posicao.x = objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2;
                     inimigo->direcao_movimento = 1;
                 }
-                else if (objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y > j->y) //Detecta a colisão abaixo do objeto
+                else if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 2)
                 {
-                    inimigo->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_MINION_Y;
-                    inimigo->velocidade = GRAVIDADE * delta;
+                    inimigo->direcao_movimento = 0;
                 }
+                
             }
         }
+
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
+        {
+            Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+
+            //Colisão do lado DIREITO
+            if (CheckCollisionCircleRec(poderDR->posicao,poderDR->raio,inimigoRect)) {
+                poderDR->poder_ativo = false;
+                inimigo[i].tipo = 0;
+            }
+
+            //Colisão do lado ESQUERDO
+            if (CheckCollisionCircleRec(poderES->posicao,poderES->raio,inimigoRect)) {
+                poderES->poder_ativo = false;
+                inimigo[i].tipo = 0;
+            }
+        }
+        
 
         if (!colisaoObjeto) //Se não há colisão com objeto
         {
@@ -419,78 +406,78 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
     }
 }
 
-void UpdatePoder(Poder *poderes, PoderEsq *poderesEsq, Inimigo *inimigo, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta) {
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, float delta){
 
-    //Usando o poder na DIREITA
-    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x < inimigo->posicao.x)
+    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x < inimigo->posicao.x) //Poder seguindo para a DIREITA
     {
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
         {
-            if (!poderes[p].poder_ativo) //Caso não haja poder ativo, seta as configurações abaixo
-            { 
-                poderes[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 10, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
-                poderes[p].poder_ativo = true;
-                poderes[p].velocidade = JOGADOR_MOVIMENTO_VELOCIDADE;
+            if (!poderDR[p].poder_ativo)
+            {
+                poderDR[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderDR[p].poder_ativo = true;
+                poderDR[p].velocidade = PODER_MOVIMENTO_VELOCIDADE;
                 break;
             }
         }
     }
-
+    
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        if (poderes[p].poder_ativo) //Caso haja poder ativo
+        if (poderDR[p].poder_ativo)
         {
-            poderes[p].posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é incrementada
-
-            for (int i = 0; i < envItemsLength; i++)
-            {
-                EnvItem *objeto = envItems + 1;
-                if (objeto[i].colisao && CheckCollisionCircleRec(poderes[p].posicao, poderes[p].raio, objeto[i].retangulo))
-                {
-                    poderes[p].poder_ativo = false;
-                }
-            }
+            poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
             
-            if (poderes[p].posicao.x > TAMANHO_X_CENARIO + poderes[p].raio) //Movimentação da bola atirada é limitada até o fim do cenário
-            {                                                               //no lado direito, então desaparece
-                poderes[p].poder_ativo = false;
+            for (int i = 0; i < tamanhoInimigo; i++)
+            {
+                for (int o = 0; o < envItemsLength; o++)
+                {
+                    EnvItem *objeto = envItems + 1;
+                    if (objeto[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, objeto[o].retangulo))
+                    {
+                        poderDR[p].poder_ativo = false;
+                    }
+                    if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
+                    {
+                        poderDR[p].poder_ativo = false;
+                    }
+                }
             }
         }
     }
 
-    //Usando o poder na ESQUERDA
-    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x > inimigo->posicao.x) 
+    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x > inimigo->posicao.x) //Poder seguindo para a ESQUERDA
     {
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
         {
-            if (!poderesEsq[p].poder_ativo_Esq) //Caso não haja poder ativo, seta as configurações abaixo
-            { 
-                poderesEsq[p].posicao_Esq = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
-                poderesEsq[p].poder_ativo_Esq = true;
-                poderesEsq[p].velocidade_Esq = JOGADOR_MOVIMENTO_VELOCIDADE;
+            if (!poderES[p].poder_ativo)
+            {
+                poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderES[p].poder_ativo = true;
+                poderES[p].velocidade = PODER_MOVIMENTO_VELOCIDADE;
                 break;
             }
         }
     }
-
+    
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        if (poderesEsq[p].poder_ativo_Esq) //Caso haja poder ativo
+        if (poderES[p].poder_ativo)
         {
-            poderesEsq[p].posicao_Esq.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Posição é decrementada  
+            poderES[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta;
 
-            for (int i = 0; i < envItemsLength; i++)
+            for (int o = 0; o < envItemsLength; o++)
             {
                 EnvItem *objeto = envItems + 1;
-                if (objeto[i].colisao && CheckCollisionCircleRec(poderesEsq[p].posicao_Esq, poderesEsq[p].raio_Esq, objeto[i].retangulo))
+                if (objeto[o].colisao && CheckCollisionCircleRec(poderES[p].posicao, poderES[p].raio, objeto[o].retangulo))
                 {
-                    poderesEsq[p].poder_ativo_Esq = false;
+                    poderES[p].poder_ativo = false;
                 }
-            }
-
-            if (poderesEsq[p].posicao_Esq.x < 0 - poderesEsq[p].raio_Esq) //Lado esquerdo do cenário é o limite do poder, então este desaparece
-            {
-                poderesEsq[p].poder_ativo_Esq = false;
+                
+                if (poderES[p].posicao.x < 0 - poderES[p].raio)
+                {
+                    poderES[p].poder_ativo = false;
+                }
             }
         }
     }
@@ -500,4 +487,65 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
 {
     camera->offset = (Vector2){width / 2, height / 2};
     camera->target = jogador->posicao;
+}
+
+/*
+Verifica se há colisão com as bordas Esquerda e Direita de uma Entidade com um objeto
+Retorna 0 se não há colisão
+Retorna 1 se há colisão com borda esquerda
+Retorna 2 se há colisão com borda direita
+*/
+int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
+    const float ponto_superior_esquerda = entidade.x - (tamanho_entidade_x / 2);
+    const float ponto_superior_direita = entidade.x + (tamanho_entidade_x / 2);
+    const float ponto_superior = entidade.y - tamanho_entidade_y + 1;
+    const float ponto_inferior = entidade.y - 1;
+
+    //Verifica a reta (conjunto de ~infinitos~ pontos) do ponto superior ao inferior
+    for (float ponto = ponto_superior; ponto <= ponto_inferior; ponto++)
+    {
+        //Verifica se há colisão com borda/reta esquerda
+        if (CheckCollisionPointRec((Vector2){ponto_superior_esquerda,ponto},objeto))
+        {
+            return 1;
+        }
+        //Verifica se há colisão com borda/reta direita
+        if (CheckCollisionPointRec((Vector2){ponto_superior_direita,ponto},objeto))
+        {
+            return 2;
+        }
+    }
+
+    return 0;
+}
+
+/*
+Verifica se há colisão com a borda superior de uma Entidade com um objeto
+Retorna 0 se não há colisão
+Retorna 1 se há colisão com borda superior
+*/
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
+    Vector2 ponto_superior_esquerda = (Vector2){entidade.x - (tamanho_entidade_x / 2) + 5, entidade.y - tamanho_entidade_y - 1};
+    Vector2 ponto_superior_direita = (Vector2){entidade.x + (tamanho_entidade_x / 2) - 5, entidade.y - tamanho_entidade_y - 1};
+
+    //Verifica a colisão entre 2 pontos superiores da entidade
+    if (CheckCollisionPointRec(ponto_superior_esquerda,objeto) ||
+        CheckCollisionPointRec(ponto_superior_direita,objeto))
+    {
+        return 1;
+    } 
+    else
+    {
+        return 0;
+    }
+}
+
+bool VerificaColisaoPoderInimigo(Poder *poder,Inimigo *inimigo) {
+    Rectangle ret_inimigo = {inimigo->posicao.x,inimigo->posicao.y,TAMANHO_MINION_X,TAMANHO_MINION_Y};
+
+    if (CheckCollisionCircleRec(poder->posicao,poder->raio,ret_inimigo)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
