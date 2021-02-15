@@ -12,7 +12,9 @@
 
 //Constante Poder
 #define PODER_MAX_PERSONAGEM 10
+#define PODER_MOVIMENTO_VELOCIDADE 700
 
+//Cenário e objetos
 #define TAMANHO_X_CENARIO 2000
 #define TAMANHO_Y_CENARIO 400
 
