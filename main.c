@@ -382,7 +382,8 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
 
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
         {
-            Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+            if (inimigo->tipo > 0)
+            {
 
             //Colisão do lado DIREITO
             if (CheckCollisionCircleRec(poderDR->posicao,poderDR->raio,inimigoRect)) {
