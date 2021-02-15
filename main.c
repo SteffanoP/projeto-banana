@@ -2,19 +2,21 @@
 #include "libraries/defines.c"
 
 bool colisaoJogador;
-bool colisaoPoderInimigo;
 
 /* Sobre o jogador:
 posicao: Posição X e Y
 velocidade: velocidade de movimento do jogador
 podePular: condição em que pode pular
-vida: quantidade de vidas do jogador */
+vida: quantidade de vidas do jogador 
+direcao_movimento = player segue para a direita ou esquerda */
 typedef struct Jogador
 {
     Vector2 posicao;
+    Vector2 posicaoAnterior;
     float velocidade;
     bool podePular;
     int vida;
+    int direcao_movimento;
 } Jogador;
 
 /* Sobre os inimigos:
@@ -71,7 +73,6 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
-bool VerificaColisaoPoderInimigo(Poder *poder,Inimigo *inimigo);
 
 int main()
 {
@@ -86,6 +87,7 @@ int main()
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
     jogador.vida = 1;
+    jogador.direcao_movimento = 1;
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
@@ -142,6 +144,8 @@ int main()
         // Update
         //----------------------------------------------------------------------------------
         float deltaTime = GetFrameTime();
+
+        jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
         
         //Atualiza os dados do jogador
         if (jogador.vida > 0)
@@ -154,7 +158,6 @@ int main()
 
         //Atualiza os dados do poder
         UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, tamanhoInimigo, deltaTime);
-        colisaoPoderInimigo = VerificaColisaoPoderInimigo(&(poderDR[0]), &(inimigo[0]));
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -223,17 +226,21 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
 {  
-    if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
+    if (IsKeyDown(KEY_LEFT) && jogador->vida > 0){ //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+        jogador->direcao_movimento = 0;
+    }
+    if (IsKeyDown(KEY_RIGHT)){ //Movimentação para a Direita
         jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+        jogador->direcao_movimento = 1;
+    }
 
-    if (IsKeyDown(KEY_UP) && jogador->podePular)
+    if (IsKeyDown(KEY_UP) && jogador->podePular && jogador->vida > 0)
     {
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->podePular = false;
     }
-    
+
     //Limites da area de movimentação do jogador
     if ((jogador->posicao.x + TAMANHO_X_JOGADOR / 2) > TAMANHO_X_CENARIO)
     {
@@ -380,22 +387,22 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
             }
         }
 
+        //Verifica a colisão entre o Poder e o Inimigo
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
         {
             if (inimigo->tipo > 0)
             {
+                //Desenho do inimigo
                 Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
-                //Colisão do lado DIREITO
-                if (CheckCollisionCircleRec(poderDR->posicao,poderDR->raio,inimigoRect)) {
-                    poderDR->poder_ativo = false;
-                    inimigo->tipo = 0;
+                if (CheckCollisionCircleRec(poderDR->posicao, poderDR->raio, inimigoRect)) {  //Colisão do lado DIREITO
+                    poderDR->poder_ativo = false; //Poder "desaparece" ao colidir
+                    inimigo->tipo = 0; //Inimigo morre
                 }
 
-                //Colisão do lado ESQUERDO
-                if (CheckCollisionCircleRec(poderES->posicao,poderES->raio,inimigoRect)) {
-                    poderES->poder_ativo = false;
-                    inimigo->tipo = 0;
+                if (CheckCollisionCircleRec(poderES->posicao, poderES->raio, inimigoRect)) {  //Colisão do lado ESQUERDO
+                    poderES->poder_ativo = false; //Poder "desaparece" ao colidir
+                    inimigo->tipo = 0; //Inimigo morre
                 }
             }
         }
@@ -411,8 +418,8 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
 
 void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, float delta){
 
-    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x < inimigo->posicao.x) //Poder seguindo para a DIREITA
-    {
+    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 1) //Poder seguindo para a DIREITA de acordo
+    {                                                               //com a direção do jogador
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
         {
             if (!poderDR[p].poder_ativo)
@@ -449,8 +456,8 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
         }
     }
 
-    if (IsKeyPressed(KEY_SPACE) && jogador->posicao.x > inimigo->posicao.x) //Poder seguindo para a ESQUERDA
-    {
+    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 0) //Poder seguindo para a ESQUERDA de acordo
+    {                                                               //com a direção do jogador
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
         {
             if (!poderES[p].poder_ativo)
@@ -539,16 +546,6 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
     } 
     else
     {
-        return 0;
-    }
-}
-
-bool VerificaColisaoPoderInimigo(Poder *poder,Inimigo *inimigo) {
-    Rectangle ret_inimigo = {inimigo->posicao.x,inimigo->posicao.y,TAMANHO_MINION_X,TAMANHO_MINION_Y};
-
-    if (CheckCollisionCircleRec(poder->posicao,poder->raio,ret_inimigo)) {
-        return 1;
-    } else {
         return 0;
     }
 }
