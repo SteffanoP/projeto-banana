@@ -384,17 +384,19 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
         {
             if (inimigo->tipo > 0)
             {
+                Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
-            //Colisão do lado DIREITO
-            if (CheckCollisionCircleRec(poderDR->posicao,poderDR->raio,inimigoRect)) {
-                poderDR->poder_ativo = false;
-                inimigo[i].tipo = 0;
-            }
+                //Colisão do lado DIREITO
+                if (CheckCollisionCircleRec(poderDR->posicao,poderDR->raio,inimigoRect)) {
+                    poderDR->poder_ativo = false;
+                    inimigo->tipo = 0;
+                }
 
-            //Colisão do lado ESQUERDO
-            if (CheckCollisionCircleRec(poderES->posicao,poderES->raio,inimigoRect)) {
-                poderES->poder_ativo = false;
-                inimigo[i].tipo = 0;
+                //Colisão do lado ESQUERDO
+                if (CheckCollisionCircleRec(poderES->posicao,poderES->raio,inimigoRect)) {
+                    poderES->poder_ativo = false;
+                    inimigo->tipo = 0;
+                }
             }
         }
         
