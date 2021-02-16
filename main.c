@@ -50,7 +50,6 @@ cor: cor do poder */
 typedef struct Poder
 {
     Vector2 posicao;
-    float velocidade;
     float raio;
     bool poder_ativo;
     Color cor;
@@ -69,7 +68,7 @@ static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, float delta);
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
@@ -100,14 +99,12 @@ int main()
     {
         //Configurações Iniciais do poder na DIREITA
         poderDR[p].posicao = (Vector2){0,0};
-        poderDR[p].velocidade = 0;
         poderDR[p].raio = 10;
         poderDR[p].poder_ativo = false;
         poderDR[p].cor = BLACK;
         
         //Configurações Iniciais do poder na ESQUERDA
         poderES[p].posicao = (Vector2){0,0};
-        poderES[p].velocidade = 0;
         poderES[p].raio = 10;
         poderES[p].poder_ativo = false;
         poderES[p].cor = BLACK;
@@ -157,7 +154,7 @@ int main()
         UpdateInimigos(inimigo, envItems, tamanhoInimigo, envItemsLength, deltaTime);
 
         //Atualiza os dados do poder
-        UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, tamanhoInimigo, deltaTime);
+        UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, deltaTime);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -209,7 +206,6 @@ int main()
         DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
         DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
-        DrawText(FormatText("Colisão PoderInimigo: %01i",colisaoPoderInimigo), 1650, 475, 20, BLACK);
 
         EndMode2D();
 
@@ -416,7 +412,7 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, in
     }
 }
 
-void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, float delta){
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta){
 
     if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 1) //Poder seguindo para a DIREITA de acordo
     {                                                               //com a direção do jogador
@@ -426,7 +422,6 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
             {
                 poderDR[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
                 poderDR[p].poder_ativo = true;
-                poderDR[p].velocidade = PODER_MOVIMENTO_VELOCIDADE;
                 break;
             }
         }
@@ -438,19 +433,16 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
         {
             poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
             
-            for (int i = 0; i < tamanhoInimigo; i++)
+            for (int o = 0; o < envItemsLength; o++)
             {
-                for (int o = 0; o < envItemsLength; o++)
+                EnvItem *objeto = envItems + 1;
+                if (objeto[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, objeto[o].retangulo))
                 {
-                    EnvItem *objeto = envItems + 1;
-                    if (objeto[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, objeto[o].retangulo))
-                    {
-                        poderDR[p].poder_ativo = false;
-                    }
-                    if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
-                    {
-                        poderDR[p].poder_ativo = false;
-                    }
+                    poderDR[p].poder_ativo = false;
+                }
+                if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
+                {
+                    poderDR[p].poder_ativo = false;
                 }
             }
         }
@@ -464,7 +456,6 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
             {
                 poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
                 poderES[p].poder_ativo = true;
-                poderES[p].velocidade = PODER_MOVIMENTO_VELOCIDADE;
                 break;
             }
         }
