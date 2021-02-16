@@ -44,12 +44,35 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
+//Cenário Principal
+EnvItem envItems[20] = {0};
+int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
+
+//Cenário de Testes
+EnvItem cenarioTeste[] = {
+    {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
+    {{0, 400, 2000, 200}, 1, GRAY},
+    {{300, 200, 400, 10}, 1, GRAY},
+    {{250, 300, 100, 10}, 1, GRAY},
+    {{650, 300, 100, 10}, 1, GRAY},
+    {{900, 350, 50, 50}, 1, PURPLE},
+    {{1050, 311, 50, 50}, 1, PURPLE},
+    {{1200, 308, 50, 50}, 1, PURPLE},
+    {{1350, 330, 50, 50}, 1, PURPLE},
+    {{1450, 340, 30, 60}, 1, GREEN},
+    {{1970, 340, 30, 60}, 1, GREEN}
+};
+const int tamanhoCenarioTeste = sizeof(cenarioTeste) / sizeof(cenarioTeste[0]);
+
+bool momento_transicao = 0;
+
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+void CarregaCenario(EnvItem *cenario, int tamanhoCenario, EnvItem *loadCenario, int tamanhoLoadCenario);
 
 int main()
 {
@@ -72,21 +95,8 @@ int main()
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
-    //Configurações Iniciais dos Elementos do Cenário
-    EnvItem envItems[] = {
-        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 2000, 200}, 1, GRAY},
-        {{300, 200, 400, 10}, 1, GRAY},
-        {{250, 300, 100, 10}, 1, GRAY},
-        {{650, 300, 100, 10}, 1, GRAY},
-        {{900, 350,  50, 50}, 1, PURPLE},
-        {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 308,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE},
-        {{1450, 340,  30, 60}, 1, GREEN},
-        {{1970, 340,  30, 60}, 1, GREEN}
-    };
-    int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
+    //Configura cenário inicial
+    CarregaCenario(envItems, envItemsLength, cenarioTeste, tamanhoCenarioTeste);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
@@ -382,4 +392,13 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
     {
         return 0;
     }
+}
+
+void CarregaCenario(EnvItem *cenario, int tamanhoCenario, EnvItem *loadCenario, int tamanhoLoadCenario)
+{
+    for (int i = 0; i < tamanhoLoadCenario; i++)
+    {
+        cenario[i] = loadCenario[i];
+    }
+    tamanhoCenario = tamanhoLoadCenario;
 }
