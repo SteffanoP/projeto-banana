@@ -420,30 +420,9 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
         {
             if (!poderDR[p].poder_ativo)
             {
-                poderDR[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderDR[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
                 poderDR[p].poder_ativo = true;
                 break;
-            }
-        }
-    }
-    
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        if (poderDR[p].poder_ativo)
-        {
-            poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
-            
-            for (int o = 0; o < envItemsLength; o++)
-            {
-                EnvItem *objeto = envItems + 1;
-                if (objeto[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, objeto[o].retangulo))
-                {
-                    poderDR[p].poder_ativo = false;
-                }
-                if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
-                {
-                    poderDR[p].poder_ativo = false;
-                }
             }
         }
     }
@@ -454,7 +433,7 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
         {
             if (!poderES[p].poder_ativo)
             {
-                poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2) + 20, jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
                 poderES[p].poder_ativo = true;
                 break;
             }
@@ -463,14 +442,32 @@ void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inim
     
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
+        
+        if (poderDR[p].poder_ativo)
+        {
+            poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
+            
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, envItems[o].retangulo))
+                {
+                    poderDR[p].poder_ativo = false;
+                }
+                if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
+                {
+                    poderDR[p].poder_ativo = false;
+                }
+            }
+        }
+
         if (poderES[p].poder_ativo)
         {
             poderES[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta;
 
             for (int o = 0; o < envItemsLength; o++)
             {
-                EnvItem *objeto = envItems + 1;
-                if (objeto[o].colisao && CheckCollisionCircleRec(poderES[p].posicao, poderES[p].raio, objeto[o].retangulo))
+                //EnvItem *objeto = envItems + 1;
+                if (envItems[o].colisao && CheckCollisionCircleRec(poderES[p].posicao, poderES[p].raio, envItems[o].retangulo))
                 {
                     poderES[p].poder_ativo = false;
                 }
