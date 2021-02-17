@@ -69,7 +69,7 @@ static Poder poderDR[PODER_MAX_PERSONAGEM] = {0};
 static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
 
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
@@ -152,7 +152,7 @@ int main()
         //Atualiza os dados do jogador
         if (jogador.vida > 0)
         {
-            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+            UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
         }
         
         //Atualiza os dados dos inimigos
@@ -232,7 +232,7 @@ int main()
     return 0;
 }
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {  
 
     if (IsKeyDown(KEY_LEFT)){ //Movimentação para a Esquerda
@@ -312,33 +312,12 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
-    
-    //Verifica colisão entre jogador e inimigo
-    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
-    for (int i = 0; i < tamanhoInimigo; i++) //Passa por todos os inimigos
-    {
-        inimigo += i;
-        
-        Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
-        //Verifica colisão entre inimigo e jogador
-        if (inimigo->tipo > 0)
-        {
-            //Verifica se jogador encosta nas bordas do objeto inimigo
-            if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
-            {
-                jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
-            } 
-            //Verifica se borda superior do inimigo encosta em objeto jogador
-            else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
-            {
-                inimigo->tipo = 0; //Jogador mata o inimigo
-            }
-        }
-    }
+
 }
 
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta)
 {
+    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR};
     Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
     //Verifica se o inimigo é do tipo: minion
@@ -441,11 +420,26 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
             }
         }
     }
-        if (!colisaoObjeto) //Se não há colisão com objeto
+
+    //Verifica colisão entre inimigo e jogador
+    if (inimigo->tipo > 0)
+    {
+        //Verifica se jogador encosta nas bordas do objeto inimigo
+        if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, ret_inimigo) != 0)
         {
-            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
-            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+            jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
         }
+        //Verifica se borda superior do inimigo encosta em objeto jogador
+        else if (VerificaColisaoBordaS(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, ret_jogador))
+        {
+            inimigo->tipo = 0; //Jogador mata o inimigo
+        }
+    }
+
+    if (!colisaoObjeto) //Se não há colisão com objeto
+    {
+        inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
+        inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
     }
 }
 
