@@ -15,7 +15,7 @@
 #define PODER_MOVIMENTO_VELOCIDADE 700
 
 
-#define TAMANHO_X_CENARIO 2000
+#define TAMANHO_X_CENARIO 3000
 #define TAMANHO_Y_CENARIO 400
 
 //Constantes referentes aos inimigos:
