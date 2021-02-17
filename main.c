@@ -8,7 +8,9 @@ bool colisaoJogador;
 posicao: Posição X e Y
 velocidade: velocidade de movimento do jogador
 podePular: condição em que pode pular
-vida: quantidade de vidas do jogador */
+vida: quantidade de vidas do jogador 
+direcao_movimento = player segue para a direita ou esquerda */
+
 typedef struct Jogador
 {
     Vector2 posicao;
@@ -39,6 +41,22 @@ typedef struct Inimigo
     int vida;
     Color cor;
 } Inimigo;
+
+/* Sobre os poderes:
+
+posicao: posicao em relação ao jogador
+velocidade: velocidade da movimentação
+raio: raio da forma (o poder representa um círculo)
+poder_ativo: verificação se está ativo ou não
+cor: cor do poder */
+
+typedef struct Poder
+{
+    Vector2 posicao;
+    float raio;
+    bool poder_ativo;
+    Color cor;
+} Poder;
 
 typedef struct EnvItem
 {
@@ -86,8 +104,12 @@ clock_t t;
 time_t s;
 time_t sc;
 
+static Poder poderDR[PODER_MAX_PERSONAGEM] = {0};
+static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
+
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
@@ -114,6 +136,7 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
     jogador.vida = 1;
     jogador.direcao_movimento = 1;
+
     
     //Configurações Iniciais da animação do joagdor
     FPS_Animacao frames;
@@ -128,6 +151,21 @@ int main()
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - TAMANHO_X_JOGADOR; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - TAMANHO_Y_JOGADOR; //Posiçâo y do personagem em relação à posição y do jogador
+
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        //Configurações Iniciais do poder na DIREITA
+        poderDR[p].posicao = (Vector2){0,0};
+        poderDR[p].raio = 10;
+        poderDR[p].poder_ativo = false;
+        poderDR[p].cor = BLACK;
+        
+        //Configurações Iniciais do poder na ESQUERDA
+        poderES[p].posicao = (Vector2){0,0};
+        poderES[p].raio = 10;
+        poderES[p].poder_ativo = false;
+        poderES[p].cor = BLACK;
+    }
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
@@ -160,7 +198,7 @@ int main()
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
         {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 2000, 200}, 1, GRAY},
+        {{0, 400, 3000, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
         {{650, 300, 100, 10}, 1, GRAY},
@@ -169,7 +207,8 @@ int main()
         {{1200, 308,  50, 50}, 1, PURPLE},
         {{1350, 330,  50, 50}, 1, PURPLE},
         {{1450, 340,  30, 60}, 1, GREEN},
-        {{1970, 340,  30, 60}, 1, GREEN}
+        {{1970, 340,  30, 60}, 1, GREEN},
+        {{2490, 340,  30, 60}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -209,6 +248,9 @@ int main()
 
         //Atualiza a animação do inimigo
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
+      
+        //Atualiza os dados do poder
+        UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, deltaTime);      
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -216,8 +258,11 @@ int main()
 
         // Draw
         //----------------------------------------------------------------------------------
+
         Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
+
         //----------------------------------------------------------------------------------
+      
         //Atualiza a animação quando o jogador está parado
         AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
     }
@@ -233,26 +278,26 @@ int main()
     //--------------------------------------------------------------------------------------
 
     return 0;
-} 
+}
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
 {
     if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
-        {
-            jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-            jogador->direcao_movimento = 0;
-        }
+    {
+        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
+        jogador->direcao_movimento = 0;
+    }
     if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
-        {
-            jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
-            jogador->direcao_movimento = 1;
-        }
+    {
+        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+        jogador->direcao_movimento = 1;
+    }
     if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
     {
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->podePular = false;
     }
-    
+
     //Limites da area de movimentação do jogador
     if ((jogador->posicao.x + TAMANHO_X_JOGADOR / 2) > TAMANHO_X_CENARIO)
     {
@@ -272,7 +317,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
 
     colisaoJogador = 0;
     int colisaoObjeto = 0;
-    for (int i = 0; i < envItemsLength; i++) //Preechimento da áre dos pixels dos objetos colidiveis
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
     {
         EnvItem *objeto = envItems + i;
         Vector2 *j = &(jogador->posicao);
@@ -323,18 +368,18 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         inimigo += i;
         
         Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
-        //Verifica colisão entre minion e jogador
-        if (inimigo->tipo == 1)
+        //Verifica colisão entre inimigo e jogador
+        if (inimigo->tipo > 0)
         {
-            //Verifica se jogador encosta nas bordas do objeto minion
+            //Verifica se jogador encosta nas bordas do objeto inimigo
             if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
             {
-                jogador->vida -= 1; //Jogador encosta em minion e perde vida
+                jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
             } 
-            //Verifica se borda superior de minion encosta em objeto jogador
+            //Verifica se borda superior do inimigo encosta em objeto jogador
             else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
             {
-                inimigo->tipo = 0; //Jogador mata o minion
+                inimigo->tipo = 0; //Jogador mata o inimigo
             }
         }
     }
@@ -427,6 +472,26 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
             }
         }
 
+        //Verifica a colisão entre o Poder e o Inimigo
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
+        {
+            if (inimigo->tipo > 0)
+            {
+                //Desenho do inimigo
+                Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+
+                if (CheckCollisionCircleRec(poderDR->posicao, poderDR->raio, inimigoRect)) {  //Colisão do lado DIREITO
+                    poderDR->poder_ativo = false; //Poder "desaparece" ao colidir
+                    inimigo->tipo = 0; //Inimigo morre
+                }
+
+                if (CheckCollisionCircleRec(poderES->posicao, poderES->raio, inimigoRect)) {  //Colisão do lado ESQUERDO
+                    poderES->poder_ativo = false; //Poder "desaparece" ao colidir
+                    inimigo->tipo = 0; //Inimigo morre
+                }
+            }
+        }
+        
         if (!colisaoObjeto) //Se não há colisão com objeto
         {
             inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
@@ -617,6 +682,21 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (gados->posicao.y - TAMANHO_GADO_X)}, RAYWHITE);
         }
     }
+    
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            //Desenho do poder a direita
+            if (poderDR[p].poder_ativo)
+            {
+                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
+            }
+
+            //Desenho do poder a esquerda
+            if (poderES[p].poder_ativo)
+            {
+                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
+            }
+        }
 
     //Criação e Desenho do jogador
 
@@ -636,6 +716,75 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     EndMode2D();
 
     EndDrawing();
+}
+
+void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta){
+
+    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 1) //Poder seguindo para a DIREITA de acordo
+    {                                                               //com a direção do jogador
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (!poderDR[p].poder_ativo)
+            {
+                poderDR[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderDR[p].poder_ativo = true;
+                break;
+            }
+        }
+    }
+
+    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 0) //Poder seguindo para a ESQUERDA de acordo
+    {                                                               //com a direção do jogador
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            if (!poderES[p].poder_ativo)
+            {
+                poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
+                poderES[p].poder_ativo = true;
+                break;
+            }
+        }
+    }
+    
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        
+        if (poderDR[p].poder_ativo)
+        {
+            poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
+            
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, envItems[o].retangulo))
+                {
+                    poderDR[p].poder_ativo = false;
+                }
+                if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
+                {
+                    poderDR[p].poder_ativo = false;
+                }
+            }
+        }
+
+        if (poderES[p].poder_ativo)
+        {
+            poderES[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta;
+
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                //EnvItem *objeto = envItems + 1;
+                if (envItems[o].colisao && CheckCollisionCircleRec(poderES[p].posicao, poderES[p].raio, envItems[o].retangulo))
+                {
+                    poderES[p].poder_ativo = false;
+                }
+                
+                if (poderES[p].posicao.x < 0 - poderES[p].raio)
+                {
+                    poderES[p].poder_ativo = false;
+                }
+            }
+        }
+    }
 }
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
@@ -694,6 +843,7 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
         return 0;
     }
 }
+
 /*
 Verifica se o jogador entra no range superior do Gado
 Retorna 0 se não há jogador no range

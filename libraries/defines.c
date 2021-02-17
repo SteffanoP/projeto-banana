@@ -10,7 +10,12 @@
 #define TAMANHO_X_JOGADOR 40 //40
 #define TAMANHO_Y_JOGADOR 40 //132
 
-#define TAMANHO_X_CENARIO 2000
+//Constante Poder
+#define PODER_MAX_PERSONAGEM 10
+#define PODER_MOVIMENTO_VELOCIDADE 700
+
+
+#define TAMANHO_X_CENARIO 3000
 #define TAMANHO_Y_CENARIO 400
 
 //Constantes referentes aos inimigos:
@@ -24,6 +29,7 @@
 //Gado:
 #define TAMANHO_GADO_X 40 //110
 #define TAMANHO_GADO_Y 40 //75
+
 
 #define VELOCIDADE_INIMIGO_GADO_NORMAL 15.0f
 #define VELOCIDADE_INIMIGO_GADO_STRESS 250.0f
