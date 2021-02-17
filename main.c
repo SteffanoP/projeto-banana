@@ -399,11 +399,18 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
     if (IsKeyPressed(KEY_SPACE)) {                                                               
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)  //Configuração do "imune_19" quando desativado
         {
-            if (!imune_19[p].poder_ativo)
+            if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 1) //Caso jogador esteja indo para a DIREITA
             {
-                imune_19[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
-                imune_19[p].direcao_movimento = jogador->direcao_movimento; //Poder tem direção baseada na do jogador, porém fica independente
-                imune_19[p].poder_ativo = true;                             //quando emitido
+                imune_19[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)}; //Posição inicial do poder é o centro do jogador
+                imune_19[p].direcao_movimento = jogador->direcao_movimento; //Poder tem direção baseada na do jogador, porém fica independente quando emitido
+                imune_19[p].poder_ativo = true;                             
+                break;   
+            }
+            else if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 0) //Caso jogador esteja indo para a ESQUERDA
+            {
+                imune_19[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)}; //Centro do jogador
+                imune_19[p].direcao_movimento = jogador->direcao_movimento;
+                imune_19[p].poder_ativo = true;                             
                 break;   
             }
         }
