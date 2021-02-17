@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "libraries/defines.c"
+#include "time.h"
 
 bool colisaoJogador;
 
@@ -18,7 +19,6 @@ typedef struct Jogador
     bool podePular;
     int vida;
     int direcao_movimento;
-
 } Jogador;
 
 /* Sobre os inimigos:
@@ -65,6 +65,45 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
+typedef struct Personagem
+{
+    Vector2 posicao;
+    Texture2D texture;
+    float frameWidth;
+    float frameHeight;
+    Rectangle frameRect;
+} Personagem;
+
+typedef struct Minions
+{
+    Vector2 posicao;
+    Texture2D texture;
+    float frameWidth;
+    float frameHeight;
+    Rectangle frameRect;
+} Minions;
+
+typedef struct Gados
+{
+    Vector2 posicao;
+    Texture2D texture;
+    float frameWidth;
+    float frameHeight;
+    Rectangle frameRect;
+} Gados;
+
+typedef struct FPS_Animacao
+{
+    int counter;
+    float speed;
+    int currentFrame;
+} FPS_Animacao;
+
+int updateplayer;
+clock_t t;
+time_t s;
+time_t sc;
+
 static Poder poderDR[PODER_MAX_PERSONAGEM] = {0};
 static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
 
@@ -72,6 +111,10 @@ static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
 void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
+void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
+void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
+void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
@@ -84,6 +127,8 @@ int main()
 
     InitWindow(screenWidth, screenHeight, NOME_JOGO);
 
+    updateplayer = 1;
+
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
@@ -91,6 +136,21 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
     jogador.vida = 1;
     jogador.direcao_movimento = 1;
+
+    
+    //Configurações Iniciais da animação do joagdor
+    FPS_Animacao frames;
+    frames.counter = 0; //Conta as FPS
+    frames.speed = 12;  //FPS da animação
+    frames.currentFrame = 0; //Controla a passagem de frames
+    Personagem personagem;
+    Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
+    personagem.texture = (Texture2D)spritesPersonagem;
+    personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
+    personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
+    personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
+    personagem.posicao.x = 116 - TAMANHO_X_JOGADOR; //Posiçâo x do personagem em relação à posição x do jogador
+    personagem.posicao.y = 190 - TAMANHO_Y_JOGADOR; //Posiçâo y do personagem em relação à posição y do jogador
 
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
@@ -113,6 +173,27 @@ int main()
         {2, {2150, 280}, 0, 1, 2, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
+
+    //Configurações iniciais da animação dos minions
+    Minions minions;
+    Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
+    minions.texture = (Texture2D)spritesMinion;
+    minions.frameWidth = minions.texture.width / 2; //Largura da sprite
+    minions.frameHeight = minions.texture.height / 2; //Altura da sprite
+    minions.frameRect = (Rectangle){0.0f, 0.0f, minions.frameWidth, minions.frameHeight}; //Sprite inicial
+    minions.posicao.x = 146 - TAMANHO_MINION_X; //Posição x do personagem em relação à posição x do inimigo tipo 1
+    minions.posicao.y = 241 - TAMANHO_MINION_Y; //Posição y do personagem em relação à posição y do inimigo tipo 1
+
+    //Configurações iniciais da animação dos gados
+    Gados gados;
+    Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
+    gados.texture = (Texture2D)spritesGado;
+    gados.frameWidth = gados.texture.width / 2; //Largura da sprite
+    gados.frameHeight = gados.texture.height / 2; //Altura da sprite
+    gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
+    gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
+    gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
+
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -137,8 +218,10 @@ int main()
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
-    //--------------------------------------------------------------------------------------
 
+    time(&sc); //Tempo no começo do jogo
+
+    //--------------------------------------------------------------------------------------
     //O Jogo
     //--------------------------------------------------------------------------------------
     while (!WindowShouldClose())
@@ -146,17 +229,25 @@ int main()
         // Update
         //----------------------------------------------------------------------------------
         float deltaTime = GetFrameTime();
+        t = clock(); //Armazena o tempo da frame
+        time(&s); //Tempo enquanto o jogo está acontecendo
 
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
-        
+
         //Atualiza os dados do jogador
-        if (jogador.vida > 0)
+        if(updateplayer == 1)
         {
             UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
         }
         
         //Atualiza os dados dos inimigos
         UpdateInimigos(inimigo, envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
+
+        //Atualiza a animação do jogador quando o jogador está em movimento
+        AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
+
+        //Atualiza a animação do inimigo
+        AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
         UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, deltaTime);      
@@ -167,62 +258,22 @@ int main()
 
         // Draw
         //----------------------------------------------------------------------------------
-        BeginDrawing();
 
-        //Desenho do Background do restante da Janela que não é objeto
-        ClearBackground(LIGHTGRAY);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
 
-        BeginMode2D(camera);
-
-        //Desenho dos Retângulos referentes aos obstáculos de EnvItems
-        for (int i = 0; i < envItemsLength; i++)
-            DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
-
-        for (int i = 0; i < tamanhoInimigo; i++)
-        {
-            if (inimigo[i].tipo > 0)
-            {
-                //Desenho do inimigo
-                Rectangle inimigoRect = {inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y}; //Desenho do inimigo
-                DrawRectangleRec(inimigoRect, inimigo[i].cor);  
-            }
-        }
-
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            //Desenho do poder a direita
-            if (poderDR[p].poder_ativo)
-            {
-                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
-            }
-
-            //Desenho do poder a esquerda
-            if (poderES[p].poder_ativo)
-            {
-                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
-            }
-        }
-
-        //Criação e Desenho do jogador
-        Rectangle playerRect = {jogador.posicao.x - TAMANHO_X_JOGADOR / 2, jogador.posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR}; //Desenho do jogador
-        DrawRectangleRec(playerRect, RED); //Desenha o desenho do jogador
-
-        DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
-
-        DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
-
-        DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 1650, 475, 20, BLACK);
-
-        DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
-        DrawText(FormatText("Vida Jogador: %01i",jogador.vida), 2050, 475, 20, BLACK);
-
-        EndMode2D();
-
-        EndDrawing();
         //----------------------------------------------------------------------------------
+      
+        //Atualiza a animação quando o jogador está parado
+        AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
     }
     // De-Initialization
     //--------------------------------------------------------------------------------------
+
+    //Descarregamento da sprite sheet do jogador
+    UnloadTexture(personagem.texture); 
+    UnloadTexture(minions.texture);
+    UnloadTexture(gados.texture);
+
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
@@ -230,18 +281,18 @@ int main()
 }
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
-{  
-
-    if (IsKeyDown(KEY_LEFT)){ //Movimentação para a Esquerda
+{
+    if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
+    {
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
         jogador->direcao_movimento = 0;
     }
-    if (IsKeyDown(KEY_RIGHT)){ //Movimentação para a Direita
+    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+    {
         jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
         jogador->direcao_movimento = 1;
     }
-
-    if (IsKeyDown(KEY_UP) && jogador->podePular && jogador->vida > 0)
+    if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
     {
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->podePular = false;
@@ -309,7 +360,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
         jogador->podePular = false; //Não pode pular no ar
     } else
         jogador->podePular = true;
-    
+  
     //Verifica colisão entre jogador e inimigo
     Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
     for (int i = 0; i < tamanhoInimigo; i++) //Passa por todos os inimigos
@@ -447,6 +498,224 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
             inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
         }
     }
+}
+
+void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador, Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime)
+{
+    frames->counter++; //Atualiza o valor da frame do jogo
+
+    if (frames->counter % 2 == 0) frames->currentFrame = 1;
+    else frames->currentFrame = 2; //Controle da alternância dos passos
+
+    if ((frames->counter >= (t/frames->speed)) && frames ->counter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    {
+        frames->counter = 0;
+        frames->speed += 0.5;
+        if((float)s > (float)sc + 60) frames->speed += 0.1;
+        if((float)s > (float)sc + 4*60) frames->speed += 0.1;
+        
+        //Jogador
+        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 2 && jogador->vida > 0) //Passo 2 esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = 3*personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 1 && jogador->vida > 0) //Passo 1 direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 2 && jogador->vida > 0) //Passo 2 direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+
+        if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 0) ||
+        (jogador->podePular == false && IsKeyDown(KEY_LEFT) && jogador->vida > 0)) //Pulo esquerda
+        {
+            personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 1) ||
+        (jogador->podePular == false && IsKeyDown(KEY_RIGHT) && jogador->vida > 0)) //Pulo direita
+        {
+            personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = personagem->frameHeight;
+        }
+    }
+}
+
+void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime)
+{
+    if ((frames->counter >= (t/frames->speed)) && frames ->counter % 2 == 1) //Altera as FPSs do jogo para a desejada para a movimentação do inimigo
+    {
+        //Minions
+        for (int i = 0; i < tamanhoInimigos; i++)
+        {
+            inimigo += i;
+            if (inimigo->tipo == 1)
+            {
+                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 1) //Passo 1 esquerda
+                {
+                    minions->posicao.x = 146 - TAMANHO_MINION_X;
+                    minions->frameRect.x = 0.0f;
+                    minions->frameRect.y = 0.0f;
+                }
+                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 2) //Passo 2 esquerda
+                {
+                    minions->posicao.x = 146 - TAMANHO_MINION_X;
+                    minions->frameRect.x = minions->frameWidth;
+                    minions->frameRect.y = 0.0f;
+                }
+                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 1) //Passo 1 direita
+                {
+                    minions->posicao.x = 159 - TAMANHO_MINION_X;
+                    minions->frameRect.x = 0.0f;
+                    minions->frameRect.y = minions->frameHeight;
+                }
+                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 2) //Passo 2 direita
+                {
+                    minions->posicao.x = 159 - TAMANHO_MINION_X;
+                    minions->frameRect.x = minions->frameWidth;
+                    minions->frameRect.y = minions->frameHeight;
+                }
+            }
+            if (inimigo->tipo == 2)
+            {
+                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 1) //Passo 1 esquerda
+                {
+                    gados->frameRect.x = gados->frameWidth;
+                    gados->frameRect.y = gados->frameHeight;
+                }
+                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 2) //Passo 2 esquerda
+                {
+                    gados->frameRect.x = 0.0f;
+                    gados->frameRect.y = gados->frameHeight;
+                }
+                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 1) //Passo 1 direita
+                {
+                    gados->frameRect.x = gados->frameWidth;
+                    gados->frameRect.y = 0.0f;                    
+                }
+                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 2) //Passo 2 direita
+                {                    
+                    gados->frameRect.x = 0.0f;
+                    gados->frameRect.y = 0.0f;
+                }
+            }
+        }
+    }
+}
+
+void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta)
+{
+    if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda
+    {
+        personagem->posicao.x = 140 - TAMANHO_X_JOGADOR;
+        personagem->frameRect.x = 0.0f;
+        personagem->frameRect.y = 2*personagem->frameHeight;
+    }
+    if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado direita
+    {
+        personagem->posicao.x = 116 - TAMANHO_X_JOGADOR;
+        personagem->frameRect.x = 2*personagem->frameWidth;
+        personagem->frameRect.y = 0.0f;
+    }
+    
+    if (jogador->vida <= 0 && jogador->vida >= -3) //Pulo depois da morte
+    {
+        personagem->posicao.x = 120 - TAMANHO_X_JOGADOR;
+        personagem->frameRect.x = personagem->frameHeight;
+        personagem->frameRect.y = 0.0f;
+        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
+        jogador->posicao.y += jogador->velocidade * delta; //Aumentar a posição do Y do jogador
+    } 
+    if (jogador->vida < -3 && jogador->posicao.y == TAMANHO_Y_CENARIO/2) //Caída
+    {
+        updateplayer = 0;
+        jogador->posicao.y += 2* jogador->velocidade * delta;
+        jogador->velocidade += GRAVIDADE * delta; //Vai sofrer com a Gravidade
+    }
+}
+
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem)
+{
+    BeginDrawing();
+
+    //Desenho do Background do restante da Janela que não é objeto
+    ClearBackground(LIGHTGRAY);
+
+    BeginMode2D(camera);
+
+    //Desenho dos Retângulos referentes aos obstáculos de EnvItems
+    for (int i = 0; i < envItemsLength; i++)
+        DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 1)
+        {
+            //Desenho da hitbox do inimigo
+            DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y, YELLOW);
+
+            //Desenho da textura dos minions
+            DrawTextureRec(minions->texture, minions->frameRect, (Vector2){inimigo[i].posicao.x - (minions->posicao.x - TAMANHO_MINION_X), inimigo[i].posicao.y - (minions->posicao.y - TAMANHO_MINION_X)}, RAYWHITE);
+        }
+        if (inimigo[i].tipo == 2)
+        {
+            //Desenho da hitbox do inimigo
+            DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_GADO_X / 2, inimigo[i].posicao.y - TAMANHO_GADO_Y, TAMANHO_GADO_X, TAMANHO_GADO_Y, ORANGE);
+
+            //Desenho da textura dos gados
+            DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (gados->posicao.y - TAMANHO_GADO_X)}, RAYWHITE);
+        }
+    }
+    
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+        {
+            //Desenho do poder a direita
+            if (poderDR[p].poder_ativo)
+            {
+                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
+            }
+
+            //Desenho do poder a esquerda
+            if (poderES[p].poder_ativo)
+            {
+                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
+            }
+        }
+
+    //Criação e Desenho do jogador
+
+    //Desenho da hitbox do jogador
+    DrawRectangleLines(jogador->posicao.x - TAMANHO_X_JOGADOR / 2, jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, RED);
+    //Desenho da textura do jogador
+    DrawTextureRec(personagem->texture, personagem->frameRect, (Vector2){jogador->posicao.x - (personagem->posicao.x + TAMANHO_X_JOGADOR), jogador->posicao.y - (personagem->posicao.y + TAMANHO_Y_JOGADOR)}, RAYWHITE);
+
+    DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
+
+    DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
+    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 1650, 475, 20, BLACK);
+
+    DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
+    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
+
+    EndMode2D();
+
+    EndDrawing();
 }
 
 void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta){
