@@ -232,7 +232,7 @@ int main()
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
 {  
 
-    if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
+    if (IsKeyDown(KEY_LEFT)){ //Movimentação para a Esquerda
         jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
         jogador->direcao_movimento = 0;
     }
