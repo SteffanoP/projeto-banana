@@ -109,7 +109,10 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
+        {1, {1650, 280}, 0, 0, 2, YELLOW},
+        {1, {1750, 280}, 0, 0, 2, YELLOW},
         {1, {1850, 280}, 0, 0, 2, YELLOW},
+        {2, {2050, 280}, 0, 1, 2, ORANGE},
         {2, {2150, 280}, 0, 1, 2, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
