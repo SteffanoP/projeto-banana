@@ -250,13 +250,6 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            if (imune_19[p].poder_ativo)
-            {
-                DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
-            }
-        }
         Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
 
         //----------------------------------------------------------------------------------
@@ -675,21 +668,14 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (gados->posicao.y - TAMANHO_GADO_X)}, RAYWHITE);
         }
     }
-    
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            //Desenho do poder a direita
-            if (poderDR[p].poder_ativo)
-            {
-                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
-            }
 
-            //Desenho do poder a esquerda
-            if (poderES[p].poder_ativo)
-            {
-                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
-            }
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (imune_19[p].poder_ativo)
+        {
+            DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
         }
+    }
 
     //Criação e Desenho do jogador
 
