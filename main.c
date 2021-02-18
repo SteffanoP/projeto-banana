@@ -17,8 +17,9 @@ typedef struct Jogador
     Vector2 posicaoAnterior;
     float velocidade;
     bool podePular;
-    int vida;
     int direcao_movimento;
+    int vida;
+    int poder;
 } Jogador;
 
 /* Sobre os inimigos:
@@ -134,9 +135,8 @@ int main()
     jogador.podePular = false; //Habilitação de pulo
     jogador.vida = 1;
     jogador.direcao_movimento = 1;
+    jogador.poder = 0;
 
-
-    
     //Configurações Iniciais da animação do joagdor
     FPS_Animacao frames;
     frames.counter = 0; //Conta as FPS
@@ -247,7 +247,10 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
+        if (jogador.poder == 1)
+        {
+            UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
+        }
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
