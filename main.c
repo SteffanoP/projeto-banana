@@ -795,20 +795,22 @@ Verifica se há colisão com a borda superior de uma Entidade com um objeto
 Retorna 0 se não há colisão
 Retorna 1 se há colisão com borda superior
 */
-bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
-    Vector2 ponto_superior_esquerda = (Vector2){entidade.x - (tamanho_entidade_x / 2) + 5, entidade.y - tamanho_entidade_y - 1};
-    Vector2 ponto_superior_direita = (Vector2){entidade.x + (tamanho_entidade_x / 2) - 5, entidade.y - tamanho_entidade_y - 1};
+    const float ponto_superior = entidade.y - tamanho_entidade_y - 1;
+    const float ponto_esquerda = entidade.x - (tamanho_entidade_x / 2) + range;
+    const float ponto_direita = entidade.x + (tamanho_entidade_x / 2) - range;
 
     //Verifica a colisão entre 2 pontos superiores da entidade
-    if (CheckCollisionPointRec(ponto_superior_esquerda,objeto) ||
-        CheckCollisionPointRec(ponto_superior_direita,objeto))
+    for (float ponto = ponto_esquerda; ponto <= ponto_direita; ponto++)
     {
-        return 1;
+        if (CheckCollisionPointRec((Vector2){ponto,ponto_superior},objeto))
+        {
+            return 1;
+        }
     } 
-    else
-    {
-        return 0;
+        }
     }
+
+    return 0;
 }
 
 /*
