@@ -105,8 +105,9 @@ time_t sc;
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 
 //Protótipo das funções
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
+
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
@@ -152,7 +153,10 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
+        {1, {1650, 280}, 0, 0, 2, YELLOW},
+        {1, {1750, 280}, 0, 0, 2, YELLOW},
         {1, {1850, 280}, 0, 0, 2, YELLOW},
+        {2, {2050, 280}, 0, 1, 2, ORANGE},
         {2, {2150, 280}, 0, 1, 2, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
@@ -227,11 +231,14 @@ int main()
         //Atualiza os dados do jogador
         if(updateplayer == 1)
         {
-            UpdatePlayer(&jogador, envItems, inimigo, envItemsLength, tamanhoInimigo, deltaTime);
+            UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
         }
         
         //Atualiza os dados dos inimigos
-        UpdateInimigos(inimigo, envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
+        for (int i = 0; i < tamanhoInimigo; i++)
+        {
+            UpdateInimigo(&(inimigo[i]), envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
+        }
 
         //Atualiza a animação do jogador quando o jogador está em movimento
         AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
@@ -271,7 +278,8 @@ int main()
     return 0;
 }
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
     if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
     {
@@ -352,137 +360,129 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int env
     } else
         jogador->podePular = true;
   
-    //Verifica colisão entre jogador e inimigo
-    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
-    for (int i = 0; i < tamanhoInimigo; i++) //Passa por todos os inimigos
+}
+
+void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta)
+{
+    Rectangle ret_jogador = {jogador->posicao.x - (TAMANHO_X_JOGADOR / 2),jogador->posicao.y - TAMANHO_Y_JOGADOR,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR};
+    Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+
+    //Verifica se o inimigo é do tipo: minion
+    if (inimigo->tipo == 1)
     {
-        inimigo += i;
-        
-        Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
-        //Verifica colisão entre inimigo e jogador
-        if (inimigo->tipo > 0)
-        {
-            //Verifica se jogador encosta nas bordas do objeto inimigo
-            if (VerificaColisaoBordasED(jogador->posicao,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR,ret_inimigo) != 0)
+        if (inimigo->direcao_movimento == 0)
+            inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
+        else if (inimigo->direcao_movimento == 1)
+            inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
+    }
+
+    //Verifica se o inimigo é do tipo: gado
+    if (inimigo->tipo == 2)
+    {
+        Rectangle ret_jogador = {jogador->posicao.x, jogador->posicao.y, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR};
+        //Verifica se o inimigo está andando para a esquerda
+        if (inimigo->direcao_movimento == 0) {
+            if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,ret_jogador,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
             {
-                jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
             } 
-            //Verifica se borda superior do inimigo encosta em objeto jogador
-            else if (VerificaColisaoBordaS(inimigo->posicao,TAMANHO_MINION_X,TAMANHO_MINION_Y,ret_jogador))
+            else //Se não há nenhum inimigo no range a esquerda
             {
-                inimigo->tipo = 0; //Jogador mata o inimigo
+                inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
+            }
+        }
+        else if (inimigo->direcao_movimento == 1) //Verifica se o inimigo está andando para a esquerda
+        {
+            if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,ret_jogador,RANGE_GADO) == 2) //Verifica o range do gado a direita
+            {
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
+            } 
+            else //Se não há nenhum inimigo no range a direita
+            {
+                inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
+            }    
+        }
+    }
+
+    //Limites da area de movimentação do inimigo no cenário
+    if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+    {
+        inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
+        inimigo->direcao_movimento = !inimigo->direcao_movimento;
+    }
+    else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+    {
+        inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
+        inimigo->direcao_movimento = !inimigo->direcao_movimento;
+    }
+
+    int colisaoObjeto = 0;
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+    {
+        EnvItem *objeto = envItems + i;
+        Vector2 *j = &(inimigo->posicao);
+
+        //Condição de colisão para andar encima de plataformas
+        if (objeto->colisao &&
+            objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
+            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
+            objeto->retangulo.y >= j->y &&
+            objeto->retangulo.y < j->y + inimigo->velocidade * delta)
+        {
+            colisaoObjeto = 1;
+            inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+            j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+        }
+
+        //Condição de colisão em objetos Universais
+        if (objeto->colisao)
+        {
+            if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 1)
+            {
+                inimigo->direcao_movimento = 1;
+            }
+            else if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 2)
+            {
+                inimigo->direcao_movimento = 0;
             }
         }
     }
-}
 
-void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta)
-{
-    Rectangle jogador_ret = {jogador->posicao.x,jogador->posicao.y,TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR};
-    for (int i = 0; i < tamanhoInimigos; i++)
+    //Verifica a colisão entre o Poder e o Inimigo
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        inimigo += i;
-
-        //Verifica se o inimigo é do tipo: minion
-        if (inimigo->tipo == 1)
+        if (inimigo->tipo > 0)
         {
-            if (inimigo->direcao_movimento == 0)
-                inimigo->posicao.x -= VELOCIDADE_INIMIGO_MINION * delta;
-            else if (inimigo->direcao_movimento == 1)
-                inimigo->posicao.x += VELOCIDADE_INIMIGO_MINION * delta;
-        }
+            //Desenho do inimigo
+            Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
-        //Verifica se o inimigo é do tipo: gado
-        if (inimigo->tipo == 2)
-        {
-            //Verifica se o inimigo está andando para a esquerda
-            if (inimigo->direcao_movimento == 0) {
-                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
-                {
-                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
-                } 
-                else //Se não há nenhum inimigo no range a esquerda
-                {
-                    inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
-                }
-            }
-            else if (inimigo->direcao_movimento == 1) //Verifica se o inimigo está andando para a esquerda
+            if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, inimigoRect) && imune_19[p].poder_ativo)
             {
-                if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,jogador_ret,RANGE_GADO) == 2) //Verifica o range do gado a direita
-                {
-                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
-                } 
-                else //Se não há nenhum inimigo no range a direita
-                {
-                    inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_NORMAL * delta; //Velocidade normal do gado
-                }    
+                imune_19[p].poder_ativo = false; //Poder é desativado quando colide
+                inimigo->tipo = 0;               //Inimigo morre
             }
         }
+    }
 
-        //Limites da area de movimentação do inimigo no cenário
-        if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+    //Verifica colisão entre inimigo e jogador
+    if (inimigo->tipo > 0)
+    {
+        //Verifica se jogador encosta nas bordas do objeto inimigo
+        if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, ret_inimigo) != 0)
         {
-            inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
-            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+            jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
         }
-        else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+        //Verifica se borda superior do inimigo encosta em objeto jogador
+        else if (VerificaColisaoBordaS(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, ret_jogador))
         {
-            inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
-            inimigo->direcao_movimento = !inimigo->direcao_movimento;
+            inimigo->tipo = 0; //Jogador mata o inimigo
         }
+    }
 
-        int colisaoObjeto = 0;
-        for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
-        {
-            EnvItem *objeto = envItems + i;
-            Vector2 *j = &(inimigo->posicao);
-
-            //Condição de colisão para andar encima de plataformas
-            if (objeto->colisao &&
-                objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
-                objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
-                objeto->retangulo.y >= j->y &&
-                objeto->retangulo.y < j->y + inimigo->velocidade * delta)
-            {
-                colisaoObjeto = 1;
-                inimigo->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
-                j->y = objeto->retangulo.y; //Atualiza a variável do movimento
-            }
-
-            //Condição de colisão em objetos Universais
-            if (objeto->colisao)
-            {
-                if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 1)
-                {
-                    inimigo->direcao_movimento = 1;
-                }
-                else if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 2)
-                {
-                    inimigo->direcao_movimento = 0;
-                }
-            }
-        }
-
-        //Verifica a colisão entre o Poder e o Inimigo
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
-        {
-            if (inimigo->tipo > 0)
-            {
-                //Desenho do inimigo
-                Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
-
-                if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, inimigoRect) && imune_19[p].poder_ativo) {
-                    imune_19[p].poder_ativo = false; //Poder é desativado quando colide
-                    inimigo->tipo = 0; //Inimigo morre
-                }
-            }
-        }
-        
-        if (!colisaoObjeto) //Se não há colisão com objeto
-        {
-            inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
-            inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
-        }
+    if (!colisaoObjeto) //Se não há colisão com objeto
+    {
+        inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
+        inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
     }
 }
 
