@@ -202,7 +202,8 @@ int main()
         {{1350, 330,  50, 50}, 1, PURPLE},
         {{1450, 340,  30, 60}, 1, GREEN},
         {{1970, 340,  30, 60}, 1, GREEN},
-        {{2490, 340,  30, 60}, 1, GREEN}
+        {{2490, 340,  30, 60}, 1, GREEN},
+        {{2700, 200,  50, 50}, 2, BLACK}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -694,6 +695,9 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 
     DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
     DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
+
+    DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
+    DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
 
     EndMode2D();
 
