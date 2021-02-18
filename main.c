@@ -279,7 +279,7 @@ int main()
 }
 
 
-void UpdatePlayer(Jogador *jogador, EnvItem *envItems, Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta)
+void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
     if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
     {
@@ -449,21 +449,17 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 
     //Verifica a colisão entre o Poder e o Inimigo
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++) 
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
         if (inimigo->tipo > 0)
         {
             //Desenho do inimigo
             Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
-            if (CheckCollisionCircleRec(poderDR->posicao, poderDR->raio, inimigoRect)) {  //Colisão do lado DIREITO
-                poderDR->poder_ativo = false; //Poder "desaparece" ao colidir
-                inimigo->tipo = 0; //Inimigo morre
-            }
-
-            if (CheckCollisionCircleRec(poderES->posicao, poderES->raio, inimigoRect)) {  //Colisão do lado ESQUERDO
-                poderES->poder_ativo = false; //Poder "desaparece" ao colidir
-                inimigo->tipo = 0; //Inimigo morre
+            if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, inimigoRect) && imune_19[p].poder_ativo)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado quando colide
+                inimigo->tipo = 0;               //Inimigo morre
             }
         }
     }
