@@ -57,6 +57,11 @@ typedef struct Poder
     Color cor;
 } Poder;
 
+/*
+colisao: tipo de bloco de colisão
+colisao = 1 = bloco normal com colisão
+colisao = 2 = bloco com poder imune-19
+*/
 typedef struct EnvItem
 {
     Rectangle retangulo;
@@ -338,12 +343,23 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         }
 
         //Condição de colisão em objetos Universais
-        if (objeto->colisao)
+        if (objeto->colisao > 0)
         {
             if (VerificaColisaoBordaS(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo))
             {
-                jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR + 1;
-                jogador->velocidade = GRAVIDADE * delta;
+                if (objeto->colisao == 1)
+                {
+                    jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR + 1;
+                    jogador->velocidade = GRAVIDADE * delta;
+                }
+                else if (objeto->colisao == 2) //Verifica se é bloco de poder: imune-19
+                {
+                    jogador->poder = 1; //Define o poder imune-19 ao jogador
+                    jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + TAMANHO_Y_JOGADOR + 1;
+                    jogador->velocidade = GRAVIDADE * delta;
+                    objeto->retangulo.y -= 10; //Desloca o bloco 10 pixels para cima
+                    objeto->colisao = 1;  //Define o bloco para um bloco normal neste momento
+                }
             } 
             else if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, objeto->retangulo) == 1)
             {
@@ -696,6 +712,14 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
     DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
 
+    for (int i = 0; i < envItemsLength; i++)
+    {
+        //Desenho da interrogação dentro do bloco
+        if (envItems[i].colisao == 2)
+        {
+            DrawText(FormatText("?"),envItems[i].retangulo.x + 10, envItems[i].retangulo.y + 5, 50, WHITE);
+        }
+    }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
 
