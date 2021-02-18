@@ -25,13 +25,11 @@ typedef struct Jogador
 tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
-
 posicao: Posição do Minion no cenário
 velocidade: velocidade de movimentação
 direcao_movimento: direção em que se movimenta
 vida: quantidade de vidas do inimigo
-cor: Cor do inimigo
-*/
+cor: Cor do inimigo*/
 typedef struct Inimigo
 {
     int tipo;
@@ -43,18 +41,18 @@ typedef struct Inimigo
 } Inimigo;
 
 /* Sobre os poderes:
-
 posicao: posicao em relação ao jogador
 velocidade: velocidade da movimentação
 raio: raio da forma (o poder representa um círculo)
 poder_ativo: verificação se está ativo ou não
+direcao_movimento: direção do poder independente da do jogador 
 cor: cor do poder */
-
 typedef struct Poder
 {
     Vector2 posicao;
     float raio;
     bool poder_ativo;
+    bool direcao_movimento;
     Color cor;
 } Poder;
 
@@ -104,13 +102,12 @@ clock_t t;
 time_t s;
 time_t sc;
 
-static Poder poderDR[PODER_MAX_PERSONAGEM] = {0};
-static Poder poderES[PODER_MAX_PERSONAGEM] = {0};
+static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems,Inimigo *inimigo, int envItemsLength, int tamanhoInimigo, float delta);
-void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
+void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
@@ -137,6 +134,7 @@ int main()
     jogador.vida = 1;
     jogador.direcao_movimento = 1;
 
+
     
     //Configurações Iniciais da animação do joagdor
     FPS_Animacao frames;
@@ -152,27 +150,20 @@ int main()
     personagem.posicao.x = 116 - TAMANHO_X_JOGADOR; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - TAMANHO_Y_JOGADOR; //Posiçâo y do personagem em relação à posição y do jogador
 
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        //Configurações Iniciais do poder na DIREITA
-        poderDR[p].posicao = (Vector2){0,0};
-        poderDR[p].raio = 10;
-        poderDR[p].poder_ativo = false;
-        poderDR[p].cor = BLACK;
-        
-        //Configurações Iniciais do poder na ESQUERDA
-        poderES[p].posicao = (Vector2){0,0};
-        poderES[p].raio = 10;
-        poderES[p].poder_ativo = false;
-        poderES[p].cor = BLACK;
-    }
-
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
         {1, {1850, 280}, 0, 0, 2, YELLOW},
         {2, {2150, 280}, 0, 1, 2, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
+
+    //Configurações iniciais do poder "IMUNE_19"
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        imune_19[p].posicao = (Vector2){0,0};
+        imune_19[p].raio = 10;
+        imune_19[p].cor = BLACK;
+    }
 
     //Configurações iniciais da animação dos minions
     Minions minions;
@@ -193,7 +184,6 @@ int main()
     gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
     gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
-
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -250,7 +240,7 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        UpdatePoder(poderDR, poderES, &jogador, inimigo, envItems, envItemsLength, deltaTime);      
+        UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -259,6 +249,7 @@ int main()
         // Draw
         //----------------------------------------------------------------------------------
 
+        //Desenho circular do poder "IMUNE_19"
         Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
 
         //----------------------------------------------------------------------------------
@@ -480,13 +471,8 @@ void UpdateInimigos(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int t
                 //Desenho do inimigo
                 Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
 
-                if (CheckCollisionCircleRec(poderDR->posicao, poderDR->raio, inimigoRect)) {  //Colisão do lado DIREITO
-                    poderDR->poder_ativo = false; //Poder "desaparece" ao colidir
-                    inimigo->tipo = 0; //Inimigo morre
-                }
-
-                if (CheckCollisionCircleRec(poderES->posicao, poderES->raio, inimigoRect)) {  //Colisão do lado ESQUERDO
-                    poderES->poder_ativo = false; //Poder "desaparece" ao colidir
+                if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, inimigoRect) && imune_19[p].poder_ativo) {
+                    imune_19[p].poder_ativo = false; //Poder é desativado quando colide
                     inimigo->tipo = 0; //Inimigo morre
                 }
             }
@@ -682,21 +668,14 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (gados->posicao.y - TAMANHO_GADO_X)}, RAYWHITE);
         }
     }
-    
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            //Desenho do poder a direita
-            if (poderDR[p].poder_ativo)
-            {
-                DrawCircleV(poderDR[p].posicao, poderDR[p].raio, BLACK);
-            }
 
-            //Desenho do poder a esquerda
-            if (poderES[p].poder_ativo)
-            {
-                DrawCircleV(poderES[p].posicao, poderES[p].raio, BLACK);
-            }
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (imune_19[p].poder_ativo)
+        {
+            DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
         }
+    }
 
     //Criação e Desenho do jogador
 
@@ -718,72 +697,60 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     EndDrawing();
 }
 
-void UpdatePoder(Poder *poderDR, Poder *poderES, Jogador *jogador, Inimigo *inimigo, EnvItem *envItems, int envItemsLength, float delta){
+void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta){
 
-    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 1) //Poder seguindo para a DIREITA de acordo
-    {                                                               //com a direção do jogador
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+
+    //Acionamento do poder IMUNE_19
+    if (IsKeyPressed(KEY_SPACE)) {                                                               
+        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)  //Configuração do "imune_19" quando desativado
         {
-            if (!poderDR[p].poder_ativo)
+            if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 1) //Caso jogador esteja indo para a DIREITA
             {
-                poderDR[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
-                poderDR[p].poder_ativo = true;
-                break;
+                imune_19[p].posicao = (Vector2){jogador->posicao.x + (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)}; //Posição inicial do poder é o centro do jogador
+                imune_19[p].direcao_movimento = jogador->direcao_movimento; //Poder tem direção baseada na do jogador, porém fica independente quando emitido
+                imune_19[p].poder_ativo = true;                             
+                break;   
             }
-        }
-    }
-
-    if (IsKeyPressed(KEY_SPACE) && jogador->direcao_movimento == 0) //Poder seguindo para a ESQUERDA de acordo
-    {                                                               //com a direção do jogador
-        for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-        {
-            if (!poderES[p].poder_ativo)
+            else if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 0) //Caso jogador esteja indo para a ESQUERDA
             {
-                poderES[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)};
-                poderES[p].poder_ativo = true;
-                break;
+                imune_19[p].posicao = (Vector2){jogador->posicao.x - (TAMANHO_X_JOGADOR/2), jogador->posicao.y - (TAMANHO_Y_JOGADOR/2)}; //Centro do jogador
+                imune_19[p].direcao_movimento = jogador->direcao_movimento;
+                imune_19[p].poder_ativo = true;                             
+                break;   
             }
         }
     }
     
+    //Movimentação do poder
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
+        if (imune_19[p].direcao_movimento == 1)  //Considerando a direção do poder para a DIREITA:
+        {
+            imune_19[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na DIREITA
+        } else if (imune_19[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+        {
+            imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+        }
+
+        //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+        for (int o = 0; o < envItemsLength; o++)
+        {
+            if (envItems[o].colisao //Se houver um objeto colidível
+                && CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, envItems[o].retangulo))  //e a colisão for entre o poder
+            {                                                                                               // (círculo) e um retângulo
+                imune_19[p].poder_ativo = false; //O poder é dasativado ("desaparece" do cenário)                                                 
+            }
+        }
         
-        if (poderDR[p].poder_ativo)
+        //Limite da área de movimento do poder
+        if (imune_19[p].posicao.x < imune_19[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
         {
-            poderDR[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta;
-            
-            for (int o = 0; o < envItemsLength; o++)
-            {
-                if (envItems[o].colisao && CheckCollisionCircleRec(poderDR[p].posicao, poderDR[p].raio, envItems[o].retangulo))
-                {
-                    poderDR[p].poder_ativo = false;
-                }
-                if (poderDR[p].posicao.x > TAMANHO_X_CENARIO + poderDR[p].raio)
-                {
-                    poderDR[p].poder_ativo = false;
-                }
-            }
-        }
-
-        if (poderES[p].poder_ativo)
+            imune_19[p].poder_ativo = false; //Poder é desativado
+        } else if (imune_19[p].posicao.x + imune_19[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
         {
-            poderES[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta;
-
-            for (int o = 0; o < envItemsLength; o++)
-            {
-                //EnvItem *objeto = envItems + 1;
-                if (envItems[o].colisao && CheckCollisionCircleRec(poderES[p].posicao, poderES[p].raio, envItems[o].retangulo))
-                {
-                    poderES[p].poder_ativo = false;
-                }
-                
-                if (poderES[p].posicao.x < 0 - poderES[p].raio)
-                {
-                    poderES[p].poder_ativo = false;
-                }
-            }
+            imune_19[p].poder_ativo = false; //Poder é desativado
         }
+        
     }
 }
 
