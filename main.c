@@ -400,7 +400,6 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     //Verifica se o inimigo é do tipo: gado
     if (inimigo->tipo == 2)
     {
-        Rectangle ret_jogador = {jogador->posicao.x, jogador->posicao.y, jogador->tamanho.x, jogador->tamanho.y};
         //Verifica se o inimigo está andando para a esquerda
         if (inimigo->direcao_movimento == 0) {
             if (VerificaRangeGado(inimigo->posicao,inimigo->tamanho.x,inimigo->tamanho.y,ret_jogador,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
@@ -839,7 +838,7 @@ Retorna 1 se há jogador no range a esquerda
 Retorna 2 se há jogador no range a direita
 */
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range) {
-    const float ponto_inicial_range_y = posicao_inicial.y + (tamanho_gado_y / 2); //Pega a posição central do retângulo do gadinho
+    const float ponto_inicial_range_y = posicao_inicial.y - (tamanho_gado_y / 2); //Pega a posição central do retângulo do gadinho
     const float ponto_inicial_range_x_esquerda = posicao_inicial.x - (tamanho_gado_x / 2);
     const float ponto_inicial_range_x_direita = posicao_inicial.x + (tamanho_gado_x / 2);
 
