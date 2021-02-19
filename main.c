@@ -635,8 +635,6 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
             jogador->vida = -1;
         }
     } 
-        }
-    } 
     else if (jogador->vida == -1) //Caída
     {
         updateplayer = 0;
@@ -765,8 +763,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
 {
-    camera->offset = (Vector2){width / 2, height / 2};
-    camera->target = jogador->posicao;
+    if (jogador->vida > 0)
+    {
+        camera->offset = (Vector2){width / 2, height / 2};
+        camera->target = jogador->posicao;
+    }
 }
 
 /*
