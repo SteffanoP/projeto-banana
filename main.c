@@ -26,7 +26,8 @@ typedef struct Jogador
 tipo: Tipo de inimigos
 tipo = 1 = minion
 tipo = 2 = gado
-posicao: Posição do Minion no cenário
+tamanho: Tamanho do inimigo no cenário
+posicao: Posição do Inimigo no cenário
 velocidade: velocidade de movimentação
 direcao_movimento: direção em que se movimenta
 vida: quantidade de vidas do inimigo
@@ -34,6 +35,7 @@ cor: Cor do inimigo*/
 typedef struct Inimigo
 {
     int tipo;
+    Vector2 tamanho;
     Vector2 posicao;
     float velocidade;
     bool direcao_movimento;
@@ -155,13 +157,30 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
-        {1, {1650, 280}, 0, 0, 2, YELLOW},
-        {1, {1750, 280}, 0, 0, 2, YELLOW},
-        {1, {1850, 280}, 0, 0, 2, YELLOW},
-        {2, {2050, 280}, 0, 1, 2, ORANGE},
-        {2, {2150, 280}, 0, 1, 2, ORANGE}
+        {1, {0}, {1650, 280}, 0, 0, 0, YELLOW},
+        {1, {0}, {1750, 280}, 0, 0, 0, YELLOW},
+        {1, {0}, {1850, 280}, 0, 0, 0, YELLOW},
+        {2, {0}, {2050, 280}, 0, 1, 0, ORANGE},
+        {2, {0}, {2150, 280}, 0, 1, 0, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
+    
+    //Preenchimento dos valores do inimigo
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 1)
+        {
+            inimigo[i].tamanho = (Vector2){TAMANHO_MINION_X,TAMANHO_MINION_Y};
+            inimigo[i].vida = 1;
+            inimigo[i].cor = YELLOW;
+        }
+        else if (inimigo[i].tipo == 2)
+        {
+            inimigo[i].tamanho = (Vector2){TAMANHO_GADO_X,TAMANHO_GADO_Y};
+            inimigo[i].vida = 2;
+            inimigo[i].cor = ORANGE;
+        }
+    }
 
     //Configurações iniciais do poder "IMUNE_19"
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
@@ -367,7 +386,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta)
 {
     Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2),jogador->posicao.y - jogador->tamanho.y,jogador->tamanho.x,jogador->tamanho.y};
-    Rectangle ret_inimigo = {inimigo->posicao.x - (TAMANHO_MINION_X / 2), inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+    Rectangle ret_inimigo = {inimigo->posicao.x - (inimigo->tamanho.x / 2), inimigo->posicao.y - inimigo->tamanho.y, inimigo->tamanho.x, inimigo->tamanho.y};
 
     //Verifica se o inimigo é do tipo: minion
     if (inimigo->tipo == 1)
@@ -384,7 +403,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         Rectangle ret_jogador = {jogador->posicao.x, jogador->posicao.y, jogador->tamanho.x, jogador->tamanho.y};
         //Verifica se o inimigo está andando para a esquerda
         if (inimigo->direcao_movimento == 0) {
-            if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,ret_jogador,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
+            if (VerificaRangeGado(inimigo->posicao,inimigo->tamanho.x,inimigo->tamanho.y,ret_jogador,RANGE_GADO) == 1) //Verifica o range do gado a esquerda
             {
                 inimigo->posicao.x -= VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
             } 
@@ -395,7 +414,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         }
         else if (inimigo->direcao_movimento == 1) //Verifica se o inimigo está andando para a esquerda
         {
-            if (VerificaRangeGado(inimigo->posicao,TAMANHO_GADO_X,TAMANHO_GADO_Y,ret_jogador,RANGE_GADO) == 2) //Verifica o range do gado a direita
+            if (VerificaRangeGado(inimigo->posicao,inimigo->tamanho.x,inimigo->tamanho.y,ret_jogador,RANGE_GADO) == 2) //Verifica o range do gado a direita
             {
                 inimigo->posicao.x += VELOCIDADE_INIMIGO_GADO_STRESS * delta; //Velocidade do gado sob Stress
             } 
@@ -407,14 +426,14 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 
     //Limites da area de movimentação do inimigo no cenário
-    if ((inimigo->posicao.x + TAMANHO_MINION_X / 2) > TAMANHO_X_CENARIO)
+    if ((inimigo->posicao.x + inimigo->tamanho.x / 2) > TAMANHO_X_CENARIO)
     {
-        inimigo->posicao.x = TAMANHO_X_CENARIO - TAMANHO_MINION_X / 2; //Limites para direita
+        inimigo->posicao.x = TAMANHO_X_CENARIO - inimigo->tamanho.x / 2; //Limites para direita
         inimigo->direcao_movimento = !inimigo->direcao_movimento;
     }
-    else if (inimigo->posicao.x < TAMANHO_MINION_X / 2)
+    else if (inimigo->posicao.x < inimigo->tamanho.x / 2)
     {
-        inimigo->posicao.x = TAMANHO_MINION_X / 2; //Limites para a esquerda
+        inimigo->posicao.x = inimigo->tamanho.x / 2; //Limites para a esquerda
         inimigo->direcao_movimento = !inimigo->direcao_movimento;
     }
 
@@ -426,8 +445,8 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
 
         //Condição de colisão para andar encima de plataformas
         if (objeto->colisao &&
-            objeto->retangulo.x - TAMANHO_MINION_X / 2 <= j->x &&                           
-            objeto->retangulo.x + objeto->retangulo.width + TAMANHO_MINION_X / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
+            objeto->retangulo.x - inimigo->tamanho.x / 2 <= j->x &&                           
+            objeto->retangulo.x + objeto->retangulo.width + inimigo->tamanho.x / 2 >= j->x && // Definindo a invasão da área do inimigo com a área do objeto(área de colisão)
             objeto->retangulo.y >= j->y &&
             objeto->retangulo.y < j->y + inimigo->velocidade * delta)
         {
@@ -439,11 +458,11 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         //Condição de colisão em objetos Universais
         if (objeto->colisao)
         {
-            if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 1)
+            if (VerificaColisaoBordasED(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, objeto->retangulo) == 1)
             {
                 inimigo->direcao_movimento = 1;
             }
-            else if (VerificaColisaoBordasED(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, objeto->retangulo) == 2)
+            else if (VerificaColisaoBordasED(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, objeto->retangulo) == 2)
             {
                 inimigo->direcao_movimento = 0;
             }
@@ -456,7 +475,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         if (inimigo->tipo > 0)
         {
             //Desenho do inimigo
-            Rectangle inimigoRect = {inimigo->posicao.x - TAMANHO_MINION_X / 2, inimigo->posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y};
+            Rectangle inimigoRect = {inimigo->posicao.x - inimigo->tamanho.x / 2, inimigo->posicao.y - inimigo->tamanho.y, inimigo->tamanho.x, inimigo->tamanho.y};
 
             if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, inimigoRect) && imune_19[p].poder_ativo)
             {
@@ -475,7 +494,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
             jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
         }
         //Verifica se borda superior do inimigo encosta em objeto jogador
-        else if (VerificaColisaoBordaS(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, ret_jogador))
+        else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador))
         {
             inimigo->tipo = 0; //Jogador mata o inimigo
         }
@@ -557,25 +576,25 @@ void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, G
             {
                 if (inimigo->direcao_movimento == 0 && frames->currentFrame == 1) //Passo 1 esquerda
                 {
-                    minions->posicao.x = 146 - TAMANHO_MINION_X;
+                    minions->posicao.x = 146 - inimigo->tamanho.x;
                     minions->frameRect.x = 0.0f;
                     minions->frameRect.y = 0.0f;
                 }
                 if (inimigo->direcao_movimento == 0 && frames->currentFrame == 2) //Passo 2 esquerda
                 {
-                    minions->posicao.x = 146 - TAMANHO_MINION_X;
+                    minions->posicao.x = 146 - inimigo->tamanho.x;
                     minions->frameRect.x = minions->frameWidth;
                     minions->frameRect.y = 0.0f;
                 }
                 if (inimigo->direcao_movimento == 1 && frames->currentFrame == 1) //Passo 1 direita
                 {
-                    minions->posicao.x = 159 - TAMANHO_MINION_X;
+                    minions->posicao.x = 159 - inimigo->tamanho.x;
                     minions->frameRect.x = 0.0f;
                     minions->frameRect.y = minions->frameHeight;
                 }
                 if (inimigo->direcao_movimento == 1 && frames->currentFrame == 2) //Passo 2 direita
                 {
-                    minions->posicao.x = 159 - TAMANHO_MINION_X;
+                    minions->posicao.x = 159 - inimigo->tamanho.x;
                     minions->frameRect.x = minions->frameWidth;
                     minions->frameRect.y = minions->frameHeight;
                 }
@@ -656,18 +675,18 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (inimigo[i].tipo == 1)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y, YELLOW);
+            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
 
             //Desenho da textura dos minions
-            DrawTextureRec(minions->texture, minions->frameRect, (Vector2){inimigo[i].posicao.x - (minions->posicao.x - TAMANHO_MINION_X), inimigo[i].posicao.y - (minions->posicao.y - TAMANHO_MINION_X)}, RAYWHITE);
+            DrawTextureRec(minions->texture, minions->frameRect, (Vector2){inimigo[i].posicao.x - (minions->posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (minions->posicao.y - inimigo[i].tamanho.x)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 2)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_GADO_X / 2, inimigo[i].posicao.y - TAMANHO_GADO_Y, TAMANHO_GADO_X, TAMANHO_GADO_Y, ORANGE);
+            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
 
             //Desenho da textura dos gados
-            DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (gados->posicao.y - TAMANHO_GADO_X)}, RAYWHITE);
+            DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (gados->posicao.y - inimigo[i].tamanho.x)}, RAYWHITE);
         }
     }
 

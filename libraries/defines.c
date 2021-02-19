@@ -21,14 +21,14 @@
 //Constantes referentes aos inimigos:
 
 //Minions
-#define TAMANHO_MINION_X 40 //56
-#define TAMANHO_MINION_Y 40 //81
+#define TAMANHO_MINION_X 56 //56
+#define TAMANHO_MINION_Y 81 //81
 
 #define VELOCIDADE_INIMIGO_MINION 10.0f
 
 //Gado:
-#define TAMANHO_GADO_X 40 //110
-#define TAMANHO_GADO_Y 40 //75
+#define TAMANHO_GADO_X 110 //110
+#define TAMANHO_GADO_Y 75 //75
 
 
 #define VELOCIDADE_INIMIGO_GADO_NORMAL 15.0f
