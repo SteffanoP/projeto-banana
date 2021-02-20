@@ -118,7 +118,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
 void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
-bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 
 int main()
@@ -302,22 +302,25 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
-    if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
+    if (jogador->vida > 0)
     {
-        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-        jogador->direcao_movimento = 0;
+        if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
+        {
+            jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
+            jogador->direcao_movimento = 0;
+        }
+        if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+        {
+            jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+            jogador->direcao_movimento = 1;
+        }
+        if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
+        {
+            jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
+            jogador->podePular = false;
+        }
     }
-    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
-    {
-        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
-        jogador->direcao_movimento = 1;
-    }
-    if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
-    {
-        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
-        jogador->podePular = false;
-    }
-
+    
     //Limites da area de movimentação do jogador
     if ((jogador->posicao.x + jogador->tamanho.x / 2) > TAMANHO_X_CENARIO)
     {
@@ -357,7 +360,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         //Condição de colisão em objetos Universais
         if (objeto->colisao)
         {
-            if (VerificaColisaoBordaS(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, objeto->retangulo))
+            if (VerificaColisaoBordaS(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, objeto->retangulo, 5))
             {
                 jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + jogador->tamanho.y + 1;
                 jogador->velocidade = GRAVIDADE * delta;
@@ -485,15 +488,15 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 
     //Verifica colisão entre inimigo e jogador
-    if (inimigo->tipo > 0)
+    if (inimigo->tipo > 0 && jogador->vida > 0)
     {
         //Verifica se jogador encosta nas bordas do objeto inimigo
         if (VerificaColisaoBordasED(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, ret_inimigo) != 0)
         {
-            jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
+            jogador->vida = 0; //Jogador encosta em inimigo e perde vida
         }
         //Verifica se borda superior do inimigo encosta em objeto jogador
-        else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador))
+        else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
         {
             inimigo->tipo = 0; //Jogador mata o inimigo
         }
@@ -640,15 +643,19 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
         personagem->frameRect.y = 0.0f;
     }
     
-    if (jogador->vida <= 0 && jogador->vida >= -3) //Pulo depois da morte
+    if (jogador->vida == 0) //Pulo depois da morte
     {
         personagem->posicao.x = 120 - jogador->tamanho.x;
         personagem->frameRect.x = personagem->frameHeight;
         personagem->frameRect.y = 0.0f;
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->posicao.y += jogador->velocidade * delta; //Aumentar a posição do Y do jogador
+        if (jogador->posicao.y <= 400)
+        {
+            jogador->vida = -1;
+        }
     } 
-    if (jogador->vida < -3 && jogador->posicao.y == TAMANHO_Y_CENARIO/2) //Caída
+    else if (jogador->vida == -1) //Caída
     {
         updateplayer = 0;
         jogador->posicao.y += 2* jogador->velocidade * delta;
@@ -776,8 +783,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
 {
-    camera->offset = (Vector2){width / 2, height / 2};
-    camera->target = jogador->posicao;
+    if (jogador->vida > 0)
+    {
+        camera->offset = (Vector2){width / 2, height / 2};
+        camera->target = jogador->posicao;
+    }
 }
 
 /*
@@ -815,20 +825,21 @@ Verifica se há colisão com a borda superior de uma Entidade com um objeto
 Retorna 0 se não há colisão
 Retorna 1 se há colisão com borda superior
 */
-bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto) {
-    Vector2 ponto_superior_esquerda = (Vector2){entidade.x - (tamanho_entidade_x / 2) + 5, entidade.y - tamanho_entidade_y - 1};
-    Vector2 ponto_superior_direita = (Vector2){entidade.x + (tamanho_entidade_x / 2) - 5, entidade.y - tamanho_entidade_y - 1};
+bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range) {
+    const float ponto_superior = entidade.y - tamanho_entidade_y - 1;
+    const float ponto_esquerda = entidade.x - (tamanho_entidade_x / 2) + range;
+    const float ponto_direita = entidade.x + (tamanho_entidade_x / 2) - range;
 
     //Verifica a colisão entre 2 pontos superiores da entidade
-    if (CheckCollisionPointRec(ponto_superior_esquerda,objeto) ||
-        CheckCollisionPointRec(ponto_superior_direita,objeto))
+    for (float ponto = ponto_esquerda; ponto <= ponto_direita; ponto++)
     {
-        return 1;
-    } 
-    else
-    {
-        return 0;
+        if (CheckCollisionPointRec((Vector2){ponto,ponto_superior},objeto))
+        {
+            return 1;
+        }
     }
+
+    return 0;
 }
 
 /*
