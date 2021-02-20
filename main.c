@@ -281,22 +281,25 @@ int main()
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
-    if (IsKeyDown(KEY_LEFT) && jogador->vida > 0) //Movimentação para a Esquerda
+    if (jogador->vida > 0)
     {
-        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-        jogador->direcao_movimento = 0;
+        if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
+        {
+            jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
+            jogador->direcao_movimento = 0;
+        }
+        if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+        {
+            jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+            jogador->direcao_movimento = 1;
+        }
+        if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
+        {
+            jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
+            jogador->podePular = false;
+        }
     }
-    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
-    {
-        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
-        jogador->direcao_movimento = 1;
-    }
-    if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
-    {
-        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
-        jogador->podePular = false;
-    }
-
+    
     //Limites da area de movimentação do jogador
     if ((jogador->posicao.x + TAMANHO_X_JOGADOR / 2) > TAMANHO_X_CENARIO)
     {
@@ -465,12 +468,12 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 
     //Verifica colisão entre inimigo e jogador
-    if (inimigo->tipo > 0)
+    if (inimigo->tipo > 0 && jogador->vida > 0)
     {
         //Verifica se jogador encosta nas bordas do objeto inimigo
         if (VerificaColisaoBordasED(jogador->posicao, TAMANHO_X_JOGADOR, TAMANHO_Y_JOGADOR, ret_inimigo) != 0)
         {
-            jogador->vida -= 1; //Jogador encosta em inimigo e perde vida
+            jogador->vida = 0; //Jogador encosta em inimigo e perde vida
         }
         //Verifica se borda superior do inimigo encosta em objeto jogador
         else if (VerificaColisaoBordaS(inimigo->posicao, TAMANHO_MINION_X, TAMANHO_MINION_Y, ret_jogador))
@@ -620,15 +623,19 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
         personagem->frameRect.y = 0.0f;
     }
     
-    if (jogador->vida <= 0 && jogador->vida >= -3) //Pulo depois da morte
+    if (jogador->vida == 0) //Pulo depois da morte
     {
         personagem->posicao.x = 120 - TAMANHO_X_JOGADOR;
         personagem->frameRect.x = personagem->frameHeight;
         personagem->frameRect.y = 0.0f;
         jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
         jogador->posicao.y += jogador->velocidade * delta; //Aumentar a posição do Y do jogador
+        if (jogador->posicao.y <= 400)
+        {
+            jogador->vida = -1;
+        }
     } 
-    if (jogador->vida < -3 && jogador->posicao.y == TAMANHO_Y_CENARIO/2) //Caída
+    else if (jogador->vida == -1) //Caída
     {
         updateplayer = 0;
         jogador->posicao.y += 2* jogador->velocidade * delta;
@@ -756,8 +763,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
 
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height)
 {
-    camera->offset = (Vector2){width / 2, height / 2};
-    camera->target = jogador->posicao;
+    if (jogador->vida > 0)
+    {
+        camera->offset = (Vector2){width / 2, height / 2};
+        camera->target = jogador->posicao;
+    }
 }
 
 /*
