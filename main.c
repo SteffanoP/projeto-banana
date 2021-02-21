@@ -127,6 +127,7 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
+bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
 
 int main()
 {
@@ -557,6 +558,14 @@ void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItems
     Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2),jogador->posicao.y - jogador->tamanho.y,jogador->tamanho.x,jogador->tamanho.y};
     Rectangle ret_boss = {boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y, boss->tamanho.x, boss->tamanho.y};
 
+    if (boss->tipo == 1)
+    {
+        if (VerificaRangeDudu(boss->posicao, boss->tamanho, ret_jogador, RANGE_DUDU))
+        {
+            boss->posicao.x -= VELOCIDADE_DUDU_ATAQUE * delta;
+        }
+    }
+    
     int colisaoObjeto = 0;
     for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
     {
@@ -999,6 +1008,23 @@ int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float taman
         if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_direita + ponto, ponto_inicial_range_y},jogador))
         {
             return 2;
+        }
+    }
+
+    return 0;
+}
+
+bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range) {
+    const float ponto_inicial_range_y = posicao_inicial.y - 1; //Pega a posição inferior do retângulo do gadinho
+    const float ponto_inicial_range_x_esquerda = posicao_inicial.x - (tamanho.x / 2);
+    
+    //Verifica a reta que sai do ponto até o range
+    for (float ponto = 0; ponto <= range; ponto++)
+    {
+        //Verifica se há colisão no range a esquerda do boss
+        if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_esquerda - ponto, ponto_inicial_range_y}, ret_jogador))
+        {
+            return 1;
         }
     }
 

@@ -42,3 +42,6 @@
 //Dudu Bananinha
 #define TAMANHO_DUDU_X 50
 #define TAMANHO_DUDU_Y 132
+
+#define RANGE_DUDU 100 //Distância entre o jogador e o Dudu para o ataque do Dudu
+#define VELOCIDADE_DUDU_ATAQUE 50.0f //Velocidade em que Dudu realiza o ataque
