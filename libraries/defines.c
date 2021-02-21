@@ -36,3 +36,9 @@
 
 //Habilidades:
 #define RANGE_GADO 100
+
+//Constantes referentes aos Bosses:
+
+//Dudu Bananinha
+#define TAMANHO_DUDU_X 50
+#define TAMANHO_DUDU_Y 132

@@ -188,6 +188,23 @@ int main()
         }
     }
 
+    //Configurações iniciais Boss
+    Inimigo boss[] = {
+        {1, {0}, {3430, 280}, 0, 0, 0, 0}
+    };
+    const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
+
+    //Preenchimento dos valores do inimigo
+    for (int i = 0; i < tamanhoBoss; i++)
+    {
+        if (boss[i].tipo == 1)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+    }
+
     //Configurações iniciais do poder "IMUNE_19"
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
