@@ -122,7 +122,7 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, Inimigo *boss);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -287,6 +287,9 @@ int main()
             UpdateInimigo(&(inimigo[i]), envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
         }
 
+        //Atualiza os dados do Boss
+        UpdateBoss(&(boss[0]), envItems, &jogador, envItemsLength, deltaTime);
+
         //Atualiza a animação do jogador quando o jogador está em movimento
         AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
 
@@ -307,7 +310,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[0]));
 
         //----------------------------------------------------------------------------------
       
@@ -775,7 +778,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, Inimigo *boss)
 {
     BeginDrawing();
 
@@ -816,12 +819,20 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         }
     }
 
-    //Criação e Desenho do jogador
+    //Criação e Desenho
 
     //Desenho da hitbox do jogador
     DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);
+
+
     //Desenho da textura do jogador
     DrawTextureRec(personagem->texture, personagem->frameRect, (Vector2){jogador->posicao.x - (personagem->posicao.x + jogador->tamanho.x), jogador->posicao.y - (personagem->posicao.y + jogador->tamanho.y)}, RAYWHITE);
+    
+    //Desenho da hitbox do boss
+    if (boss->vida > 0)
+    {
+        DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
+    }
 
     DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
