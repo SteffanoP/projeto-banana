@@ -117,6 +117,7 @@ static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zera
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
+void UpdateBoss(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
@@ -528,6 +529,78 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     {
         inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
         inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+    }
+}
+
+void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta)
+{
+    Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2),jogador->posicao.y - jogador->tamanho.y,jogador->tamanho.x,jogador->tamanho.y};
+    Rectangle ret_boss = {boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y, boss->tamanho.x, boss->tamanho.y};
+
+    int colisaoObjeto = 0;
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+    {
+        EnvItem *objeto = envItems + i;
+        Vector2 *j = &(boss->posicao);
+
+        //Condição de colisão para andar encima de plataformas
+        if (objeto->colisao &&
+            objeto->retangulo.x - boss->tamanho.x / 2 <= j->x &&                           
+            objeto->retangulo.x + objeto->retangulo.width + boss->tamanho.x / 2 >= j->x && // Definindo a invasão da área do boss com a área do objeto(área de colisão)
+            objeto->retangulo.y >= j->y &&
+            objeto->retangulo.y < j->y + boss->velocidade * delta)
+        {
+            colisaoObjeto = 1;
+            boss->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+            j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+        }
+
+        //Condição de colisão em objetos Universais
+        if (objeto->colisao)
+        {
+            if (VerificaColisaoBordasED(boss->posicao, boss->tamanho.x, boss->tamanho.y, objeto->retangulo) == 1)
+            {
+                boss->direcao_movimento = 1;
+            }
+            else if (VerificaColisaoBordasED(boss->posicao, boss->tamanho.x, boss->tamanho.y, objeto->retangulo) == 2)
+            {
+                boss->direcao_movimento = 0;
+            }
+        }
+    }
+
+    //Verifica a colisão entre o Poder e o Inimigo
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (boss->tipo > 0)
+        {           
+            if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, ret_boss) && imune_19[p].poder_ativo)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado quando colide
+            }
+        }
+    }
+
+    //Verifica colisão entre boss e jogador
+    if (boss->tipo > 0 && jogador->vida > 0)
+    {
+        //Verifica se jogador encosta nas bordas do objeto boss
+        if (VerificaColisaoBordasED(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, ret_boss) != 0)
+        {
+            jogador->vida = 0; //Jogador encosta em boss e perde vida
+        }
+        //Verifica se borda superior do boss encosta em objeto jogador
+        else if (VerificaColisaoBordaS(boss->posicao, boss->tamanho.x, boss->tamanho.y, ret_jogador, 5))
+        {
+            boss->tipo = 0; //Jogador mata o boss
+            boss->vida = 0;
+        }
+    }
+
+    if (!colisaoObjeto) //Se não há colisão com objeto
+    {
+        boss->posicao.y += boss->velocidade * delta; //Aumentar a posição do Y do boss
+        boss->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
     }
 }
 
