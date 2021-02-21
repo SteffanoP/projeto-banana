@@ -164,11 +164,14 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
-        {1, {0}, {1650, 280}, 0, 0, 0, YELLOW},
-        {1, {0}, {1750, 280}, 0, 0, 0, YELLOW},
-        {1, {0}, {1850, 280}, 0, 0, 0, YELLOW},
-        {2, {0}, {2050, 280}, 0, 1, 0, ORANGE},
-        {2, {0}, {2150, 280}, 0, 1, 0, ORANGE}
+        {1, {0}, {1650, 280}, 0, 0, 0, 0},
+        {1, {0}, {1750, 280}, 0, 0, 0, 0},
+        {1, {0}, {1850, 280}, 0, 0, 0, 0},
+        {2, {0}, {2050, 280}, 0, 1, 0, 0},
+        {2, {0}, {2150, 280}, 0, 1, 0, 0},
+        {3, {0}, {3310, 280}, 0, 0, 0, 0},
+        {3, {0}, {3210, 280}, 0, 0, 0, 0},
+        {3, {0}, {3110, 280}, 0, 0, 0, 0},
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
     
@@ -186,6 +189,12 @@ int main()
             inimigo[i].tamanho = (Vector2){TAMANHO_GADO_X,TAMANHO_GADO_Y};
             inimigo[i].vida = 2;
             inimigo[i].cor = ORANGE;
+        }
+        else if (inimigo[i].tipo == 3)
+        {
+            inimigo[i].tamanho = (Vector2){TAMANHO_BANANA_X,TAMANHO_BANANA_Y};
+            inimigo[i].vida = 1;
+            inimigo[i].cor = DARKBLUE;
         }
     }
 
@@ -518,7 +527,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     //Verifica a colisão entre o Poder e o Inimigo
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        if (inimigo->tipo > 0)
+        if (inimigo->tipo > 0 && inimigo->tipo != 3)
         {
             //Desenho do inimigo
             Rectangle inimigoRect = {inimigo->posicao.x - inimigo->tamanho.x / 2, inimigo->posicao.y - inimigo->tamanho.y, inimigo->tamanho.x, inimigo->tamanho.y};
@@ -542,7 +551,11 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         //Verifica se borda superior do inimigo encosta em objeto jogador
         else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
         {
-            inimigo->tipo = 0; //Jogador mata o inimigo
+            //Verifica se inimigo não é do tipo banana
+            if (inimigo->tipo != 3)
+            {
+                inimigo->tipo = 0; //Jogador mata o inimigo
+            }
         }
     }
 
@@ -818,6 +831,11 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             //Desenho da textura dos gados
             DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (gados->posicao.y - inimigo[i].tamanho.x)}, RAYWHITE);
         }
+        if (inimigo[i].tipo == 3)
+        {
+            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
+        }
+        
     }
 
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)

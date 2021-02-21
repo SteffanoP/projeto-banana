@@ -45,3 +45,6 @@
 
 #define RANGE_DUDU 100 //Distância entre o jogador e o Dudu para o ataque do Dudu
 #define VELOCIDADE_DUDU_ATAQUE 50.0f //Velocidade em que Dudu realiza o ataque
+
+#define TAMANHO_BANANA_X 40
+#define TAMANHO_BANANA_Y 40
