@@ -200,7 +200,7 @@ int main()
 
     //Configurações iniciais Boss
     Inimigo boss[] = {
-        {1, {0}, {3430, 280}, 0, 0, 0, 0}
+        {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
 
@@ -208,6 +208,12 @@ int main()
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == 1)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 2)
         {
             boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
             boss[i].vida = 1;
@@ -880,6 +886,9 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
+
+    DrawText(FormatText("Exemplo de Boss Fabinho"), 3750, 450, 20, BLACK);
+    DrawText(FormatText("Tempo em Segundos: %u",t), 3750, 475, 20, BLACK);
 
     EndMode2D();
 

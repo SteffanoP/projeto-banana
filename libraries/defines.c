@@ -48,3 +48,8 @@
 
 #define TAMANHO_BANANA_X 40
 #define TAMANHO_BANANA_Y 40
+
+//Fabinho Bananinha
+#define TAMANHO_FABIO_X 50
+#define TAMANHO_FABIO_Y 50
+
