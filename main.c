@@ -891,7 +891,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (laranja[p].poder_ativo)
             {
-                DrawCircleV(laranja[p].posicao, imune_19[p].raio, ORANGE);
+                DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
             }
         }
     }
