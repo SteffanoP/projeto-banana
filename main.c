@@ -113,14 +113,16 @@ time_t s;
 time_t sc;
 
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
+static Poder laranja[PODER_MAX_FABIO] = {0}; //A variável inicializa zerada em suas posições
 
+unsigned int inimigo_cooldown_poder = 0;
 unsigned int inimigo_cooldown_pulo = 0;
 //Protótipo das funções
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateBoss(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
@@ -230,6 +232,14 @@ int main()
         imune_19[p].posicao = (Vector2){0,0};
         imune_19[p].raio = 10;
         imune_19[p].cor = BLACK;
+    }
+
+    //Configurações iniciais do poder "LARANJA!"
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        laranja[p].posicao = (Vector2){0,0};
+        laranja[p].raio = 10;
+        laranja[p].cor = ORANGE;
     }
 
     //Configurações iniciais da animação dos minions
@@ -825,7 +835,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, Inimigo *boss)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, Inimigo *boss, float delta)
 {
     BeginDrawing();
 
@@ -863,11 +873,21 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         
     }
 
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
     {
-        if (imune_19[p].poder_ativo)
+        if (p < PODER_MAX_PERSONAGEM)
         {
-            DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+            if (imune_19[p].poder_ativo)
+            {
+                DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+            }
+        }
+        if (p < PODER_MAX_FABIO)
+        {
+            if (laranja[p].poder_ativo)
+            {
+                DrawCircleV(laranja[p].posicao, imune_19[p].raio, ORANGE);
+            }
         }
     }
 
@@ -913,8 +933,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     EndDrawing();
 }
 
-void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta){
-
+void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta){
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE)) {                                                               
@@ -936,37 +955,85 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
             }
         }
     }
-    
-    //Movimentação do poder
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        if (imune_19[p].direcao_movimento == 1)  //Considerando a direção do poder para a DIREITA:
-        {
-            imune_19[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na DIREITA
-        } else if (imune_19[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
-        {
-            imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
-        }
 
-        //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
-        for (int o = 0; o < envItemsLength; o++)
+    //Condição de Fábio atirar LARANJAS!
+    if ((boss->tipo == 2) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_FABIO <= t))
+    {
+        for (int p = 0; p < PODER_MAX_FABIO; p++)
         {
-            if (envItems[o].colisao //Se houver um objeto colidível
-                && CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, envItems[o].retangulo))  //e a colisão for entre o poder
-            {                                                                                               // (círculo) e um retângulo
-                imune_19[p].poder_ativo = false; //O poder é dasativado ("desaparece" do cenário)                                                 
+            if (!laranja[p].poder_ativo)
+            {
+                laranja[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/2)};
+                laranja[p].direcao_movimento = 0;
+                laranja[p].poder_ativo = true;
+                break;
             }
         }
-        
-        //Limite da área de movimento do poder
-        if (imune_19[p].posicao.x < imune_19[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+    }
+
+    //Movimentação do poder
+    /*Aqui há uma economia no for, veja que o 'for' é utilizado para o maior valor de p 
+     *e existe um 'if' que separa o loop para o personagem e o boss fábio
+     */
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        if (p < PODER_MAX_PERSONAGEM)
         {
-            imune_19[p].poder_ativo = false; //Poder é desativado
-        } else if (imune_19[p].posicao.x + imune_19[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
-        {
-            imune_19[p].poder_ativo = false; //Poder é desativado
+            if (imune_19[p].direcao_movimento == 1)  //Considerando a direção do poder para a DIREITA:
+            {
+                imune_19[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na DIREITA
+            } else if (imune_19[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, envItems[o].retangulo))  //e a colisão for entre o poder
+                {                                                                                               // (círculo) e um retângulo
+                    imune_19[p].poder_ativo = false; //O poder é desativado ("desaparece" do cenário)                                                                                               
+                }
+            }
+            
+            //Limite da área de movimento do poder
+            if (imune_19[p].posicao.x < imune_19[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado
+            } else if (imune_19[p].posicao.x + imune_19[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado
+            }
         }
-        
+
+        if (p < PODER_MAX_FABIO)
+        {
+            if (laranja[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                laranja[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                       //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(laranja[p].posicao, laranja[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                             // (círculo) e um retângulo
+                    laranja[p].poder_ativo = false;                                                          //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (laranja[p].posicao.x < laranja[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                laranja[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (laranja[p].posicao.x + laranja[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                laranja[p].poder_ativo = false; //Poder é desativado
+            }
+        }  
     }
 }
 
