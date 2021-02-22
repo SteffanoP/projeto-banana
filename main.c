@@ -42,6 +42,7 @@ typedef struct Inimigo
     bool direcao_movimento;
     int vida;
     Color cor;
+    bool podePular;
 } Inimigo;
 
 /* Sobre os poderes:
@@ -113,6 +114,7 @@ time_t sc;
 
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 
+unsigned int inimigo_cooldown_pulo = 0;
 //Protótipo das funções
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
@@ -164,14 +166,14 @@ int main()
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
-        {1, {0}, {1650, 280}, 0, 0, 0, 0},
-        {1, {0}, {1750, 280}, 0, 0, 0, 0},
-        {1, {0}, {1850, 280}, 0, 0, 0, 0},
-        {2, {0}, {2050, 280}, 0, 1, 0, 0},
-        {2, {0}, {2150, 280}, 0, 1, 0, 0},
-        {3, {0}, {3310, 280}, 0, 0, 0, 0},
-        {3, {0}, {3210, 280}, 0, 0, 0, 0},
-        {3, {0}, {3110, 280}, 0, 0, 0, 0},
+        {1, {0}, {1650, 280}, 0, 0, 0, 0, 0},
+        {1, {0}, {1750, 280}, 0, 0, 0, 0, 0},
+        {1, {0}, {1850, 280}, 0, 0, 0, 0, 0},
+        {2, {0}, {2050, 280}, 0, 1, 0, 0, 0},
+        {2, {0}, {2150, 280}, 0, 1, 0, 0, 0},
+        {3, {0}, {3310, 280}, 0, 0, 0, 0, 0},
+        {3, {0}, {3210, 280}, 0, 0, 0, 0, 0},
+        {3, {0}, {3110, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
     
@@ -200,6 +202,7 @@ int main()
 
     //Configurações iniciais Boss
     Inimigo boss[] = {
+        {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
@@ -585,6 +588,17 @@ void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItems
             boss->posicao.x -= VELOCIDADE_DUDU_ATAQUE * delta;
         }
     }
+
+    if (boss->tipo == 2)
+    {
+        //Condição de Fábio pular
+        if (boss->podePular && (inimigo_cooldown_pulo + TEMPO_COOLDOWN_PULO_FABIO <= t))
+        {
+            boss->velocidade = -JOGADOR_PULO_VELOCIDADE;
+            boss->podePular = false;
+            inimigo_cooldown_pulo = t;
+        }
+    }
     
     int colisaoObjeto = 0;
     for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
@@ -650,6 +664,10 @@ void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItems
     {
         boss->posicao.y += boss->velocidade * delta; //Aumentar a posição do Y do boss
         boss->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+    }
+    else
+    {
+        boss->podePular = true;
     }
 }
 

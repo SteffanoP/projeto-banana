@@ -53,3 +53,4 @@
 #define TAMANHO_FABIO_X 50
 #define TAMANHO_FABIO_Y 50
 
+#define TEMPO_COOLDOWN_PULO_FABIO 3000 //millisegundos
