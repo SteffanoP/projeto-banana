@@ -15,7 +15,7 @@
 #define PODER_MOVIMENTO_VELOCIDADE 700
 
 
-#define TAMANHO_X_CENARIO 4000
+#define TAMANHO_X_CENARIO 4030
 #define TAMANHO_Y_CENARIO 400
 
 //Constantes referentes aos inimigos:
@@ -48,3 +48,12 @@
 
 #define TAMANHO_BANANA_X 40
 #define TAMANHO_BANANA_Y 40
+
+//Fabinho Bananinha
+#define TAMANHO_FABIO_X 50
+#define TAMANHO_FABIO_Y 50
+
+#define TEMPO_COOLDOWN_PULO_FABIO 3000 //millisegundos
+#define TEMPO_COOLDOWN_PODER_FABIO 2000 //ms
+#define PODER_MAX_FABIO 20
+
