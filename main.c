@@ -59,6 +59,14 @@ typedef struct Poder
     Color cor;
 } Poder;
 
+typedef struct IMUNE_19
+{
+    Vector2 posicao;
+    Texture2D texture;
+    Rectangle frameRect;
+} IMUNE_19;
+
+
 typedef struct EnvItem
 {
     Rectangle retangulo;
@@ -111,11 +119,11 @@ static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zera
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2);
 void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, IMUNE_19 *imune);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -182,14 +190,6 @@ int main()
         }
     }
 
-    //Configurações iniciais do poder "IMUNE_19"
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        imune_19[p].posicao = (Vector2){0,0};
-        imune_19[p].raio = 10;
-        imune_19[p].cor = BLACK;
-    }
-
     //Configurações iniciais da animação dos minions
     Minions minions;
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
@@ -209,6 +209,19 @@ int main()
     gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
     gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
+    
+    //Configurações iniciais da animação do poder "IMUNE_19"
+    IMUNE_19 imune;
+    Texture2D spriteImune1 = LoadTexture("sprites/seringa1.png"); //Carregamento da sprite sheet
+    Texture2D spriteImune2 = LoadTexture("sprites/seringa2.png");
+    imune.texture = spriteImune1;
+    //Configurações iniciais do poder "IMUNE_19"
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        imune_19[p].posicao = (Vector2){0,0};
+        imune_19[p].raio = 10;
+        imune_19[p].cor = BLACK;
+    }
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -268,7 +281,7 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
+        UpdatePoder(imune_19, &imune, &jogador, envItems, envItemsLength, deltaTime, spriteImune1, spriteImune2);      
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -278,7 +291,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &imune);
 
         //----------------------------------------------------------------------------------
       
@@ -292,6 +305,8 @@ int main()
     UnloadTexture(personagem.texture); 
     UnloadTexture(minions.texture);
     UnloadTexture(gados.texture);
+    UnloadTexture(spriteImune1);
+    UnloadTexture(spriteImune2);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -663,7 +678,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, IMUNE_19 *imune)
 {
     BeginDrawing();
 
@@ -701,6 +716,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (imune_19[p].poder_ativo)
         {
             DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+            DrawTextureRec(imune->texture, imune->frameRect, (Vector2){imune_19[p].posicao.x - 30, imune_19[p].posicao.y - 30}, RAYWHITE);
         }
     }
 
@@ -724,7 +740,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     EndDrawing();
 }
 
-void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta){
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2){
 
 
     //Acionamento do poder IMUNE_19
@@ -735,7 +751,8 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
             {
                 imune_19[p].posicao = (Vector2){jogador->posicao.x + (jogador->tamanho.x/2), jogador->posicao.y - (jogador->tamanho.y/2)}; //Posição inicial do poder é o centro do jogador
                 imune_19[p].direcao_movimento = jogador->direcao_movimento; //Poder tem direção baseada na do jogador, porém fica independente quando emitido
-                imune_19[p].poder_ativo = true;                             
+                imune_19[p].poder_ativo = true;
+                imune->texture = spriteImune1;
                 break;   
             }
             else if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 0) //Caso jogador esteja indo para a ESQUERDA
@@ -743,6 +760,7 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
                 imune_19[p].posicao = (Vector2){jogador->posicao.x - (jogador->tamanho.x/2), jogador->posicao.y - (jogador->tamanho.y/2)}; //Centro do jogador
                 imune_19[p].direcao_movimento = jogador->direcao_movimento;
                 imune_19[p].poder_ativo = true;                             
+                imune->texture = spriteImune2;            
                 break;   
             }
         }
@@ -758,6 +776,9 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
         {
             imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
         }
+
+        imune->frameRect = (Rectangle){0.0f, 0.0f, imune->texture.width, imune->texture.height}; //Sprite
+        imune->posicao = imune_19[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
         //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
         for (int o = 0; o < envItemsLength; o++)
