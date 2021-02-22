@@ -56,3 +56,4 @@
 #define TEMPO_COOLDOWN_PULO_FABIO 3000 //millisegundos
 #define TEMPO_COOLDOWN_PODER_FABIO 2000 //ms
 #define PODER_MAX_FABIO 20
+
