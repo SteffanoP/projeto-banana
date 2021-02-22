@@ -208,6 +208,14 @@ int main()
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
+    int bossAtivo = 2; //Define qual o tipo de boss que deve estar ativo
+    for (int i = 0; i < tamanhoBoss; i++)
+    {
+        if (boss[i].tipo == bossAtivo)
+        {
+            bossAtivo = i;
+        }
+    }
 
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
@@ -318,7 +326,7 @@ int main()
         }
 
         //Atualiza os dados do Boss
-        UpdateBoss(&(boss[0]), envItems, &jogador, envItemsLength, deltaTime);
+        UpdateBoss(&(boss[bossAtivo]), envItems, &jogador, envItemsLength, deltaTime);
 
         //Atualiza a animação do jogador quando o jogador está em movimento
         AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
@@ -340,7 +348,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[0]));
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[bossAtivo]), deltaTime);
 
         //----------------------------------------------------------------------------------
       
