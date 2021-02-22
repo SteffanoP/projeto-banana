@@ -335,10 +335,7 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        if (jogador.poder == 1)
-        {
-            UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
-        }
+        UpdatePoder(imune_19, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime);      
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -944,7 +941,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta){
 
     //Acionamento do poder IMUNE_19
-    if (IsKeyPressed(KEY_SPACE)) {                                                               
+    if (IsKeyPressed(KEY_SPACE) && jogador->poder) {                                                               
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)  //Configuração do "imune_19" quando desativado
         {
             if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 1) //Caso jogador esteja indo para a DIREITA
