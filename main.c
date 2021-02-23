@@ -63,7 +63,7 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
-typedef struct Personagem
+typedef struct Animacao
 {
     Vector2 posicao;
     Texture2D texture;
@@ -73,19 +73,7 @@ typedef struct Personagem
     int framesCounter;
     float framesSpeed;
     int currentFrame;
-} Personagem;
-
-typedef struct Frame_inimigo
-{
-    Vector2 posicao;
-    Texture2D texture;
-    float frameWidth;
-    float frameHeight;
-    Rectangle frameRect;
-    int framesCounter;
-    float framesSpeed;
-    int currentFrame;
-} Frame_inimigo;
+} Animacao;
 
 int updateplayer;
 clock_t t;
@@ -99,10 +87,10 @@ static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zera
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
-void AnimacaoJogadorMovimento(Jogador *jogador,Personagem *personagem, float deltaTime);
-void AnimacaoInimigo(Inimigo *inimigo, Frame_inimigo *frameInimigoT1, Frame_inimigo *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime);
-void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Personagem *personagem, Frame_inimigo *frameInimigoT1, Frame_inimigo *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado);
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime);
+void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime);
+void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
@@ -128,10 +116,8 @@ int main()
 
     
     //Configurações Iniciais da animação do joagdor
-    Personagem personagem;
+    Animacao personagem;
     Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
-    //Texture2D spritesPersonagem = LoadTexture("sprites/dr-cake.png");
-    //Texture2D spritesPersonagem = LoadTexture("sprites/john-dorivac.png");
     personagem.texture = (Texture2D)spritesPersonagem;
     personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
     personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
@@ -139,7 +125,7 @@ int main()
     personagem.posicao.x = 116 - TAMANHO_X_JOGADOR; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - TAMANHO_Y_JOGADOR; //Posiçâo y do personagem em relação à posição y do jogador
     personagem.framesCounter = 0; //Conta as FPS
-    personagem.framesSpeed = 18;  //FPS da animação
+    personagem.framesSpeed = 28;  //FPS da animação
     personagem.currentFrame = 0; //Controla a passagem de frames
 
     //Configurações Iniciais dos inimigos
@@ -161,12 +147,12 @@ int main()
     }
 
     //Configurações iniciais da animação dos inimigos
-    Frame_inimigo frameInimigoT1 = {0};
+    Animacao frameInimigoT1 = {0};
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
     frameInimigoT1.currentFrame = 0;
     frameInimigoT1.framesCounter = 0;
     frameInimigoT1.framesSpeed = 13;
-    Frame_inimigo frameInimigoT2 = {0};
+    Animacao frameInimigoT2 = {0};
     Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
     frameInimigoT2.currentFrame = 0;
     frameInimigoT2.framesCounter = 0;
@@ -466,7 +452,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 }
 
-void AnimacaoJogadorMovimento(Jogador *jogador, Personagem *personagem, float deltaTime)
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime)
 {
     personagem->framesCounter++; //Atualiza o valor da frame do jogo
 
@@ -476,7 +462,7 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Personagem *personagem, float de
     if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
     {
         personagem->framesCounter = 0;
-        personagem->framesSpeed += 0.4;
+        personagem->framesSpeed += 0.5;
         if((float)s > (float)sc + 60) personagem->framesSpeed += 0.1;
         if((float)s > (float)sc + 5*60) personagem->framesSpeed += 0.1;
         
@@ -523,7 +509,7 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Personagem *personagem, float de
     }
 }
 
-void AnimacaoInimigo(Inimigo *inimigo, Frame_inimigo *frameInimigoT1, Frame_inimigo *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime)
+void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime)
 {
     if (inimigo->tipo == 1)
     {
@@ -615,7 +601,7 @@ void AnimacaoInimigo(Inimigo *inimigo, Frame_inimigo *frameInimigoT1, Frame_inim
     }
 }
 
-void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta)
+void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
 {
     if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda
     {
@@ -646,7 +632,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Personagem *personagem, Frame_inimigo *framesInimigoT1, Frame_inimigo *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *framesInimigoT1, Animacao *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado)
 {
     BeginDrawing();
 
