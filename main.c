@@ -228,7 +228,7 @@ int main()
         }
         if (boss[i].tipo == 2)
         {
-            boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
+            boss[i].tamanho = (Vector2){TAMANHO_FABIO_X,TAMANHO_FABIO_Y};
             boss[i].vida = 1;
             boss[i].cor = BLUE;
         }
