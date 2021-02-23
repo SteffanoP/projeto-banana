@@ -68,3 +68,5 @@
 #define TAMANHO_REI_X 50
 #define TAMANHO_REI_Y 132
 
+#define TEMPO_COOLDOWN_PODER_REI 1000 //ms
+#define PODER_MAX_REI 20
