@@ -152,19 +152,32 @@ int main()
 
     
     //Configurações Iniciais da animação do joagdor
+    int tela_personagem = 2;
     FPS_Animacao frames;
     frames.counter = 0; //Conta as FPS
     frames.speed = 12;  //FPS da animação
     frames.currentFrame = 0; //Controla a passagem de frames
     Personagem personagem;
-    Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
-    personagem.texture = (Texture2D)spritesPersonagem;
+    Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
+    Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
+    Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
+    switch(tela_personagem)
+    {
+        case 1:
+        personagem.texture = (Texture2D)spritesPersonagem_comp;
+        break;
+        case 2:
+        personagem.texture = (Texture2D)spritesPersonagem_john;
+        break;
+        case 0:
+        personagem.texture = (Texture2D)spritesPersonagem_cake;
+        break;
+    }
     personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
     personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
-    personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
-
+    personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador    
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
         {1, {0}, {1650, 280}, 0, 0, 0, YELLOW},
@@ -253,9 +266,6 @@ int main()
 
 
     //TECLAS para as telas
-    bool IsKeyPressed(KEY_SPACE);
-    bool IsKeyPressed(KEY_LEFT);
-    bool IsKeyPressed(KEY_RIGHT);
 
     /*Carregando texturas*/
     Texture2D LOGO_img = LoadTexture("imagens_tela/LOGO_img.png");
@@ -263,7 +273,7 @@ int main()
     Texture2D tela_companheiro = LoadTexture("imagens_tela/tela_companheiro.png");
     Texture2D tela_cake = LoadTexture("imagens_tela/tela_cake.png");
     Texture2D tela_dorivac = LoadTexture("imagens_tela/tela_dorivac.png");
-
+    
     //--------------------------------------------------------------------------------------
     //O Jogo
     //--------------------------------------------------------------------------------------
@@ -271,7 +281,7 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
-        int tela_personagem = 1;
+        
         float deltaTime = GetFrameTime();
         t = clock(); //Armazena o tempo da frame
         time(&s); //Tempo enquanto o jogo está acontecendo
@@ -384,17 +394,18 @@ int main()
         BeginMode2D(camera);
         switch (gamescreen)
         {
+              
         case LOGO:
             switch (state)
             {
             case 0:
-                DrawTexture(LOGO_img, 0.0f, 0.0f, Fade(BLACK,alpha)); // "Fade()" é usado para fazer a transição entre as telas
+                DrawTexture(LOGO_img, -110.0f, -105.0f, Fade(BLACK,alpha)); // "Fade()" é usado para fazer a transição entre as telas
                 break;
             case 1:
-                DrawTexture(LOGO_img, 0.0f, 0.0f, WHITE); //
+                DrawTexture(LOGO_img, -110.0f, -105.0f, WHITE); //
                 break;
             case 2:
-                DrawTexture(LOGO_img, 0.0f, 0.0f, Fade(BLACK, alpha));
+                DrawTexture(LOGO_img, -110.0f, -105.0f, Fade(BLACK, alpha));
                 break;
             }
             break;
@@ -403,10 +414,10 @@ int main()
             switch (state)
             {
             case 1:
-                DrawTexture(INICIO_img, 0.0f, 0.0f, WHITE);
+                DrawTexture(INICIO_img,-110.0f, -105.0f, WHITE);
                 break;
             case 2:
-                DrawTexture(INICIO_img, 0.0f, 0.0f, Fade(BLACK, alpha));
+                DrawTexture(INICIO_img, -110.0f, -105.0f, Fade(BLACK, alpha));
                 break;
             }
             break;
@@ -414,13 +425,13 @@ int main()
             switch (tela_personagem)
             {
             case 1:
-                DrawTexture(tela_companheiro, 0.0f, 0.0f, WHITE);
+                DrawTexture(tela_companheiro, -110.0f, -105.0f, WHITE);
                 break;
             case 0:
-                DrawTexture(tela_cake, 0.0f, 0.0f, WHITE);
+                DrawTexture(tela_cake, -110.0f, -105.0f, WHITE);
                 break;
             case 2:
-                DrawTexture(tela_dorivac, 0.0f, 0.0f, WHITE);
+                DrawTexture(tela_dorivac, -110.0f, -105.0f, WHITE);
                 break;
             }
         break;
@@ -430,43 +441,6 @@ int main()
             break;
 
         }
-    
-
-            // //Atualiza os dados do jogador
-            // if (updateplayer == 1)
-            // {
-            //     UpdatePlayer(&jogador, envItems, envItemsLength, deltaTime);
-            // }
-
-            // //Atualiza os dados dos inimigos
-            // for (int i = 0; i < tamanhoInimigo; i++)
-            // {
-            //     UpdateInimigo(&(inimigo[i]), envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
-            // }
-
-            // //Atualiza a animação do jogador quando o jogador está em movimento
-            // AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
-
-            // //Atualiza a animação do inimigo
-            // AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
-
-            // //Atualiza os dados do poder
-            // UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);
-
-            // //Atualiza a Câmera focada no jogador
-            // UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
-            // //----------------------------------------------------------------------------------
-
-            // // Draw
-            // //----------------------------------------------------------------------------------
-
-            // //Desenho circular do poder "IMUNE_19"
-            // Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem);
-
-            // //----------------------------------------------------------------------------------
-
-            //Atualiza a animação quando o jogador está parado
-         
     EndMode2D();
 
     EndDrawing();   
