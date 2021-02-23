@@ -207,10 +207,11 @@ int main()
     Inimigo boss[] = {
         {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0},
-        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0}
+        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0},
+        {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
+    int bossAtivo = 4; //Define qual o tipo de boss que deve estar ativo
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -237,6 +238,12 @@ int main()
         if (boss[i].tipo == 3)
         {
             boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 4)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_REI_X,TAMANHO_REI_Y};
             boss[i].vida = 1;
             boss[i].cor = BLUE;
         }

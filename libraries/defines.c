@@ -63,3 +63,8 @@
 
 #define TEMPO_COOLDOWN_PODER_TCHUTCHUCA 2500 //ms
 #define PODER_MAX_TCHUTCHUCA 20
+
+//Rei Banana
+#define TAMANHO_REI_X 50
+#define TAMANHO_REI_Y 132
+
