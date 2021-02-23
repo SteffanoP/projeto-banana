@@ -289,7 +289,7 @@ int main()
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
         {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 4550, 200}, 1, GRAY},
+        {{0, 400, 5070, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
         {{650, 300, 100, 10}, 1, GRAY},
@@ -304,7 +304,8 @@ int main()
         {{3010, 340,  30, 60}, 1, GREEN},
         {{3530, 270,  30, 130}, 1, GREEN},
         {{4000, 270,  30, 130}, 1, GREEN},
-        {{4520, 270,  30, 130}, 1, GREEN}
+        {{4520, 270,  30, 130}, 1, GREEN},
+        {{5040, 270,  30, 130}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
