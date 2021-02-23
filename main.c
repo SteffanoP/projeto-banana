@@ -117,6 +117,7 @@ static Poder laranja[PODER_MAX_FABIO] = {0}; //A variável inicializa zerada em 
 static Poder dinheiro[PODER_MAX_TCHUTCHUCA] = {0}; //A variável inicializa zerada em suas posições
 static Poder pocao[PODER_MAX_REI] = {0}; //A variável inicializa zerada em suas posições
 
+
 unsigned int inimigo_cooldown_poder = 0;
 unsigned int inimigo_cooldown_pulo = 0;
 //Protótipo das funções
@@ -213,6 +214,7 @@ int main()
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
     int bossAtivo = 4; //Define qual o tipo de boss que deve estar ativo
+
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -232,7 +234,13 @@ int main()
         }
         if (boss[i].tipo == 2)
         {
-            boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
+            boss[i].tamanho = (Vector2){TAMANHO_FABIO_X,TAMANHO_FABIO_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
             boss[i].vida = 1;
             boss[i].cor = BLUE;
         }
@@ -944,6 +952,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
                 DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
             }
         }
+
     }
 
     //Criação e Desenho
@@ -1024,6 +1033,7 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
                 break;
             }
         }
+        inimigo_cooldown_poder = t;
     }
 
     //Condição de Tchutchuca atirar dinheiro!
@@ -1189,6 +1199,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
             else if (dinheiro[p].posicao.x + dinheiro[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
             {
                 dinheiro[p].poder_ativo = false; //Poder é desativado
+            }
+          
+            if (dinheiro[p].posicao.y < 0) //Limite até o teto do cenário
+            {
+                dinheiro[p].poder_ativo = false;
             }
         } 
 
