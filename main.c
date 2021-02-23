@@ -115,6 +115,8 @@ time_t sc;
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 static Poder laranja[PODER_MAX_FABIO] = {0}; //A variável inicializa zerada em suas posições
 static Poder dinheiro[PODER_MAX_TCHUTCHUCA] = {0}; //A variável inicializa zerada em suas posições
+static Poder pocao[PODER_MAX_REI] = {0}; //A variável inicializa zerada em suas posições
+
 
 unsigned int inimigo_cooldown_poder = 0;
 unsigned int inimigo_cooldown_pulo = 0;
@@ -207,10 +209,12 @@ int main()
     Inimigo boss[] = {
         {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0},
-        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0}
+        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0},
+        {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
+    int bossAtivo = 4; //Define qual o tipo de boss que deve estar ativo
+
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -240,6 +244,18 @@ int main()
             boss[i].vida = 1;
             boss[i].cor = BLUE;
         }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 4)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_REI_X,TAMANHO_REI_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
     }
 
     //Configurações iniciais do poder "IMUNE_19"
@@ -266,6 +282,14 @@ int main()
         dinheiro[p].cor = ORANGE;
     }
 
+    //Configurações iniciais do poder "Poção"
+    for (int p = 0; p < PODER_MAX_REI; p++)
+    {
+        pocao[p].posicao = (Vector2){0,0};
+        pocao[p].raio = 10;
+        pocao[p].cor = BLUE;
+    }
+
     //Configurações iniciais da animação dos minions
     Minions minions;
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
@@ -289,7 +313,7 @@ int main()
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
         {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 4550, 200}, 1, GRAY},
+        {{0, 400, 5070, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
         {{650, 300, 100, 10}, 1, GRAY},
@@ -304,7 +328,8 @@ int main()
         {{3010, 340,  30, 60}, 1, GREEN},
         {{3530, 270,  30, 130}, 1, GREEN},
         {{4000, 270,  30, 130}, 1, GREEN},
-        {{4520, 270,  30, 130}, 1, GREEN}
+        {{4520, 270,  30, 130}, 1, GREEN},
+        {{5040, 270,  30, 130}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -919,6 +944,15 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
                 DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
             }
         }
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].poder_ativo)
+            {
+                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+            }
+        }
+
     }
 
     //Criação e Desenho
@@ -1041,6 +1075,21 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
         inimigo_cooldown_poder = t;
     }
     
+    //Condição do rei de atirar poções
+    if ((boss->tipo == 4) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_REI <= t))
+    {
+        for (int p = 0; p < PODER_MAX_REI; p++)
+        {
+            if (!pocao[p].poder_ativo)
+            {
+                pocao[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/4)};
+                pocao[p].direcao_movimento = 0;
+                pocao[p].poder_ativo = true;
+                break;
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
 
     //Movimentação do poder
     /*Aqui há uma economia no for, veja que o 'for' é utilizado para o maior valor de p 
@@ -1151,12 +1200,40 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
             {
                 dinheiro[p].poder_ativo = false; //Poder é desativado
             }
-
+          
             if (dinheiro[p].posicao.y < 0) //Limite até o teto do cenário
             {
                 dinheiro[p].poder_ativo = false;
             }
-        }  
+        } 
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                pocao[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                     //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(pocao[p].posicao, pocao[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                           // (círculo) e um retângulo
+                    pocao[p].poder_ativo = false;                                                         //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (pocao[p].posicao.x < pocao[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (pocao[p].posicao.x + pocao[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+        } 
     }
 }
 
