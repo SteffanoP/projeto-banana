@@ -135,6 +135,7 @@ int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float ta
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
+bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
 
 int main()
 {
@@ -213,7 +214,7 @@ int main()
         {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 4; //Define qual o tipo de boss que deve estar ativo
+    int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
 
     for (int i = 0; i < tamanhoBoss; i++)
     {
@@ -1233,7 +1234,38 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
             {
                 pocao[p].poder_ativo = false; //Poder é desativado
             }
-        } 
+        }
+
+        //Verificação se há colisão de poder com poder
+        for (int i = 0; i < PODER_MAX_PERSONAGEM; i++)
+        {
+            switch (boss->tipo)
+            {
+            case 2:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(laranja[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    laranja[p].poder_ativo = false;
+                }
+                break;
+            case 3:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(dinheiro[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    dinheiro[p].poder_ativo = false;
+                }
+                break;
+            case 4:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(pocao[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    pocao[p].poder_ativo = false;
+                }
+                break;
+            default:
+                break;
+            }
+        }
     }
 }
 
@@ -1336,6 +1368,19 @@ bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_j
     {
         //Verifica se há colisão no range a esquerda do boss
         if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_esquerda - ponto, ponto_inicial_range_y}, ret_jogador))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
+{
+    if (poder1->poder_ativo && poder2->poder_ativo)
+    {
+        if (CheckCollisionCircles(poder1->posicao, poder1->raio, poder2->posicao, poder2->raio))
         {
             return 1;
         }
