@@ -974,6 +974,7 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
                 break;
             }
         }
+        inimigo_cooldown_poder = t;
     }
 
     //Movimentação do poder
