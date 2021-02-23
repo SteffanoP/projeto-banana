@@ -1150,6 +1150,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
             {
                 dinheiro[p].poder_ativo = false; //Poder é desativado
             }
+
+            if (dinheiro[p].posicao.y < 0) //Limite até o teto do cenário
+            {
+                dinheiro[p].poder_ativo = false;
+            }
         }  
     }
 }
