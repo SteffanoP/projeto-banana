@@ -73,14 +73,19 @@ typedef struct EnvItem
     Color cor;
 } EnvItem;
 
-typedef struct Personagem
+typedef struct Animacao
 {
     Vector2 posicao;
     Texture2D texture;
     float frameWidth;
     float frameHeight;
     Rectangle frameRect;
-} Personagem;
+    int framesCounter;
+    float framesSpeed;
+    int currentFrame;
+    int poderCounter;
+    int poderCurrentFrame;
+} Animacao;
 
 typedef struct Minions
 {
@@ -120,10 +125,10 @@ unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
-void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador,Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
-void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem);
+void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -153,7 +158,7 @@ int main()
     frames.counter = 0; //Conta as FPS
     frames.speed = 12;  //FPS da animação
     frames.currentFrame = 0; //Controla a passagem de frames
-    Personagem personagem;
+    Animacao personagem;
     Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
     personagem.texture = (Texture2D)spritesPersonagem;
     personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
@@ -161,6 +166,11 @@ int main()
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
+    personagem.poderCounter = 0;
+    personagem.poderCurrentFrame = 0;
+    personagem.framesSpeed = 12;
+    personagem.framesCounter = 0;
+    personagem.currentFrame = 0;
 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
@@ -271,7 +281,7 @@ int main()
         }
 
         //Atualiza a animação do jogador quando o jogador está em movimento
-        AnimacaoJogadorMovimento(&frames, &jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
+        AnimacaoJogadorMovimento(&jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
 
         //Atualiza a animação do inimigo
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
@@ -543,61 +553,207 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 }
 
-void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador, Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime)
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime)
 {
-    frames->counter++; //Atualiza o valor da frame do jogo
-
-    if (frames->counter % 2 == 0) frames->currentFrame = 1;
-    else frames->currentFrame = 2; //Controle da alternância dos passos
-
-    if ((frames->counter >= (t/frames->speed)) && frames ->counter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    if(jogador->poder != 2)
     {
-        frames->counter = 0;
-        frames->speed += 0.5;
-        if((float)s > (float)sc + 60) frames->speed += 0.1;
-        if((float)s > (float)sc + 4*60) frames->speed += 0.1;
-        
-        //Jogador
-        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
-        {
-            personagem->posicao.x = 140 - jogador->tamanho.x;
-            personagem->frameRect.x = 2*personagem->frameWidth;
-            personagem->frameRect.y = 2*personagem->frameHeight;
-        }
-        if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && frames->currentFrame == 2 && jogador->vida > 0) //Passo 2 esquerda
-        {
-            personagem->posicao.x = 140 - jogador->tamanho.x;
-            personagem->frameRect.x = 0.0f;
-            personagem->frameRect.y = 3*personagem->frameHeight;
-        }
-        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 1 && jogador->vida > 0) //Passo 1 direita
-        {
-            personagem->posicao.x = 116 - jogador->tamanho.x;
-            personagem->frameRect.x = 0.0f;
-            personagem->frameRect.y = personagem->frameHeight;
-        }
-        if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && frames->currentFrame == 2 && jogador->vida > 0) //Passo 2 direita
-        {
-            personagem->posicao.x = 116 - jogador->tamanho.x;
-            personagem->frameRect.x = 2*personagem->frameWidth;
-            personagem->frameRect.y = personagem->frameHeight;
-        }
+        personagem->framesCounter++; //Atualiza o valor da frame do jogo
 
-        if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 0) ||
-        (jogador->podePular == false && IsKeyDown(KEY_LEFT) && jogador->vida > 0)) //Pulo esquerda
+        if (personagem->framesCounter % 2 == 0) personagem->currentFrame = 1;
+        else personagem->currentFrame = 2; //Controle da alternância dos passos
+
+        if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem ->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
         {
-            personagem->posicao.x = 140 - jogador->tamanho.x;
-            personagem->frameRect.x = 2*personagem->frameWidth;
-            personagem->frameRect.y = 2*personagem->frameHeight;
-        }
-        if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 1) ||
-        (jogador->podePular == false && IsKeyDown(KEY_RIGHT) && jogador->vida > 0)) //Pulo direita
-        {
-            personagem->posicao.x = 116 - jogador->tamanho.x;
-            personagem->frameRect.x = 0.0f;
-            personagem->frameRect.y = personagem->frameHeight;
+            personagem->framesCounter = 0;
+            personagem->framesSpeed += 0.5;
+            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.1;
+            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.1;
+            
+            //Jogador
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 2 && jogador->vida > 0) //Passo 2 esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = 3*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 1 && jogador->vida > 0) //Passo 1 direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 2 && jogador->vida > 0) //Passo 2 direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+
+            if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 0) ||
+            (jogador->podePular == false && IsKeyDown(KEY_LEFT) && jogador->vida > 0)) //Pulo esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if ((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 1) ||
+            (jogador->podePular == false && IsKeyDown(KEY_RIGHT) && jogador->vida > 0)) //Pulo direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
         }
     }
+    else
+    {
+        personagem->framesCounter++; //Atualiza o valor da frame do jogo
+
+        if (personagem->framesCounter % 2 == 0) personagem->currentFrame = 1;
+        else personagem->currentFrame = 2; //Controle da alternância dos passos
+
+        if (personagem->poderCounter == 1)
+        {
+            personagem->poderCounter = 2;
+            personagem->poderCurrentFrame = 1;
+        }
+        else if (personagem->poderCounter == 2) 
+        {
+            personagem->poderCounter = 3;
+            personagem->poderCurrentFrame = 2;
+        } 
+        else if (personagem->poderCounter == 3) 
+        {
+            personagem->poderCounter = 4;
+            personagem->poderCurrentFrame = 1;
+        }
+        else
+        {
+            personagem->poderCounter = 1;
+            personagem->poderCurrentFrame = 2;
+        } //Controle da alternância dos passos especiais
+
+        if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+        {
+            personagem->framesCounter = 0;
+            personagem->framesSpeed += 0.5;
+            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.1;
+            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.1;
+            
+            //Jogador
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 1 && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 2 && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Passo 2 esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = 3*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 1 && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Passo 1 direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 2 && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Passo 2 direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 1 && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Passo 1 esquerda especial
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 3*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 2 && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Passo 2 esquerda especial
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = personagem->frameWidth;
+                personagem->frameRect.y = 3*personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 1 && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Passo 1 direita especial
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = personagem->frameWidth;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+            if (IsKeyDown(KEY_RIGHT) && jogador->podePular == true && personagem->currentFrame == 2 && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Passo 2 direita especial
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 3*personagem->frameWidth;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+
+            if (((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 0) ||
+            (jogador->podePular == false && IsKeyDown(KEY_LEFT) && jogador->vida > 0)) && personagem->poderCurrentFrame == 1) //Pulo esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 1) ||
+            (jogador->podePular == false && IsKeyDown(KEY_RIGHT) && jogador->vida > 0)) && personagem->poderCurrentFrame == 1) //Pulo direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+
+            if (((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 0) ||
+            (jogador->podePular == false && IsKeyDown(KEY_LEFT) && jogador->vida > 0)) && personagem->poderCurrentFrame == 2) //Pulo esquerda especial
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 3*personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (((IsKeyDown(KEY_UP) && jogador->direcao_movimento == 1) ||
+            (jogador->podePular == false && IsKeyDown(KEY_RIGHT) && jogador->vida > 0)) && personagem->poderCurrentFrame == 2) //Pulo direita especial
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = personagem->frameWidth;
+                personagem->frameRect.y = personagem->frameHeight;
+            }
+            
+            if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Parado esquerda
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = 0.0f;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->poderCurrentFrame == 1 && jogador->vida > 0) //Parado direita
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 2*personagem->frameWidth;
+                personagem->frameRect.y = 0.0f;
+            }
+            
+            if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Parado esquerda especial
+            {
+                personagem->posicao.x = 140 - jogador->tamanho.x;
+                personagem->frameRect.x = personagem->frameWidth;
+                personagem->frameRect.y = 2*personagem->frameHeight;
+            }
+            if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->poderCurrentFrame == 2 && jogador->vida > 0) //Parado direita especial
+            {
+                personagem->posicao.x = 116 - jogador->tamanho.x;
+                personagem->frameRect.x = 3*personagem->frameWidth;
+                personagem->frameRect.y = 0.0f;
+            }
+        }
+    } 
 }
 
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime)
@@ -662,21 +818,40 @@ void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, G
     }
 }
 
-void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta)
+void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
 {
-    if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda
+    if (jogador->poder != 2)
     {
-        personagem->posicao.x = 140 - jogador->tamanho.x;
-        personagem->frameRect.x = 0.0f;
-        personagem->frameRect.y = 2*personagem->frameHeight;
+        if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda
+        {
+            personagem->posicao.x = 140 - jogador->tamanho.x;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado direita
+        {
+            personagem->posicao.x = 116 - jogador->tamanho.x;
+            personagem->frameRect.x = 2*personagem->frameWidth;
+            personagem->frameRect.y = 0.0f;
+        }
     }
-    if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado direita
-    {
-        personagem->posicao.x = 116 - jogador->tamanho.x;
-        personagem->frameRect.x = 2*personagem->frameWidth;
-        personagem->frameRect.y = 0.0f;
+    else
+    {        
+        if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda especial
+        {
+            personagem->posicao.x = 140 - jogador->tamanho.x;
+            personagem->frameRect.x = personagem->frameWidth;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado direita especial
+        {
+            personagem->posicao.x = 116 - jogador->tamanho.x;
+            personagem->frameRect.x = 3*personagem->frameWidth;
+            personagem->frameRect.y = 0.0f;
+        }
     }
     
+
     if (jogador->vida == 0) //Pulo depois da morte
     {
         personagem->posicao.x = 120 - jogador->tamanho.x;
@@ -697,7 +872,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem)
 {
     BeginDrawing();
 
