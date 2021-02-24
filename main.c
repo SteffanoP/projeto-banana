@@ -836,17 +836,29 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
         }
     }
     else
-    {        
-        if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado esquerda especial
+    {
+        if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->currentFrame == 1 && jogador->vida > 0) //Parado esquerda especial
         {
             personagem->posicao.x = 140 - jogador->tamanho.x;
             personagem->frameRect.x = personagem->frameWidth;
             personagem->frameRect.y = 2*personagem->frameHeight;
         }
-        if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && jogador->vida > 0) //Parado direita especial
+        if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->currentFrame == 1 && jogador->vida > 0) //Parado direita especial
         {
             personagem->posicao.x = 116 - jogador->tamanho.x;
             personagem->frameRect.x = 3*personagem->frameWidth;
+            personagem->frameRect.y = 0.0f;
+        }
+        if (jogador->direcao_movimento == 0 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->currentFrame == 2 && jogador->vida > 0) //Parado esquerda
+        {
+            personagem->posicao.x = 140 - jogador->tamanho.x;
+            personagem->frameRect.x = 0.0f;
+            personagem->frameRect.y = 2*personagem->frameHeight;
+        }
+        if (jogador->direcao_movimento == 1 && jogador->podePular == true && jogador->posicao.x == jogador->posicaoAnterior.x && personagem->currentFrame == 2 && jogador->vida > 0) //Parado direita
+        {
+            personagem->posicao.x = 116 - jogador->tamanho.x;
+            personagem->frameRect.x = 2*personagem->frameWidth;
             personagem->frameRect.y = 0.0f;
         }
     }
