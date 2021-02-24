@@ -282,7 +282,7 @@ int main()
         float deltaTime = GetFrameTime();
         t = clock(); //Armazena o tempo da frame
         time(&s); //Tempo enquanto o jogo está acontecendo
-
+        framesCounter++;
         
         
         
