@@ -4,6 +4,7 @@
 
 bool colisaoJogador;
 
+
 /* Sobre o jogador:
 posicao: Posição X e Y
 velocidade: velocidade de movimento do jogador
@@ -113,8 +114,9 @@ time_t sc;
 
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 
-//Protótipo das funções
+unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 
+//Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
@@ -229,7 +231,8 @@ int main()
         {{1450, 340,  30, 60}, 1, GREEN},
         {{1970, 340,  30, 60}, 1, GREEN},
         {{2490, 340,  30, 60}, 1, GREEN},
-        {{2700, 200,  50, 50}, 2, BLACK}
+        {{2700, 200,  50, 50}, 2, BLACK}, //bloco de poder imune-19
+        {{2800, 200,  50, 50}, 3, BLACK} // bloco de poder poção-52
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -274,7 +277,7 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        if (jogador.poder == 1)
+        if (jogador.poder == 1 || jogador.poder == 2)
         {
             UpdatePoder(imune_19, &jogador, envItems, envItemsLength, deltaTime);      
         }
@@ -307,7 +310,6 @@ int main()
 
     return 0;
 }
-
 
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta)
 {
@@ -379,6 +381,15 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
                 else if (objeto->colisao == 2) //Verifica se é bloco de poder: imune-19
                 {
                     jogador->poder = 1; //Define o poder imune-19 ao jogador
+                    jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + jogador->tamanho.y + 1;
+                    jogador->velocidade = GRAVIDADE * delta;
+                    objeto->retangulo.y -= 10; //Desloca o bloco 10 pixels para cima
+                    objeto->colisao = 1;  //Define o bloco para um bloco normal neste momento
+                }
+                else if (objeto->colisao == 3) //Verifica se é bloco de poder: poção-52
+                {
+                    jogador->poder = 2; //Define o poder poção-52 ao jogador
+                    jogador_tempo_poder_pocao52 = t; //Recebe o tempo decorrido do jogo
                     jogador->posicao.y = objeto->retangulo.y + objeto->retangulo.height + jogador->tamanho.y + 1;
                     jogador->velocidade = GRAVIDADE * delta;
                     objeto->retangulo.y -= 10; //Desloca o bloco 10 pixels para cima
@@ -510,10 +521,13 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     //Verifica colisão entre inimigo e jogador
     if (inimigo->tipo > 0 && jogador->vida > 0)
     {
-        //Verifica se jogador encosta nas bordas do objeto inimigo
-        if (VerificaColisaoBordasED(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, ret_inimigo) != 0)
+        if (jogador->poder != 2) // Caso o poder do jogador não seja a "poção-52"
         {
-            jogador->vida = 0; //Jogador encosta em inimigo e perde vida
+            //Verifica se jogador encosta nas bordas do objeto inimigo
+            if (VerificaColisaoBordasED(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, ret_inimigo) != 0)
+            {
+                jogador->vida = 0; //Jogador encosta em inimigo e perde vida
+            }
         }
         //Verifica se borda superior do inimigo encosta em objeto jogador
         else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
@@ -745,18 +759,21 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (envItems[i].colisao == 2)
         {
             DrawText(FormatText("?"),envItems[i].retangulo.x + 10, envItems[i].retangulo.y + 5, 50, WHITE);
+        } 
+        else if (envItems[i].colisao == 3)  //Desenho da exclamação dentro do bloco (poção-52)
+        {
+            DrawText(FormatText("!"),envItems[i].retangulo.x + 23, envItems[i].retangulo.y + 5, 50, WHITE);
         }
     }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
-
+    
     EndMode2D();
 
     EndDrawing();
 }
 
 void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta){
-
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE)) {                                                               
@@ -808,7 +825,12 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, EnvItem *envItems, int envIt
         {
             imune_19[p].poder_ativo = false; //Poder é desativado
         }
-        
+    }
+
+    // Referente ao poder "Poção-52"
+    if ((jogador->poder == 2) && (jogador_tempo_poder_pocao52 + DURACAO_PODER_POCAO52 <= t)) // Caso o power-up esteja ativo e o tempo de uso
+    {                                                                                        //seja menor ou igual ao tempo decorrido de jogo
+        jogador->poder = 0; // Poder é desativado
     }
 }
 
