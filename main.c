@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "libraries/defines.c"
 #include "time.h"
+#include "cenario.h"
 
 bool colisaoJogador;
 
@@ -60,18 +61,6 @@ typedef struct Poder
     int direcao_movimento;
     Color cor;
 } Poder;
-
-/*
-colisao: tipo de bloco de colisão
-colisao = 1 = bloco normal com colisão
-colisao = 2 = bloco com poder imune-19
-*/
-typedef struct EnvItem
-{
-    Rectangle retangulo;
-    int colisao;
-    Color cor;
-} EnvItem;
 
 typedef struct Personagem
 {
@@ -136,6 +125,10 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
 bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
+void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario);
+void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
+
+int bossAtivo = 1; //Define qual o tipo de boss que deve estar ativo
 
 int main()
 {
@@ -214,7 +207,6 @@ int main()
         {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
 
     for (int i = 0; i < tamanhoBoss; i++)
     {
@@ -311,28 +303,8 @@ int main()
     gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
-    //Configurações Iniciais dos Elementos do Cenário
-    EnvItem envItems[] = {
-        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 5070, 200}, 1, GRAY},
-        {{300, 200, 400, 10}, 1, GRAY},
-        {{250, 300, 100, 10}, 1, GRAY},
-        {{650, 300, 100, 10}, 1, GRAY},
-        {{900, 350,  50, 50}, 1, PURPLE},
-        {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 308,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE},
-        {{1450, 340,  30, 60}, 1, GREEN},
-        {{1970, 340,  30, 60}, 1, GREEN},
-        {{2490, 340,  30, 60}, 1, GREEN},
-        {{2700, 200,  50, 50}, 2, BLACK},
-        {{3010, 340,  30, 60}, 1, GREEN},
-        {{3530, 270,  30, 130}, 1, GREEN},
-        {{4000, 270,  30, 130}, 1, GREEN},
-        {{4520, 270,  30, 130}, 1, GREEN},
-        {{5040, 270,  30, 130}, 1, GREEN}
-    };
-    int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
+    //Configuração Inicial de Cenário
+    IniciaCenario(&jogador,inimigo,0);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
@@ -355,6 +327,14 @@ int main()
         time(&s); //Tempo enquanto o jogo está acontecendo
 
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
+
+        //Faz Transição de cenário de testes para Cenário 1
+        if (jogador.posicao.x > 5000 && bossAtivo == 0)
+        {
+            IniciaCenario(&jogador, inimigo, 1);
+            //envItemsLength = 2;
+            //CarregaObjetos(envItems, envItemsLength, cenario1, TAMANHO_CENARIO_1);
+        }
 
         //Atualiza os dados do jogador
         if(updateplayer == 1)
@@ -715,6 +695,7 @@ void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItems
         {
             boss->tipo = 0; //Jogador mata o boss
             boss->vida = 0;
+            bossAtivo = 0;
         }
     }
 
@@ -1403,4 +1384,61 @@ bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
     }
 
     return 0;
+}
+
+//Funções referentes ao cenário
+
+void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
+{
+    switch (cenario)
+    {
+    case 0:
+        CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
+        envItemsLength = tamanhoCenarioTeste;
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
+        break;
+    case 1:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario1, tamanhoCenario1);
+        envItemsLength = tamanhoCenario1;
+        break;
+    case 2:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario1, tamanhoCenario2);
+        envItemsLength = tamanhoCenario2;
+        break;
+    case 3:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario1, tamanhoCenario3);
+        envItemsLength = tamanhoCenario3;
+        break;
+    case 4:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario1, tamanhoCenario4);
+        envItemsLength = tamanhoCenario4;
+        break;
+
+    default:
+        break;
+    }
+}
+
+void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario)
+{
+    for (int i = 0; i < tamanhoLoadCenario; i++)
+    {
+        cenario[i] = loadCenario[i];
+    }
 }
