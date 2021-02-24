@@ -114,7 +114,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
 void AnimacaoInimigo(Inimigo *inimigo, Animacao *minions, Animacao *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoBoss(Inimigo *boss, Animacao *Boss);
 void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnteriorBoss);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -195,7 +195,7 @@ int main()
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 2; //Define qual o tipo de boss que deve estar ativo
+    int bossAtivo = 1; //Define qual o tipo de boss que deve estar ativo
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -252,9 +252,15 @@ int main()
         imune_19[p].cor = BLACK;
     }
 
+    AnimacaoPoder Banana;
+    Texture2D spriteBanana = LoadTexture ("sprites/banana.png");
+    Banana.texture = spriteBanana;
+    Banana.frameRect = (Rectangle){0.0f, 0.0f, Banana.texture.width, Banana.texture.height}; //Sprite
+
     AnimacaoPoder Laranja;
     Texture2D spriteLaranja = LoadTexture ("sprites/laranja.png");
     Laranja.texture = spriteLaranja;
+    Laranja.frameRect = (Rectangle){0.0f, 0.0f, Laranja.texture.width, Laranja.texture.height}; //Sprite
 
     //Configurações iniciais do poder "LARANJA!"
     for (int p = 0; p < PODER_MAX_FABIO; p++)
@@ -361,7 +367,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[bossAtivo]), &Boss, &Laranja, deltaTime);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, deltaTime);
 
         //----------------------------------------------------------------------------------
       
@@ -928,7 +934,7 @@ void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnterior_B
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, float delta)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, float delta)
 {
     BeginDrawing();
 
@@ -962,6 +968,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (inimigo[i].tipo == 3)
         {
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
+            DrawTextureRec(Banana->texture, Banana->frameRect, (Vector2){inimigo[i].posicao.x - 25, inimigo[i].posicao.y - 50}, RAYWHITE);
         }
         
     }
@@ -1062,7 +1069,6 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder
                 laranja[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/2)};
                 laranja[p].direcao_movimento = 0;
                 laranja[p].poder_ativo = true;
-                Laranja->frameRect = (Rectangle){0.0f, 0.0f, Laranja->texture.width, Laranja->texture.height}; //Sprite
                 Laranja->posicao = laranja[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
                 break;
             }
