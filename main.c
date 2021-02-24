@@ -858,13 +858,6 @@ void AnimacaoJogadorParado(Jogador *jogador, Personagem *personagem, float delta
 
 void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Personagem *personagem, IMUNE_19 *imune)
 {
-    BeginDrawing();
-
-    //Desenho do Background do restante da Janela que não é objeto
-    ClearBackground(LIGHTGRAY);
-
-    BeginMode2D(camera);
-
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
         DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
@@ -912,10 +905,6 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 
     DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
     DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
-
-    EndMode2D();
-
-    EndDrawing();
 }
 
 void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2){
