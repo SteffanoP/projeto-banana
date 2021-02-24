@@ -999,6 +999,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 }
 
 void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta){
+    Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2), jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y};
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE) && jogador->poder) {                                                               
@@ -1236,17 +1237,22 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
             }
         }
 
-        //Verificação se há colisão de poder com poder
         for (int i = 0; i < PODER_MAX_PERSONAGEM; i++)
         {
             switch (boss->tipo)
             {
             case 2:
+                //Verificação se há colisão de poder com poder
                 if (VerificaColisaoPoderPoder(&(imune_19[i]), &(laranja[p])))
                 {
                     imune_19[i].poder_ativo = false;
                     laranja[p].poder_ativo = false;
                 }
+
+                //Verifica a colisão entre laranja e jogador
+                if (CheckCollisionCircleRec(laranja[p].posicao,laranja[p].raio,ret_jogador) && laranja[p].poder_ativo)
+                    jogador->vida = 0;
+                
                 break;
             case 3:
                 if (VerificaColisaoPoderPoder(&(imune_19[i]), &(dinheiro[p])))
@@ -1254,6 +1260,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
                     imune_19[i].poder_ativo = false;
                     dinheiro[p].poder_ativo = false;
                 }
+
+                //Verifica a colisão entre dinheiro e jogador
+                if (CheckCollisionCircleRec(dinheiro[p].posicao,dinheiro[p].raio,ret_jogador) && dinheiro[p].poder_ativo)
+                    jogador->vida = 0;
+                
                 break;
             case 4:
                 if (VerificaColisaoPoderPoder(&(imune_19[i]), &(pocao[p])))
@@ -1261,6 +1272,11 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envI
                     imune_19[i].poder_ativo = false;
                     pocao[p].poder_ativo = false;
                 }
+
+                //Verifica a colisão entre poção e jogador
+                if (CheckCollisionCircleRec(pocao[p].posicao,pocao[p].raio,ret_jogador) && pocao[p].poder_ativo)
+                    jogador->vida = 0;
+                
                 break;
             default:
                 break;
