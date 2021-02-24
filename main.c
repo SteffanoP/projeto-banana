@@ -142,7 +142,7 @@ int main()
 
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
-    jogador.tamanho = (Vector2){TAMANHO_JOGADOR_X,TAMANHO_JOGADOR_Y};
+    jogador.tamanho = (Vector2){TAMANHO_X_JOGADOR,TAMANHO_Y_JOGADOR};
     jogador.posicao = (Vector2){400, 280}; //Posição Inicial
     jogador.velocidade = 0; //Velocidade Inicial
     jogador.podePular = false; //Habilitação de pulo
@@ -160,24 +160,7 @@ int main()
     Personagem personagem;
     Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
     Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
-    Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
-    switch(tela_personagem)
-    {
-        case 1:
-        personagem.texture = (Texture2D)spritesPersonagem_comp;
-        break;
-        case 2:
-        personagem.texture = (Texture2D)spritesPersonagem_john;
-        break;
-        case 0:
-        personagem.texture = (Texture2D)spritesPersonagem_cake;
-        break;
-    }
-    personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
-    personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
-    personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
-    personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
-    personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador    
+    Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet 
     //Configurações Iniciais dos inimigos
     Inimigo inimigo[] = {
         {1, {0}, {1650, 280}, 0, 0, 0, YELLOW},
@@ -353,8 +336,27 @@ int main()
 
             if (IsKeyPressed(KEY_SPACE))
             {
+                switch (tela_personagem)
+                {
+                case 1:
+                    personagem.texture = (Texture2D)spritesPersonagem_comp;
+                    break;
+                case 2:
+                    personagem.texture = (Texture2D)spritesPersonagem_john;
+                    break;
+                case 0:
+                    personagem.texture = (Texture2D)spritesPersonagem_cake;
+                    break;
+                }
+                personagem.frameWidth = personagem.texture.width / 4;                                                               //Largura da sprite
+                personagem.frameHeight = personagem.texture.height / 4;                                                             //Altura da sprite
+                personagem.frameRect = (Rectangle){2 * personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
+                personagem.posicao.x = 116 - jogador.tamanho.x;                                                                     //Posiçâo x do personagem em relação à posição x do jogador
+                personagem.posicao.y = 190 - jogador.tamanho.y;                                                                     //Posiçâo y do personagem em relação à posição y do jogador
+
                 gamescreen = INGAME;
                 state = 0;
+
             }
             break;
         case INGAME:
