@@ -90,31 +90,6 @@ typedef struct Animacao
     int poderCurrentFrame;
 } Animacao;
 
-typedef struct Minions
-{
-    Vector2 posicao;
-    Texture2D texture;
-    float frameWidth;
-    float frameHeight;
-    Rectangle frameRect;
-} Minions;
-
-typedef struct Gados
-{
-    Vector2 posicao;
-    Texture2D texture;
-    float frameWidth;
-    float frameHeight;
-    Rectangle frameRect;
-} Gados;
-
-typedef struct FPS_Animacao
-{
-    int counter;
-    float speed;
-    int currentFrame;
-} FPS_Animacao;
-
 typedef enum 
 {
     LOGO,
@@ -122,7 +97,7 @@ typedef enum
     SELECT,
     INGAME
 } GameScreen; // As diferentes telas do jogo
-    
+
 int updateplayer;
 clock_t t;
 time_t s;
@@ -135,11 +110,11 @@ unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2);
-void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
-void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune);
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime);
+void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, IMUNE_19 *imune);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -165,12 +140,6 @@ int main()
     jogador.poder = 0;
 
     //Configurações Iniciais da animação do joagdor
- int tela_personagem = 1;
-    FPS_Animacao frames;
-    frames.counter = 0; //Conta as FPS
-    frames.speed = 12;  //FPS da animação
-    frames.currentFrame = 0; //Controla a passagem de frames
-
     Animacao personagem;
     Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
     personagem.texture = (Texture2D)spritesPersonagem;
@@ -184,7 +153,8 @@ int main()
     personagem.framesSpeed = 12;
     personagem.framesCounter = 0;
     personagem.currentFrame = 0;
-
+    int tela_personagem = 1;
+    
     Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
     Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
     Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet 
@@ -198,7 +168,7 @@ int main()
         {2, {0}, {2150, 280}, 0, 1, 0, ORANGE}
     };
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
-    
+
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoInimigo; i++)
     {
@@ -216,31 +186,34 @@ int main()
         }
     }
 
-    //Configurações iniciais da animação dos minions
-    Minions minions;
+    //Configurações iniciais da animação dos inimigos
+    Animacao frameInimigoT1[tamanhoInimigo];
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
-    minions.texture = (Texture2D)spritesMinion;
-    minions.frameWidth = minions.texture.width / 2; //Largura da sprite
-    minions.frameHeight = minions.texture.height / 2; //Altura da sprite
-    minions.frameRect = (Rectangle){0.0f, 0.0f, minions.frameWidth, minions.frameHeight}; //Sprite inicial
-    minions.posicao.x = 146 - TAMANHO_MINION_X; //Posição x do personagem em relação à posição x do inimigo tipo 1
-    minions.posicao.y = 241 - TAMANHO_MINION_Y; //Posição y do personagem em relação à posição y do inimigo tipo 1
-
-    //Configurações iniciais da animação dos gados
-    Gados gados;
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 1)
+        {
+            frameInimigoT1[i].currentFrame = 0;
+            frameInimigoT1[i].framesCounter = 0;
+            frameInimigoT1[i].framesSpeed = 13;
+        }
+    } 
+    Animacao frameInimigoT2[tamanhoInimigo];
     Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
-    gados.texture = (Texture2D)spritesGado;
-    gados.frameWidth = gados.texture.width / 2; //Largura da sprite
-    gados.frameHeight = gados.texture.height / 2; //Altura da sprite
-    gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
-    gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
-    gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
-    
-    //Configurações iniciais da animação do poder "IMUNE_19"
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 2)
+        {
+            frameInimigoT2[i].currentFrame = 0;
+            frameInimigoT2[i].framesCounter = 0;
+            frameInimigoT2[i].framesSpeed = 13;
+        }
+    }
+//Configurações iniciais da animação do poder "IMUNE_19"
     IMUNE_19 imune;
-    Texture2D spriteImune1 = LoadTexture("sprites/seringa1.png"); //Carregamento da sprite sheet
-    Texture2D spriteImune2 = LoadTexture("sprites/seringa2.png");
-    imune.texture = spriteImune1;
+    Texture2D spriteImune = LoadTexture("sprites/seringas.png"); //Carregamento da sprite sheet
+    imune.texture = spriteImune;
+    imune.frameRect = (Rectangle){0.0f, imune.texture.height, imune.texture.width, imune.texture.height/2}; //Sprite
     //Configurações iniciais do poder "IMUNE_19"
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
@@ -277,7 +250,7 @@ int main()
 
     time(&sc); //Tempo no começo do jogo
 
-    GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "empresa"
+GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "empresa"
     int state = 0; //serve para diferenciar se o jogo está carregando a textura preta de transição o jogo ou outros estados
     float alpha = 0.0; //serve para mudar da textura preta de transicao para as outras texturas do jogo
     int framesCounter = 0;
@@ -290,7 +263,7 @@ int main()
     Texture2D tela_companheiro = LoadTexture("imagens_tela/tela_companheiro.png");
     Texture2D tela_cake = LoadTexture("imagens_tela/tela_cake.png");
     Texture2D tela_dorivac = LoadTexture("imagens_tela/tela_dorivac.png");
-    
+
     //--------------------------------------------------------------------------------------
     //O Jogo
     //--------------------------------------------------------------------------------------
@@ -302,8 +275,8 @@ int main()
         t = clock(); //Armazena o tempo da frame
         time(&s); //Tempo enquanto o jogo está acontecendo
         framesCounter++;
-        
-        switch (gamescreen)
+
+switch (gamescreen)
         {
         case LOGO:
             // o logo tem uma transição com uma tela preta depois
@@ -395,10 +368,10 @@ int main()
             }
             break;
         case INGAME:
-            
-        jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
-      
         
+        jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
+
+
         //Atualiza os dados do jogador
         if(updateplayer == 1)
         {
@@ -409,18 +382,16 @@ int main()
         for (int i = 0; i < tamanhoInimigo; i++)
         {
             UpdateInimigo(&(inimigo[i]), envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
+            AnimacaoInimigo(&(inimigo[i]), &(frameInimigoT1[i]), &(frameInimigoT2[i]), spritesMinion, spritesGado, tamanhoInimigo, deltaTime); //Atualiza a animação do inimigo
         }
 
         //Atualiza a animação do jogador quando o jogador está em movimento
-        AnimacaoJogadorMovimento(&jogador, &personagem, inimigo, &minions, tamanhoInimigo, deltaTime);
+        AnimacaoJogadorMovimento(&jogador, &personagem, deltaTime);
 
-        //Atualiza a animação do inimigo
-        AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
-      
         //Atualiza os dados do poder
         if (jogador.poder > 0)
         {
-            UpdatePoder(imune_19, &imune, &jogador, envItems, envItemsLength, deltaTime, spriteImune1, spriteImune2);       
+            UpdatePoder(imune_19, &imune, &jogador, envItems, envItemsLength, deltaTime, spriteImune);       
         }
 
         //Atualiza a Câmera focada no jogador
@@ -429,14 +400,14 @@ int main()
         // Draw
         BeginDrawing();
 
+
         //Desenho do Background do restante da Janela que não é objeto
         ClearBackground(LIGHTGRAY);
-
         BeginMode2D(camera);
         switch (gamescreen)
         {
-              
-        case LOGO:
+            
+            case LOGO:
             switch (state)
             {
             case 0:
@@ -480,29 +451,30 @@ int main()
 
         // Draw
         //----------------------------------------------------------------------------------
-        //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &imune);
+
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune);
+
+        //----------------------------------------------------------------------------------
       
         //Atualiza a animação quando o jogador está parado
         AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
             break;
 
         }
-    EndMode2D();
+        EndMode2D();
 
-    EndDrawing();   
+        EndDrawing();
 
     }
-     
+
     // De-Initialization
     //--------------------------------------------------------------------------------------
 
     //Descarregamento da sprite sheet do jogador
     UnloadTexture(personagem.texture); 
-    UnloadTexture(minions.texture);
-    UnloadTexture(gados.texture);
-    UnloadTexture(spriteImune1);
-    UnloadTexture(spriteImune2);
+    UnloadTexture(spritesMinion);
+    UnloadTexture(spritesGado);
+    UnloadTexture(spriteImune);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -515,22 +487,22 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
     if (jogador->vida > 0)
     {
         if (IsKeyDown(KEY_LEFT)) //Movimentação para a Esquerda
-        {
-            jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
-            jogador->direcao_movimento = 0;
-        }
-        if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
-        {
-            jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
-            jogador->direcao_movimento = 1;
-        }
-        if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
-        {
-            jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
-            jogador->podePular = false;
-        }
+    {
+        jogador->posicao.x -= JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Decrementa o valor da posição do player
+        jogador->direcao_movimento = 0;
     }
-    
+    if (IsKeyDown(KEY_RIGHT)) //Movimentação para a Direita
+    {
+        jogador->posicao.x += JOGADOR_MOVIMENTO_VELOCIDADE * delta; //Incrementa o valor da posição do player
+        jogador->direcao_movimento = 1;
+    }
+    if (IsKeyDown(KEY_UP) && jogador->podePular  && jogador->vida > 0)
+    {
+        jogador->velocidade = -JOGADOR_PULO_VELOCIDADE;
+        jogador->podePular = false;
+    }
+    }
+
     //Limites da area de movimentação do jogador
     if ((jogador->posicao.x + jogador->tamanho.x / 2) > TAMANHO_X_CENARIO)
     {
@@ -743,7 +715,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     }
 }
 
-void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime)
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime)
 {
     if(jogador->poder != 2)
     {
@@ -818,7 +790,7 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *i
             personagem->poderCounter = 3;
             personagem->poderCurrentFrame = 2;
         } 
-        else if (personagem->poderCounter == 3) 
+        else if (personagem->poderCounter == 3)
         {
             personagem->poderCounter = 4;
             personagem->poderCurrentFrame = 1;
@@ -828,7 +800,7 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *i
             personagem->poderCounter = 1;
             personagem->poderCurrentFrame = 2;
         } //Controle da alternância dos passos especiais
-
+        
         if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
         {
             personagem->framesCounter = 0;
@@ -946,63 +918,93 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *i
     } 
 }
 
-void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime)
+void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime)
 {
-    if ((frames->counter >= (t/frames->speed)) && frames ->counter % 2 == 1) //Altera as FPSs do jogo para a desejada para a movimentação do inimigo
+    if (inimigo->tipo == 1)
+    {
+        frameInimigoT1->texture = (Texture2D)spritesMinion;
+        frameInimigoT1->frameWidth = frameInimigoT1->texture.width / 2; //Largura da sprite
+        frameInimigoT1->frameHeight = frameInimigoT1->texture.height / 2; //Altura da sprite
+        frameInimigoT1->frameRect = (Rectangle){0.0f, 0.0f, frameInimigoT1->frameWidth, frameInimigoT1->frameHeight}; //Sprite inicial
+        frameInimigoT1->posicao.x = 146 - TAMANHO_MINION_X; //Posição x do personagem em relação à posição x do inimigo tipo 1
+        frameInimigoT1->posicao.y = 265 - TAMANHO_MINION_Y; //Posição y do personagem em relação à posição y do inimigo tipo 1
+    }
+
+    if (inimigo->tipo == 2)
+    {
+        frameInimigoT2->texture = (Texture2D)spritesGado;
+        frameInimigoT2->frameWidth = frameInimigoT2->texture.width / 2; //Largura da sprite
+        frameInimigoT2->frameHeight = frameInimigoT2->texture.height / 2; //Altura da sprite
+        frameInimigoT2->frameRect = (Rectangle){0.0f, frameInimigoT2->frameHeight, frameInimigoT2->frameWidth, frameInimigoT2->frameHeight}; //Sprite inicial
+        frameInimigoT2->posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
+        frameInimigoT2->posicao.y = 253 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
+    }
+    
+    frameInimigoT1->framesCounter++;
+
+    if (frameInimigoT1->framesCounter % 2 == 0) frameInimigoT1->currentFrame = 1;
+    else frameInimigoT1->currentFrame = 2; //Controle da alternância dos passos
+
+    if (frameInimigoT1->framesCounter >= (t/frameInimigoT1->framesSpeed)) //Altera as FPSs do jogo para a desejada para a movimentação do inimigo
     {
         //Minions
-        for (int i = 0; i < tamanhoInimigos; i++)
+        if (inimigo->tipo == 1)
         {
-            inimigo += i;
-            if (inimigo->tipo == 1)
+            if (inimigo->direcao_movimento == 0 && frameInimigoT1->currentFrame == 1) //Passo 1 esquerda
             {
-                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 1) //Passo 1 esquerda
-                {
-                    minions->posicao.x = 146 - inimigo->tamanho.x;
-                    minions->frameRect.x = 0.0f;
-                    minions->frameRect.y = 0.0f;
-                }
-                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 2) //Passo 2 esquerda
-                {
-                    minions->posicao.x = 146 - inimigo->tamanho.x;
-                    minions->frameRect.x = minions->frameWidth;
-                    minions->frameRect.y = 0.0f;
-                }
-                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 1) //Passo 1 direita
-                {
-                    minions->posicao.x = 159 - inimigo->tamanho.x;
-                    minions->frameRect.x = 0.0f;
-                    minions->frameRect.y = minions->frameHeight;
-                }
-                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 2) //Passo 2 direita
-                {
-                    minions->posicao.x = 159 - inimigo->tamanho.x;
-                    minions->frameRect.x = minions->frameWidth;
-                    minions->frameRect.y = minions->frameHeight;
-                }
+                frameInimigoT1->posicao.x = 146 - inimigo->tamanho.x;
+                frameInimigoT1->frameRect.x = 0.0f;
+                frameInimigoT1->frameRect.y = 0.0f;
             }
-            if (inimigo->tipo == 2)
+            if (inimigo->direcao_movimento == 0 && frameInimigoT1->currentFrame == 2) //Passo 2 esquerda
             {
-                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 1) //Passo 1 esquerda
-                {
-                    gados->frameRect.x = gados->frameWidth;
-                    gados->frameRect.y = gados->frameHeight;
-                }
-                if (inimigo->direcao_movimento == 0 && frames->currentFrame == 2) //Passo 2 esquerda
-                {
-                    gados->frameRect.x = 0.0f;
-                    gados->frameRect.y = gados->frameHeight;
-                }
-                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 1) //Passo 1 direita
-                {
-                    gados->frameRect.x = gados->frameWidth;
-                    gados->frameRect.y = 0.0f;                    
-                }
-                if (inimigo->direcao_movimento == 1 && frames->currentFrame == 2) //Passo 2 direita
-                {                    
-                    gados->frameRect.x = 0.0f;
-                    gados->frameRect.y = 0.0f;
-                }
+                frameInimigoT1->posicao.x = 146 - inimigo->tamanho.x;
+                frameInimigoT1->frameRect.x = frameInimigoT1->frameWidth;
+                frameInimigoT1->frameRect.y = 0.0f;
+            }
+            if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 1) //Passo 1 direita
+            {
+                frameInimigoT1->posicao.x = 159 - inimigo->tamanho.x;
+                frameInimigoT1->frameRect.x = 0.0f;
+                frameInimigoT1->frameRect.y = frameInimigoT1->frameHeight;
+            }
+            if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 2) //Passo 2 direita
+            {
+                frameInimigoT1->posicao.x = 159 - inimigo->tamanho.x;
+                frameInimigoT1->frameRect.x = frameInimigoT1->frameWidth;
+                frameInimigoT1->frameRect.y = frameInimigoT1->frameHeight;
+            }
+        }
+    }
+
+    frameInimigoT2->framesCounter++;
+
+    if (frameInimigoT2->framesCounter % 2 == 0) frameInimigoT2->currentFrame = 1;
+    else frameInimigoT2->currentFrame = 2; //Controle da alternância dos passos
+
+    if (frameInimigoT2->framesCounter >= (t/frameInimigoT2->framesSpeed)) //Altera as FPSs do jogo para a desejada para a movimentação do inimigo
+    {
+        if (inimigo->tipo == 2)
+        {
+            if (inimigo->direcao_movimento == 0 && frameInimigoT2->currentFrame == 1) //Passo 1 esquerda
+            {
+                frameInimigoT2->frameRect.x = frameInimigoT2->frameWidth;
+                frameInimigoT2->frameRect.y = frameInimigoT2->frameHeight;
+            }
+            if (inimigo->direcao_movimento == 0 && frameInimigoT2->currentFrame == 2) //Passo 2 esquerda
+            {
+                frameInimigoT2->frameRect.x = 0.0f;
+                frameInimigoT2->frameRect.y = frameInimigoT2->frameHeight;
+            }
+            if (inimigo->direcao_movimento == 1 && frameInimigoT2->currentFrame == 1) //Passo 1 direita
+            {
+                frameInimigoT2->frameRect.x = frameInimigoT2->frameWidth;
+                frameInimigoT2->frameRect.y = 0.0f;                    
+            }
+            if (inimigo->direcao_movimento == 1 && frameInimigoT2->currentFrame == 2) //Passo 2 direita
+            {                    
+                frameInimigoT2->frameRect.x = 0.0f;
+                frameInimigoT2->frameRect.y = 0.0f;
             }
         }
     }
@@ -1074,7 +1076,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, IMUNE_19 *imune)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *framesInimigoT1, Animacao *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
@@ -1088,7 +1090,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
 
             //Desenho da textura dos minions
-            DrawTextureRec(minions->texture, minions->frameRect, (Vector2){inimigo[i].posicao.x - (minions->posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (minions->posicao.y - inimigo[i].tamanho.x)}, RAYWHITE);
+            DrawTextureRec(framesInimigoT1[i].texture, framesInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT1[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (framesInimigoT1[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 2)
         {
@@ -1096,10 +1098,11 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
 
             //Desenho da textura dos gados
-            DrawTextureRec(gados->texture, gados->frameRect, (Vector2){inimigo[i].posicao.x - (gados->posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (gados->posicao.y - inimigo[i].tamanho.x)}, RAYWHITE);
+            DrawTextureRec(framesInimigoT2[i].texture, framesInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (framesInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
     }
 
+    //Desenho circular do poder "IMUNE_19"
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
         if (imune_19[p].poder_ativo)
@@ -1138,10 +1141,10 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
-    
+
 }
 
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2){
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune){
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE) && jogador->poder == 1) {                                                               
@@ -1152,7 +1155,7 @@ void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *en
                 imune_19[p].posicao = (Vector2){jogador->posicao.x + (jogador->tamanho.x/2), jogador->posicao.y - (jogador->tamanho.y/2)}; //Posição inicial do poder é o centro do jogador
                 imune_19[p].direcao_movimento = jogador->direcao_movimento; //Poder tem direção baseada na do jogador, porém fica independente quando emitido
                 imune_19[p].poder_ativo = true;
-                imune->texture = spriteImune1;
+                imune->frameRect.y = 0.0f;
                 break;   
             }
             else if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 0) //Caso jogador esteja indo para a ESQUERDA
@@ -1160,7 +1163,7 @@ void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *en
                 imune_19[p].posicao = (Vector2){jogador->posicao.x - (jogador->tamanho.x/2), jogador->posicao.y - (jogador->tamanho.y/2)}; //Centro do jogador
                 imune_19[p].direcao_movimento = jogador->direcao_movimento;
                 imune_19[p].poder_ativo = true;                             
-                imune->texture = spriteImune2;            
+                imune->frameRect.y = imune->texture.width;
                 break;   
             }
         }
@@ -1177,7 +1180,6 @@ void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *en
             imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
         }
 
-        imune->frameRect = (Rectangle){0.0f, 0.0f, imune->texture.width, imune->texture.height}; //Sprite
         imune->posicao = imune_19[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
         //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
