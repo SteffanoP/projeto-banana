@@ -7,12 +7,14 @@
 #define JOGADOR_PULO_VELOCIDADE 500.0f
 #define JOGADOR_MOVIMENTO_VELOCIDADE 500.0f
 
-#define TAMANHO_X_JOGADOR 40 //40
-#define TAMANHO_Y_JOGADOR 132 //132
+#define TAMANHO_JOGADOR_X 40 //40
+#define TAMANHO_JOGADOR_Y 132 //132
 
-//Constante Poder
+//Constante Poder "Imune-19"
 #define PODER_MAX_PERSONAGEM 10
 #define PODER_MOVIMENTO_VELOCIDADE 700
+//Contante Poder "Poção-52"
+#define DURACAO_PODER_POCAO52 8500 //milissegundos
 
 
 #define TAMANHO_X_CENARIO 3000
