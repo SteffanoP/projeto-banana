@@ -272,7 +272,7 @@ int main()
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
 
         //Faz Transição de cenário de testes para Cenário 1
-        if (jogador.posicao.x > 5000 && bossAtivo == 0)
+        if (jogador.posicao.x > 5000 && boss[bossAtivo].tipo == 0)
         {
             IniciaCenario(&jogador, inimigo, 1);
         }
