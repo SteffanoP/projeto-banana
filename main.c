@@ -539,7 +539,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
             j->y = objeto->retangulo.y; //Atualiza a variável do movimento
         }
 
-//Condição de colisão em objetos Universais
+        //Condição de colisão em objetos Universais
         if (objeto->colisao > 0)
         {
             if (VerificaColisaoBordaS(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, objeto->retangulo, 5))
