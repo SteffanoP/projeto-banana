@@ -147,16 +147,29 @@ int main()
     }
 
     //Configurações iniciais da animação dos inimigos
-    Animacao frameInimigoT1 = {0};
+    Animacao frameInimigoT1[tamanhoInimigo];
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
-    frameInimigoT1.currentFrame = 0;
-    frameInimigoT1.framesCounter = 0;
-    frameInimigoT1.framesSpeed = 13;
-    Animacao frameInimigoT2 = {0};
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 1)
+        {
+            frameInimigoT1[i].currentFrame = 0;
+            frameInimigoT1[i].framesCounter = 0;
+            frameInimigoT1[i].framesSpeed = 13;
+        }
+    }
+    
+    Animacao frameInimigoT2[tamanhoInimigo];
     Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
-    frameInimigoT2.currentFrame = 0;
-    frameInimigoT2.framesCounter = 0;
-    frameInimigoT2.framesSpeed = 13;
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 2)
+        {
+            frameInimigoT2[i].currentFrame = 0;
+            frameInimigoT2[i].framesCounter = 0;
+            frameInimigoT2[i].framesSpeed = 13;
+        }
+    }
 
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
@@ -207,7 +220,7 @@ int main()
         for (int i = 0; i < tamanhoInimigo; i++)
         {
             UpdateInimigo(&(inimigo[i]), envItems, &jogador, tamanhoInimigo, envItemsLength, deltaTime);
-            AnimacaoInimigo(&(inimigo[i]), &frameInimigoT1, &frameInimigoT2, spritesMinion, spritesGado, tamanhoInimigo, deltaTime); //Atualiza a animação do inimigo
+            AnimacaoInimigo(&(inimigo[i]), &(frameInimigoT1[i]), &(frameInimigoT2[i]), spritesMinion, spritesGado, tamanhoInimigo, deltaTime); //Atualiza a animação do inimigo
         }
 
         //Atualiza a animação do jogador quando o jogador está em movimento
@@ -223,7 +236,7 @@ int main()
         // Draw
         //----------------------------------------------------------------------------------
 
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, &frameInimigoT1, &frameInimigoT2, spritesMinion, spritesGado);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado);
 
         //----------------------------------------------------------------------------------
       
@@ -547,19 +560,19 @@ void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frame
                 frameInimigoT1->frameRect.x = 0.0f;
                 frameInimigoT1->frameRect.y = 0.0f;
             }
-            if (inimigo->direcao_movimento == 0 && frameInimigoT1->currentFrame == 2) //Passo 2 esquerda
+            else if (inimigo->direcao_movimento == 0 && frameInimigoT1->currentFrame == 2) //Passo 2 esquerda
             {
                 frameInimigoT1->posicao.x = 146 - TAMANHO_MINION_X;
                 frameInimigoT1->frameRect.x = frameInimigoT1->frameWidth;
                 frameInimigoT1->frameRect.y = 0.0f;
             }
-            if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 1) //Passo 1 direita
+            else if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 1) //Passo 1 direita
             {
                 frameInimigoT1->posicao.x = 159 - TAMANHO_MINION_X;
                 frameInimigoT1->frameRect.x = 0.0f;
                 frameInimigoT1->frameRect.y = frameInimigoT1->frameHeight;
             }
-            if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 2) //Passo 2 direita
+            else if (inimigo->direcao_movimento == 1 && frameInimigoT1->currentFrame == 2) //Passo 2 direita
             {
                 frameInimigoT1->posicao.x = 159 - TAMANHO_MINION_X;
                 frameInimigoT1->frameRect.x = frameInimigoT1->frameWidth;
@@ -653,7 +666,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_MINION_X / 2, inimigo[i].posicao.y - TAMANHO_MINION_Y, TAMANHO_MINION_X, TAMANHO_MINION_Y, YELLOW);
 
             //Desenho da textura dos minions
-            DrawTextureRec(framesInimigoT1->texture, framesInimigoT1->frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT1->posicao.x - TAMANHO_MINION_X), inimigo->posicao.y - (framesInimigoT1->posicao.y - TAMANHO_MINION_Y)}, RAYWHITE);
+            DrawTextureRec(framesInimigoT1[i].texture, framesInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT1[i].posicao.x - TAMANHO_MINION_X), inimigo[i].posicao.y - (framesInimigoT1[i].posicao.y - TAMANHO_MINION_Y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 2)
         {
@@ -661,7 +674,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - TAMANHO_GADO_X / 2, inimigo[i].posicao.y - TAMANHO_GADO_Y, TAMANHO_GADO_X, TAMANHO_GADO_Y, ORANGE);
 
             //Desenho da textura dos gados
-            DrawTextureRec(framesInimigoT2->texture, framesInimigoT2->frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT2->posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (framesInimigoT2->posicao.y - TAMANHO_GADO_Y)}, RAYWHITE);
+            DrawTextureRec(framesInimigoT2[i].texture, framesInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT2[i].posicao.x - TAMANHO_GADO_X), inimigo[i].posicao.y - (framesInimigoT2[i].posicao.y - TAMANHO_GADO_Y)}, RAYWHITE);
         }
     }
 
