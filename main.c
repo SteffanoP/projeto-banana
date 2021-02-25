@@ -332,8 +332,6 @@ int main()
         if (jogador.posicao.x > 5000 && bossAtivo == 0)
         {
             IniciaCenario(&jogador, inimigo, 1);
-            //envItemsLength = 2;
-            //CarregaObjetos(envItems, envItemsLength, cenario1, TAMANHO_CENARIO_1);
         }
 
         //Atualiza os dados do jogador
@@ -1437,8 +1435,10 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
 
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario)
 {
-    for (int i = 0; i < tamanhoLoadCenario; i++)
+    for (int i = 0; i < tamanhoCenario1; i++)
     {
-        cenario[i] = loadCenario[i];
+        cenario[i].colisao = loadCenario[i].colisao;
+        cenario[i].cor = loadCenario[i].cor;
+        cenario[i].retangulo = loadCenario[i].retangulo;
     }
 }
