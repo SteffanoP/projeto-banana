@@ -2,6 +2,7 @@
 #include "libraries/defines.c"
 #include "time.h"
 #include "cenario.h"
+#include "inimigo.h"
 
 bool colisaoJogador;
 
@@ -11,7 +12,6 @@ velocidade: velocidade de movimento do jogador
 podePular: condição em que pode pular
 vida: quantidade de vidas do jogador 
 direcao_movimento = player segue para a direita ou esquerda */
-
 typedef struct Jogador
 {
     Vector2 tamanho;
@@ -23,28 +23,6 @@ typedef struct Jogador
     int vida;
     int poder;
 } Jogador;
-
-/* Sobre os inimigos:
-tipo: Tipo de inimigos
-tipo = 1 = minion
-tipo = 2 = gado
-tamanho: Tamanho do inimigo no cenário
-posicao: Posição do Inimigo no cenário
-velocidade: velocidade de movimentação
-direcao_movimento: direção em que se movimenta
-vida: quantidade de vidas do inimigo
-cor: Cor do inimigo*/
-typedef struct Inimigo
-{
-    int tipo;
-    Vector2 tamanho;
-    Vector2 posicao;
-    float velocidade;
-    bool direcao_movimento;
-    int vida;
-    Color cor;
-    bool podePular;
-} Inimigo;
 
 /* Sobre os poderes:
 posicao: posicao em relação ao jogador
@@ -127,6 +105,7 @@ bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_j
 bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
 void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario);
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
+void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
 
 int bossAtivo = 1; //Define qual o tipo de boss que deve estar ativo
 
@@ -162,43 +141,7 @@ int main()
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
-
-    //Configurações Iniciais dos inimigos
-    Inimigo inimigo[] = {
-        {1, {0}, {1650, 280}, 0, 0, 0, 0, 0},
-        {1, {0}, {1750, 280}, 0, 0, 0, 0, 0},
-        {1, {0}, {1850, 280}, 0, 0, 0, 0, 0},
-        {2, {0}, {2050, 280}, 0, 1, 0, 0, 0},
-        {2, {0}, {2150, 280}, 0, 1, 0, 0, 0},
-        {3, {0}, {3310, 280}, 0, 0, 0, 0, 0},
-        {3, {0}, {3210, 280}, 0, 0, 0, 0, 0},
-        {3, {0}, {3110, 280}, 0, 0, 0, 0, 0}
-    };
-    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
     
-    //Preenchimento dos valores do inimigo
-    for (int i = 0; i < tamanhoInimigo; i++)
-    {
-        if (inimigo[i].tipo == 1)
-        {
-            inimigo[i].tamanho = (Vector2){TAMANHO_MINION_X,TAMANHO_MINION_Y};
-            inimigo[i].vida = 1;
-            inimigo[i].cor = YELLOW;
-        }
-        else if (inimigo[i].tipo == 2)
-        {
-            inimigo[i].tamanho = (Vector2){TAMANHO_GADO_X,TAMANHO_GADO_Y};
-            inimigo[i].vida = 2;
-            inimigo[i].cor = ORANGE;
-        }
-        else if (inimigo[i].tipo == 3)
-        {
-            inimigo[i].tamanho = (Vector2){TAMANHO_BANANA_X,TAMANHO_BANANA_Y};
-            inimigo[i].vida = 1;
-            inimigo[i].cor = DARKBLUE;
-        }
-    }
-
     //Configurações iniciais Boss
     Inimigo boss[] = {
         {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
@@ -1391,9 +1334,18 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
     switch (cenario)
     {
     case 0:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
+
         CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
         envItemsLength = tamanhoCenarioTeste;
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
+
+        for (int i = 0; i < tamanho_inimigoTeste; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoTeste[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoTeste;
+
         break;
     case 1:
         //Carrega a nova posição do jogador
@@ -1402,30 +1354,58 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario1, tamanhoCenario1);
         envItemsLength = tamanhoCenario1;
+
+        for (int i = 0; i < tamanho_inimigoCenario1; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario1[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario1;
+        
         break;
     case 2:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 2
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario2, tamanhoCenario2);
         envItemsLength = tamanhoCenario2;
+
+        for (int i = 0; i < tamanhoCenario2; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario2[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario2;
+        
         break;
     case 3:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 3
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario3, tamanhoCenario3);
         envItemsLength = tamanhoCenario3;
+
+        for (int i = 0; i < tamanhoCenario3; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario3[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario3;
+
         break;
     case 4:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 4
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario4, tamanhoCenario4);
         envItemsLength = tamanhoCenario4;
+
+        for (int i = 0; i < tamanhoCenario4; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario4[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario4;
+
         break;
 
     default:
@@ -1441,4 +1421,31 @@ void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenar
         cenario[i].cor = loadCenario[i].cor;
         cenario[i].retangulo = loadCenario[i].retangulo;
     }
+}
+
+void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo) {
+    //Carrega os dados de loadInimigo para inimigo
+    inimigo->tipo = loadInimigo->tipo;
+    inimigo->posicao = loadInimigo->posicao;
+    inimigo->direcao_movimento = loadInimigo->direcao_movimento;
+
+    //Preenche os valores de inimigo que valem de acordo com seu tipo
+    if (inimigo->tipo == 1)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_MINION_X, TAMANHO_MINION_Y};
+        inimigo->vida = 1;
+        inimigo->cor = YELLOW;
+    }
+    else if (inimigo->tipo == 2)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_GADO_X, TAMANHO_GADO_Y};
+        inimigo->vida = 1;
+        inimigo->cor = ORANGE;
+    }
+    else if (inimigo->tipo == 3)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_BANANA_X, TAMANHO_BANANA_Y};
+        inimigo->vida = 1;
+        inimigo->cor = DARKBLUE;
+    }  
 }
