@@ -443,6 +443,7 @@ int main()
                 }
         break;
         }
+       }  
         // Draw
         BeginDrawing();
            
