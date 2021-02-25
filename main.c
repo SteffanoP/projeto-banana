@@ -57,7 +57,7 @@ typedef struct Poder
     Vector2 posicao;
     float raio;
     bool poder_ativo;
-    bool direcao_movimento;
+    int direcao_movimento;
     Color cor;
 } Poder;
 
@@ -122,6 +122,7 @@ int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float ta
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
+bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
 
 int main()
 {
@@ -194,10 +195,13 @@ int main()
     //Configurações iniciais Boss
     Inimigo boss[] = {
         {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
-        {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
+        {2, {0}, {3930, 280}, 0, 0, 0, 0, 0},
+        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0},
+        {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
     int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
+  
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -270,6 +274,24 @@ int main()
             Boss.posicao.x = 116 - boss[i].tamanho.x; //Posição x do personagem em relação à posição x do boss
             Boss.posicao.y = 190 - boss[i].tamanho.y; //Posição y do personagem em relação à posição y do boss
         }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 4)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_REI_X,TAMANHO_REI_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
     }
 
     //Configurações iniciais do poder "IMUNE_19"
@@ -308,6 +330,22 @@ int main()
         laranja[p].cor = ORANGE;
     }
 
+    //Configurações iniciais do poder "Dinheiro"
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        dinheiro[p].posicao = (Vector2){0,0};
+        dinheiro[p].raio = 10;
+        dinheiro[p].cor = ORANGE;
+    }
+
+    //Configurações iniciais do poder "Poção"
+    for (int p = 0; p < PODER_MAX_REI; p++)
+    {
+        pocao[p].posicao = (Vector2){0,0};
+        pocao[p].raio = 10;
+        pocao[p].cor = BLUE;
+    }
+
     //Configurações iniciais da animação dos minions
     Animacao minions;
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
@@ -331,7 +369,7 @@ int main()
     //Configurações Iniciais dos Elementos do Cenário
     EnvItem envItems[] = {
         {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 4030, 200}, 1, GRAY},
+        {{0, 400, 5070, 200}, 1, GRAY},
         {{300, 200, 400, 10}, 1, GRAY},
         {{250, 300, 100, 10}, 1, GRAY},
         {{650, 300, 100, 10}, 1, GRAY},
@@ -345,7 +383,9 @@ int main()
         {{2700, 200,  50, 50}, 2, BLACK},
         {{3010, 340,  30, 60}, 1, GREEN},
         {{3530, 270,  30, 130}, 1, GREEN},
-        {{4000, 270,  30, 130}, 1, GREEN}
+        {{4000, 270,  30, 130}, 1, GREEN},
+        {{4520, 270,  30, 130}, 1, GREEN},
+        {{5040, 270,  30, 130}, 1, GREEN}
     };
     int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
@@ -1050,6 +1090,23 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
                 DrawTextureRec(Pocao->texture, Pocao->frameRect, (Vector2){pocao[p].posicao.x - 30, pocao[p].posicao.y - 30}, RAYWHITE);
             }
         }
+
+        if (p < PODER_MAX_TCHUTCHUCA)
+        {
+            if (dinheiro[p].poder_ativo)
+            {
+                DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+            }
+        }
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].poder_ativo)
+            {
+                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+            }
+        }
+
     }
 
     //Criação e Desenho
@@ -1097,6 +1154,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 }
 
 void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, EnvItem *envItems, int envItemsLength, float delta){
+    Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2), jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y};
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE) && jogador->poder) {                                                               
@@ -1197,6 +1255,61 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder
         inimigo_cooldown_poder = t;
     }
 
+    //Condição de Tchutchuca atirar dinheiro!
+    if ((boss->tipo == 3) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_TCHUTCHUCA <= t))
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            for (int p = 0; p < PODER_MAX_TCHUTCHUCA; p++)
+            {
+                if (!dinheiro[p].poder_ativo)
+                {   
+                    switch (i)
+                    {
+                    case 0: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        break;
+                    case 1: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 2: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x, boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 3: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 4: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        break;
+                    
+                    default:
+                        break;
+                    }
+                    dinheiro[p].direcao_movimento = i;
+                    dinheiro[p].poder_ativo = true;
+                    break;
+                }
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+    
+    //Condição do rei de atirar poções
+    if ((boss->tipo == 4) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_REI <= t))
+    {
+        for (int p = 0; p < PODER_MAX_REI; p++)
+        {
+            if (!pocao[p].poder_ativo)
+            {
+                pocao[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/4)};
+                pocao[p].direcao_movimento = 0;
+                pocao[p].poder_ativo = true;
+                break;
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+
     //Movimentação do poder
     /*Aqui há uma economia no for, veja que o 'for' é utilizado para o maior valor de p 
      *e existe um 'if' que separa o loop para o personagem e o boss fábio
@@ -1259,7 +1372,133 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder
             {
                 laranja[p].poder_ativo = false; //Poder é desativado
             }
-        }  
+        }
+
+        if (p < PODER_MAX_TCHUTCHUCA)
+        {
+            switch (dinheiro[p].direcao_movimento)
+            {
+            case 0:
+                dinheiro[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            case 1:
+                dinheiro[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; 
+                break;
+            case 2:
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; 
+                break;
+            case 3:
+                dinheiro[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            case 4:
+                dinheiro[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            
+            default:
+                break;
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                     //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(dinheiro[p].posicao, dinheiro[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                           // (círculo) e um retângulo
+                    dinheiro[p].poder_ativo = false;                                                         //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (dinheiro[p].posicao.x < dinheiro[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                dinheiro[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (dinheiro[p].posicao.x + dinheiro[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                dinheiro[p].poder_ativo = false; //Poder é desativado
+            }
+          
+            if (dinheiro[p].posicao.y < 0) //Limite até o teto do cenário
+            {
+                dinheiro[p].poder_ativo = false;
+            }
+        } 
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                pocao[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                     //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(pocao[p].posicao, pocao[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                           // (círculo) e um retângulo
+                    pocao[p].poder_ativo = false;                                                         //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (pocao[p].posicao.x < pocao[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (pocao[p].posicao.x + pocao[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+        }
+
+        for (int i = 0; i < PODER_MAX_PERSONAGEM; i++)
+        {
+            switch (boss->tipo)
+            {
+            case 2:
+                //Verificação se há colisão de poder com poder
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(laranja[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    laranja[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre laranja e jogador
+                if (CheckCollisionCircleRec(laranja[p].posicao,laranja[p].raio,ret_jogador) && laranja[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            case 3:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(dinheiro[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    dinheiro[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre dinheiro e jogador
+                if (CheckCollisionCircleRec(dinheiro[p].posicao,dinheiro[p].raio,ret_jogador) && dinheiro[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            case 4:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(pocao[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    pocao[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre poção e jogador
+                if (CheckCollisionCircleRec(pocao[p].posicao,pocao[p].raio,ret_jogador) && pocao[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            default:
+                break;
+            }
+        }
     }
 }
 
@@ -1362,6 +1601,19 @@ bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_j
     {
         //Verifica se há colisão no range a esquerda do boss
         if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_esquerda - ponto, ponto_inicial_range_y}, ret_jogador))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
+{
+    if (poder1->poder_ativo && poder2->poder_ativo)
+    {
+        if (CheckCollisionCircles(poder1->posicao, poder1->raio, poder2->posicao, poder2->raio))
         {
             return 1;
         }
