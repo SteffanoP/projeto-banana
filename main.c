@@ -103,7 +103,7 @@ bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tam
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
 bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
 bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
-void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario);
+void IniciaCenario(Jogador *jogador, int cenario);
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
 void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
 
@@ -247,7 +247,7 @@ int main()
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
     //Configuração Inicial de Cenário
-    IniciaCenario(&jogador,inimigo,0);
+    IniciaCenario(&jogador,0);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
@@ -274,7 +274,7 @@ int main()
         //Faz Transição de cenário de testes para Cenário 1
         if (jogador.posicao.x > 5000 && boss[bossAtivo].tipo == 0)
         {
-            IniciaCenario(&jogador, inimigo, 1);
+            IniciaCenario(&jogador, 1);
         }
 
         //Atualiza os dados do jogador
@@ -1329,7 +1329,7 @@ bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
 
 //Funções referentes ao cenário
 
-void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
+void IniciaCenario(Jogador *jogador, int cenario)
 {
     switch (cenario)
     {
