@@ -418,7 +418,7 @@ int main()
         AnimacaoInimigo(&frames, inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        if (jogador.poder == 1 || jogador.poder == 2)
+        if (jogador.poder > 0)
         {
             UpdatePoder(imune_19, &imune, &jogador, envItems, envItemsLength, deltaTime, spriteImune1, spriteImune2);       
         }
@@ -720,6 +720,12 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     //Verifica colisão entre inimigo e jogador
     if (inimigo->tipo > 0 && jogador->vida > 0)
     {
+        //Verifica se borda superior do inimigo encosta em objeto jogador
+        if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
+        {
+            inimigo->tipo = 0; //Jogador mata o inimigo
+        }
+
         if (jogador->poder != 2) // Caso o poder do jogador não seja a "poção-52"
         {
             //Verifica se jogador encosta nas bordas do objeto inimigo
@@ -727,11 +733,6 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
             {
                 jogador->vida = 0; //Jogador encosta em inimigo e perde vida
             }
-        }
-        //Verifica se borda superior do inimigo encosta em objeto jogador
-        else if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
-        {
-            inimigo->tipo = 0; //Jogador mata o inimigo
         }
     }
 
@@ -1143,7 +1144,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2){
 
     //Acionamento do poder IMUNE_19
-    if (IsKeyPressed(KEY_SPACE)) {                                                               
+    if (IsKeyPressed(KEY_SPACE) && jogador->poder == 1) {                                                               
         for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)  //Configuração do "imune_19" quando desativado
         {
             if (!imune_19[p].poder_ativo && jogador->direcao_movimento == 1) //Caso jogador esteja indo para a DIREITA
