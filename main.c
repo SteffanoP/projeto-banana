@@ -1408,7 +1408,7 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
         jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
 
         //Carrega os objetos do cenário
-        CarregaObjetos(envItems, cenario1, tamanhoCenario2);
+        CarregaObjetos(envItems, cenario2, tamanhoCenario2);
         envItemsLength = tamanhoCenario2;
         break;
     case 3:
@@ -1416,7 +1416,7 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
         jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
 
         //Carrega os objetos do cenário
-        CarregaObjetos(envItems, cenario1, tamanhoCenario3);
+        CarregaObjetos(envItems, cenario3, tamanhoCenario3);
         envItemsLength = tamanhoCenario3;
         break;
     case 4:
@@ -1424,7 +1424,7 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
         jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
 
         //Carrega os objetos do cenário
-        CarregaObjetos(envItems, cenario1, tamanhoCenario4);
+        CarregaObjetos(envItems, cenario4, tamanhoCenario4);
         envItemsLength = tamanhoCenario4;
         break;
 
@@ -1435,7 +1435,7 @@ void IniciaCenario(Jogador *jogador, Inimigo *inimigo, int cenario)
 
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario)
 {
-    for (int i = 0; i < tamanhoCenario1; i++)
+    for (int i = 0; i < tamanhoLoadCenario; i++)
     {
         cenario[i].colisao = loadCenario[i].colisao;
         cenario[i].cor = loadCenario[i].cor;
