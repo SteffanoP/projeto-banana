@@ -100,6 +100,8 @@ time_t sc;
 
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
 static Poder laranja[PODER_MAX_FABIO] = {0}; //A variável inicializa zerada em suas posições
+static Poder dinheiro[PODER_MAX_TCHUTCHUCA] = {0}; //A variável inicializa zerada em suas posições
+static Poder pocao[PODER_MAX_REI] = {0}; //A variável inicializa zerada em suas posições
 
 unsigned int inimigo_cooldown_poder = 0;
 unsigned int inimigo_cooldown_pulo = 0;
@@ -108,13 +110,13 @@ unsigned int inimigo_cooldown_pulo = 0;
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateBoss(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder *Laranja, EnvItem *envItems, int envItemsLength, float delta);
+void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, EnvItem *envItems, int envItemsLength, float delta);
 void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Animacao *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
 void AnimacaoInimigo(Inimigo *inimigo, Animacao *minions, Animacao *gados, int tamanhoInimigos, float deltaTime);
 void AnimacaoBoss(Inimigo *boss, Animacao *Boss);
 void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnteriorBoss);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -195,7 +197,7 @@ int main()
         {2, {0}, {3930, 280}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-    int bossAtivo = 1; //Define qual o tipo de boss que deve estar ativo
+    int bossAtivo = 3; //Define qual o tipo de boss que deve estar ativo
     for (int i = 0; i < tamanhoBoss; i++)
     {
         if (boss[i].tipo == bossAtivo)
@@ -208,7 +210,31 @@ int main()
     Boss.framesCounter = 0;
     Boss.currentFrame = 0;
     Boss.framesSpeed = 18;
-
+    Texture2D spritesboss[4];
+    spritesboss[0] = LoadTexture("sprites/dudu-bananinha.png"); //Carregamento da sprite sheet
+    spritesboss[1] = LoadTexture("sprites/fabinho-bananinha.png"); //Carregamento da sprite sheet
+    spritesboss[2] = LoadTexture("sprites/tchutchuca.png"); //Carregamento da sprite sheet
+    spritesboss[3] = LoadTexture("sprites/rei-bananinha.png"); //Carregamento da sprite sheet
+    if (bossAtivo == 1)
+    {
+        Boss.texture = (Texture2D)spritesboss[0];
+    } 
+    else if (bossAtivo == 2)
+    {
+        Boss.texture = (Texture2D)spritesboss[1];
+    }
+    else if (bossAtivo == 3)
+    {
+        Boss.texture = (Texture2D)spritesboss[2];
+    }
+    else if (bossAtivo == 3)
+    {
+        Boss.texture = (Texture2D)spritesboss[3];
+    }
+    Boss.frameWidth = Boss.texture.width / 3; //Largura da sprite
+    Boss.frameHeight = Boss.texture.height / 3; //Altura da sprite
+    Boss.frameRect = (Rectangle){2*Boss.frameWidth, Boss.frameHeight, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
+    
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
     {
@@ -217,30 +243,32 @@ int main()
             boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
             boss[i].vida = 1;
             boss[i].cor = BLUE;
-
-            //Animação
-            Texture2D spritesboss = LoadTexture("sprites/dudu-bananinha.png"); //Carregamento da sprite sheet
-            Boss.texture = (Texture2D)spritesboss;
-            Boss.frameWidth = Boss.texture.width / 3; //Largura da sprite
-            Boss.frameHeight = Boss.texture.height / 3; //Altura da sprite
-            Boss.frameRect = (Rectangle){2*Boss.frameWidth, Boss.frameHeight, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
-            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posiçâo x do personagem em relação à posição x do boss
-            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posiçâo y do personagem em relação à posição y do boss
+            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posição x do personagem em relação à posição x do boss
+            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posição y do personagem em relação à posição y do boss
         }
         if (boss[i].tipo == 2)
         {
             boss[i].tamanho = (Vector2){TAMANHO_FABIO_X,TAMANHO_FABIO_Y};
             boss[i].vida = 1;
             boss[i].cor = BLUE;
-
-            //Animação
-            Texture2D spritesboss = LoadTexture("sprites/fabinho-bananinha.png"); //Carregamento da sprite sheet
-            Boss.texture = (Texture2D)spritesboss;
-            Boss.frameWidth = Boss.texture.width / 3; //Largura da sprite
-            Boss.frameHeight = Boss.texture.height / 3; //Altura da sprite
-            Boss.frameRect = (Rectangle){2*Boss.frameWidth, Boss.frameHeight, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
-            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posiçâo x do personagem em relação à posição x do boss
-            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posiçâo y do personagem em relação à posição y do boss
+            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posição x do personagem em relação à posição x do boss
+            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posição y do personagem em relação à posição y do boss
+        }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posição x do personagem em relação à posição x do boss
+            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posição y do personagem em relação à posição y do boss
+        }
+        if (boss[i].tipo == 4)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_REI_X,TAMANHO_REI_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+            Boss.posicao.x = 116 - boss[i].tamanho.x; //Posição x do personagem em relação à posição x do boss
+            Boss.posicao.y = 190 - boss[i].tamanho.y; //Posição y do personagem em relação à posição y do boss
         }
     }
 
@@ -261,6 +289,16 @@ int main()
     Texture2D spriteLaranja = LoadTexture ("sprites/laranja.png");
     Laranja.texture = spriteLaranja;
     Laranja.frameRect = (Rectangle){0.0f, 0.0f, Laranja.texture.width, Laranja.texture.height}; //Sprite
+    
+    AnimacaoPoder Dinheiro;
+    Texture2D spriteDinheiro = LoadTexture ("sprites/dinheiro.png");
+    Dinheiro.texture = spriteDinheiro;
+    Dinheiro.frameRect = (Rectangle){0.0f, 0.0f, Dinheiro.texture.width, Dinheiro.texture.height}; //Sprite
+    
+    AnimacaoPoder Pocao;
+    Texture2D spritePocao = LoadTexture ("sprites/remedio.png");
+    Pocao.texture = spritePocao;
+    Pocao.frameRect = (Rectangle){0.0f, 0.0f, Pocao.texture.width, Pocao.texture.height}; //Sprite
 
     //Configurações iniciais do poder "LARANJA!"
     for (int p = 0; p < PODER_MAX_FABIO; p++)
@@ -357,7 +395,7 @@ int main()
         AnimacaoInimigo(inimigo, &minions, &gados, tamanhoInimigo, deltaTime);
       
         //Atualiza os dados do poder
-        UpdatePoder(imune_19, &jogador, &(boss[bossAtivo]), &Laranja, envItems, envItemsLength, deltaTime);      
+        UpdatePoder(imune_19, &jogador, &(boss[bossAtivo]), &Laranja, &Dinheiro, &Pocao, envItems, envItemsLength, deltaTime);      
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -367,7 +405,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //Desenho circular do poder "IMUNE_19"
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, deltaTime);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &minions, &gados, &jogador, &personagem, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime);
 
         //----------------------------------------------------------------------------------
       
@@ -379,10 +417,16 @@ int main()
     //--------------------------------------------------------------------------------------
 
     //Descarregamento da sprite sheet do jogador
-    UnloadTexture(personagem.texture); 
-    UnloadTexture(Boss.texture);
+    UnloadTexture(personagem.texture);
+    UnloadTexture(spritesboss[0]);
+    UnloadTexture(spritesboss[1]);
+    UnloadTexture(spritesboss[2]);
+    UnloadTexture(spritesboss[3]);
     UnloadTexture(Laranja.texture);
-
+    UnloadTexture(Banana.texture);
+    UnloadTexture(Dinheiro.texture);
+    UnloadTexture(Pocao.texture);
+    
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
@@ -934,7 +978,7 @@ void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnterior_B
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, float delta)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Animacao *minions, Animacao *gados, Jogador *jogador, Animacao *personagem, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta)
 {
     BeginDrawing();
 
@@ -990,6 +1034,22 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
                 DrawTextureRec(Laranja->texture, Laranja->frameRect, (Vector2){laranja[p].posicao.x - 30, laranja[p].posicao.y - 30}, RAYWHITE);
             }
         }
+        if (p < PODER_MAX_TCHUTCHUCA)
+        {
+            if (dinheiro[p].poder_ativo)
+            {
+                DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+                DrawTextureRec(Dinheiro->texture, Dinheiro->frameRect, (Vector2){dinheiro[p].posicao.x - 30, dinheiro[p].posicao.y - 30}, RAYWHITE);
+            }
+        }
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].poder_ativo)
+            {
+                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+                DrawTextureRec(Pocao->texture, Pocao->frameRect, (Vector2){pocao[p].posicao.x - 30, pocao[p].posicao.y - 30}, RAYWHITE);
+            }
+        }
     }
 
     //Criação e Desenho
@@ -1036,7 +1096,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     EndDrawing();
 }
 
-void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder *Laranja, EnvItem *envItems, int envItemsLength, float delta){
+void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, EnvItem *envItems, int envItemsLength, float delta){
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE) && jogador->poder) {                                                               
@@ -1070,6 +1130,67 @@ void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, AnimacaoPoder
                 laranja[p].direcao_movimento = 0;
                 laranja[p].poder_ativo = true;
                 Laranja->posicao = laranja[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
+                break;
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+
+    //Condição de Tchutchuca atirar dinheiro!
+    if ((boss->tipo == 3) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_TCHUTCHUCA <= t))
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            for (int p = 0; p < PODER_MAX_TCHUTCHUCA; p++)
+            {
+                if (!dinheiro[p].poder_ativo)
+                {   
+                    switch (i)
+                    {
+                    case 0: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        Dinheiro->posicao = dinheiro[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 3
+                        break;
+                    case 1: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        Dinheiro->posicao = dinheiro[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 3
+                        break;
+                    case 2: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x, boss->posicao.y - boss->tamanho.y};
+                        Dinheiro->posicao = dinheiro[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 3
+                        break;
+                    case 3: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        Dinheiro->posicao = dinheiro[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 3
+                        break;
+                    case 4: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        Dinheiro->posicao = dinheiro[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 3
+                        break;
+                    
+                    default:
+                        break;
+                    }
+                    dinheiro[p].direcao_movimento = i;
+                    dinheiro[p].poder_ativo = true;
+                    break;
+                }
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+    
+    //Condição do rei de atirar poções
+    if ((boss->tipo == 4) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_REI <= t))
+    {
+        for (int p = 0; p < PODER_MAX_REI; p++)
+        {
+            if (!pocao[p].poder_ativo)
+            {
+                pocao[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/4)};
+                pocao[p].direcao_movimento = 0;
+                pocao[p].poder_ativo = true;
+                Pocao->posicao = pocao[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 4
                 break;
             }
         }
