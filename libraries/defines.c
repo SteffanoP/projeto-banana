@@ -1,6 +1,9 @@
 #define screenWidth 1024
 #define screenHeight 768
 
+#define screenWidth_5 1524
+#define screenHeight_5 1600
+
 #define NOME_JOGO "O JOGO"
 
 #define GRAVIDADE 500
@@ -15,9 +18,9 @@
 #define PODER_MOVIMENTO_VELOCIDADE 700
 
 
-
-#define TAMANHO_X_CENARIO 5070
-#define TAMANHO_Y_CENARIO 400
+//Cenário de testes
+#define TAMANHO_X_CENARIO 6200
+#define TAMANHO_Y_CENARIO 1000
 
 //Constantes referentes aos inimigos:
 

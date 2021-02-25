@@ -247,14 +247,14 @@ int main()
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
     //Configuração Inicial de Cenário
-    IniciaCenario(&jogador,0);
+    IniciaCenario(&jogador,5);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
     camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
+    camera.zoom = 0.5f;
 
     time(&sc); //Tempo no começo do jogo
 
@@ -272,9 +272,9 @@ int main()
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
 
         //Faz Transição de cenário de testes para Cenário 1
-        if (jogador.posicao.x > 5000 && boss[bossAtivo].tipo == 0)
+        if (jogador.posicao.x > 2000)
         {
-            IniciaCenario(&jogador, 1);
+            //IniciaCenario(&jogador, 4);
         }
 
         //Atualiza os dados do jogador
@@ -359,14 +359,6 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
     } else if (jogador->posicao.x < jogador->tamanho.x / 2)
     {
         jogador->posicao.x = jogador->tamanho.x / 2; //Limites para a esquerda
-    }
-    
-    if ((jogador->posicao.y) > TAMANHO_Y_CENARIO)  //Limites na vertical
-    {
-        jogador->posicao.y = TAMANHO_Y_CENARIO; 
-    } else if (jogador->posicao.y < jogador->tamanho.y)
-    {
-        jogador->posicao.y = jogador->tamanho.y;
     }
 
     colisaoJogador = 0;
@@ -1335,7 +1327,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
     {
     case 0:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário de Testes
 
         CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
         envItemsLength = tamanhoCenarioTeste;
@@ -1349,7 +1341,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
         break;
     case 1:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 1
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 1
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario1, tamanhoCenario1);
@@ -1364,7 +1356,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
         break;
     case 2:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 2
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 2
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario2, tamanhoCenario2);
@@ -1379,7 +1371,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
         break;
     case 3:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 3
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 3
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario3, tamanhoCenario3);
@@ -1394,7 +1386,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
         break;
     case 4:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário 4
+        jogador->posicao = (Vector2){0, 120}; //Posição Inicial Cenário 4
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario4, tamanhoCenario4);
@@ -1405,6 +1397,21 @@ void IniciaCenario(Jogador *jogador, int cenario)
             CarregaInimigos(&(inimigo[i]),&(inimigoCenario4[i]));
         }
         tamanhoInimigo = tamanho_inimigoCenario4;
+        
+        break;
+    case 5:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 1150}; //Posição Inicial Cenário 4
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario5, tamanhoCenario5);
+        envItemsLength = tamanhoCenario5;
+
+        for (int i = 0; i < tamanhoCenario5; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario5[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario5;
 
         break;
 
