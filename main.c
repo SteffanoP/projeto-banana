@@ -136,10 +136,10 @@ unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2);
-void AnimacaoJogadorMovimento(FPS_Animacao *frames, Jogador *jogador, Animacao *personagem, Personagem *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
+void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, Inimigo *inimigo, Minions *minions, int tamanhoInimigos, float deltaTime);
 void AnimacaoInimigo(FPS_Animacao *frames, Inimigo *inimigo, Minions *minions, Gados *gados, int tamanhoInimigos, float deltaTime);
-void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, Personagem *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, Personagem *personagem, IMUNE_19 *imune);
+void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, IMUNE_19 *imune);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -185,7 +185,6 @@ int main()
     personagem.framesCounter = 0;
     personagem.currentFrame = 0;
 
-    Personagem personagem;
     Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
     Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
     Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet 
@@ -1074,7 +1073,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, Personagem *personagem, IMUNE_19 *imune)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Minions *minions, Gados *gados, Jogador *jogador, Animacao *personagem, IMUNE_19 *imune)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
@@ -1139,9 +1138,6 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
     
-    EndMode2D();
-
-    EndDrawing();
 }
 
 void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune1, Texture2D spriteImune2){
