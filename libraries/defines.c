@@ -71,4 +71,3 @@
 
 #define TEMPO_COOLDOWN_PODER_REI 1000 //ms
 #define PODER_MAX_REI 20
-
