@@ -40,6 +40,13 @@ typedef struct Poder
     Color cor;
 } Poder;
 
+typedef struct AnimacaoPoder
+{
+    Vector2 posicao;
+    Texture2D texture;
+    Rectangle frameRect;
+} AnimacaoPoder;
+
 /* colisao: tipo de bloco de colisão
 colisao = 1 = bloco normal com colisão
 colisao = 2 = bloco com poder imune-19 */
@@ -92,11 +99,13 @@ unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
 void UpdateBoss(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune);
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune,  AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao);
 void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime);
 void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, float delta);
+void AnimacaoBoss(Inimigo *boss, Animacao *Boss);
+void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnteriorBoss);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -136,13 +145,21 @@ int main()
 
     //Configurações Iniciais da animação do joagdor
     Animacao personagem;
-    Texture2D spritesPersonagem = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
-    personagem.texture = (Texture2D)spritesPersonagem;
+    Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
+    Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
+    Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet
+    personagem.texture = (Texture2D)spritesPersonagem_comp;
     personagem.frameWidth = personagem.texture.width / 4; //Largura da sprite
     personagem.frameHeight = personagem.texture.height / 4; //Altura da sprite
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
+    personagem.poderCounter = 0;
+    personagem.poderCurrentFrame = 0;
+    personagem.framesSpeed = 12;
+    personagem.framesCounter = 0;
+    personagem.currentFrame = 0;
+    int tela_personagem = 1;
     
     //Configurações iniciais Boss
     Inimigo boss[] = {
@@ -154,16 +171,34 @@ int main()
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
 
-    personagem.poderCounter = 0;
-    personagem.poderCurrentFrame = 0;
-    personagem.framesSpeed = 12;
-    personagem.framesCounter = 0;
-    personagem.currentFrame = 0;
-    int tela_personagem = 1;
-    
-    Texture2D spritesPersonagem_john = LoadTexture("sprites/john-dorivac.png");
-    Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
-    Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet 
+    Animacao Boss;
+    Boss.framesCounter = 0;
+    Boss.currentFrame = 0;
+    Boss.framesSpeed = 18;
+    Texture2D spritesboss[4];
+    spritesboss[0] = LoadTexture("sprites/dudu-bananinha.png"); //Carregamento da sprite sheet
+    spritesboss[1] = LoadTexture("sprites/fabinho-bananinha.png"); //Carregamento da sprite sheet
+    spritesboss[2] = LoadTexture("sprites/tchutchuca.png"); //Carregamento da sprite sheet
+    spritesboss[3] = LoadTexture("sprites/rei-bananinha.png"); //Carregamento da sprite sheet
+    if (bossAtivo == 1)
+    {
+        Boss.texture = (Texture2D)spritesboss[0];
+    } 
+    else if (bossAtivo == 2)
+    {
+        Boss.texture = (Texture2D)spritesboss[1];
+    }
+    else if (bossAtivo == 3)
+    {
+        Boss.texture = (Texture2D)spritesboss[2];
+    }
+    else if (bossAtivo == 3)
+    {
+        Boss.texture = (Texture2D)spritesboss[3];
+    }
+    Boss.frameWidth = Boss.texture.width / 3; //Largura da sprite
+    Boss.frameHeight = Boss.texture.height / 3; //Altura da sprite
+    Boss.frameRect = (Rectangle){2*Boss.frameWidth, Boss.frameHeight, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
 
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
@@ -212,6 +247,26 @@ int main()
         imune_19[p].raio = 10;
         imune_19[p].cor = BLACK;
     }
+
+    AnimacaoPoder Banana;
+    Texture2D spriteBanana = LoadTexture ("sprites/banana.png");
+    Banana.texture = spriteBanana;
+    Banana.frameRect = (Rectangle){0.0f, 0.0f, Banana.texture.width, Banana.texture.height}; //Sprite
+
+    AnimacaoPoder Laranja;
+    Texture2D spriteLaranja = LoadTexture ("sprites/laranja.png");
+    Laranja.texture = spriteLaranja;
+    Laranja.frameRect = (Rectangle){0.0f, 0.0f, Laranja.texture.width, Laranja.texture.height}; //Sprite
+    
+    AnimacaoPoder Dinheiro;
+    Texture2D spriteDinheiro = LoadTexture ("sprites/dinheiro.png");
+    Dinheiro.texture = spriteDinheiro;
+    Dinheiro.frameRect = (Rectangle){0.0f, 0.0f, Dinheiro.texture.width, Dinheiro.texture.height}; //Sprite
+    
+    AnimacaoPoder Pocao;
+    Texture2D spritePocao = LoadTexture ("sprites/remedio.png");
+    Pocao.texture = spritePocao;
+    Pocao.frameRect = (Rectangle){0.0f, 0.0f, Pocao.texture.width, Pocao.texture.height}; //Sprite
 
     //Configurações iniciais do poder "LARANJA!"
     for (int p = 0; p < PODER_MAX_FABIO; p++)
@@ -419,7 +474,7 @@ int main()
         AnimacaoJogadorMovimento(&jogador, &personagem, deltaTime);
 
         //Atualiza os dados do poder
-        UpdatePoder(imune_19, &imune, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime, spriteImune);
+        UpdatePoder(imune_19, &imune, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime, spriteImune, &Laranja, &Dinheiro, &Pocao);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -479,14 +534,13 @@ int main()
             // Draw
             //----------------------------------------------------------------------------------
 
-            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), deltaTime);
+            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime);
 
             //----------------------------------------------------------------------------------
         
             //Atualiza a animação quando o jogador está parado
             AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
             break;
-
         }
         EndMode2D();
 
@@ -502,6 +556,14 @@ int main()
     UnloadTexture(spritesMinion);
     UnloadTexture(spritesGado);
     UnloadTexture(spriteImune);
+    UnloadTexture(spritesboss[0]);
+    UnloadTexture(spritesboss[1]);
+    UnloadTexture(spritesboss[2]);
+    UnloadTexture(spritesboss[3]);
+    UnloadTexture(Laranja.texture);
+    UnloadTexture(Banana.texture);
+    UnloadTexture(Dinheiro.texture);
+    UnloadTexture(Pocao.texture);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -1128,6 +1190,61 @@ void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frame
     }
 }
 
+void AnimacaoBoss(Inimigo *boss, Animacao *Boss)
+{
+    Boss->framesCounter++; //Atualiza o valor da frame do jogo
+
+    if (Boss->framesCounter % 2 == 0) Boss->currentFrame = 1;
+    else Boss->currentFrame = 2; //Controle da alternância dos passos
+
+    if ((Boss->framesCounter >= (t/Boss->framesSpeed)) && Boss->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    {
+        Boss->framesCounter = 0;
+        Boss->framesSpeed += 0.4;
+        if((float)s > (float)sc + 60) Boss->framesSpeed += 0.1;
+        if((float)s > (float)sc + 5*60) Boss->framesSpeed += 0.1;
+        
+        //Jogador
+        if (boss->direcao_movimento == 0 && boss->podePular == true && Boss->currentFrame == 1 && boss->vida > 0) //Passo 1 esquerda
+        {
+            Boss->posicao.x = 140 - boss->tamanho.x;
+            Boss->frameRect.x = 2*Boss->frameWidth;
+            Boss->frameRect.y = Boss->frameHeight;
+        }
+        if (boss->direcao_movimento == 0 && boss->podePular == true && Boss->currentFrame == 2 && boss->vida > 0) //Passo 2 esquerda
+        {
+            Boss->posicao.x = 140 - boss->tamanho.x;
+            Boss->frameRect.x = 0.0f;
+            Boss->frameRect.y = 2*Boss->frameHeight;
+        }
+        if (boss->direcao_movimento == 1 && boss->podePular == true && Boss->currentFrame == 1 && boss->vida > 0) //Passo 1 direita
+        {
+            Boss->posicao.x = 116 - boss->tamanho.x;
+            Boss->frameRect.x = 2*Boss->frameWidth;
+            Boss->frameRect.y = 0.0f;
+        }
+        if (boss->direcao_movimento == 1 && boss->podePular == true && Boss->currentFrame == 2 && boss->vida > 0) //Passo 2 direita
+        {
+            Boss->posicao.x = 116 - boss->tamanho.x;
+            Boss->frameRect.x = 0.0f;
+            Boss->frameRect.y = Boss->frameHeight;
+        }
+
+        if (boss->podePular == false && boss->direcao_movimento == 0 && boss->vida > 0) //Pulo esquerda
+        {
+            Boss->posicao.x = 140 - boss->tamanho.x;
+            Boss->frameRect.x = 2*Boss->frameWidth;
+            Boss->frameRect.y = Boss->frameHeight;
+        }
+        if (boss->podePular == false && boss->direcao_movimento == 1 && boss->vida > 0) //Pulo direita
+        {
+            Boss->posicao.x = 116 - boss->tamanho.x;
+            Boss->frameRect.x = 2*Boss->frameWidth;
+            Boss->frameRect.y = 0.0f;
+        }
+    }
+}
+
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
 {
     if (jogador->poder != 2)
@@ -1194,7 +1311,23 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *framesInimigoT1, Animacao *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, float delta)
+void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnterior_Boss)
+{    
+    if (boss->direcao_movimento == 0 && boss->podePular == true && boss->velocidade == 0.0f && boss->vida > 0) //Parado esquerda
+    {
+        Boss->posicao.x = 140 - boss->tamanho.x;
+        Boss->frameRect.x = Boss->frameWidth;
+        Boss->frameRect.y = Boss->frameHeight;
+    }
+    if (boss->direcao_movimento == 1 && boss->podePular == true && boss->posicao.x == posicaoAnterior_Boss.x && boss->posicao.y == posicaoAnterior_Boss.y && boss->vida > 0) //Parado direita
+    {
+        Boss->posicao.x = 116 - boss->tamanho.x;
+        Boss->frameRect.x = Boss->frameWidth;
+        Boss->frameRect.y = 0.0f;
+    }
+}
+
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
@@ -1208,7 +1341,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
 
             //Desenho da textura dos minions
-            DrawTextureRec(framesInimigoT1[i].texture, framesInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT1[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (framesInimigoT1[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
+            DrawTextureRec(frameInimigoT1[i].texture, frameInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT1[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT1[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 2)
         {
@@ -1216,13 +1349,15 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
 
             //Desenho da textura dos gados
-            DrawTextureRec(framesInimigoT2[i].texture, framesInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (framesInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
+            DrawTextureRec(frameInimigoT2[i].texture, frameInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 3)
         {
             DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
+
+            //Desenho da textura das bananas
+            DrawTextureRec(Banana->texture, Banana->frameRect, (Vector2){inimigo[i].posicao.x - 25, inimigo[i].posicao.y - 50}, RAYWHITE);
         }
-        
     }
 
     //Desenho circular dos poderes
@@ -1241,6 +1376,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             if (laranja[p].poder_ativo)
             {
                 DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
+                DrawTextureRec(Laranja->texture, Laranja->frameRect, (Vector2){laranja[p].posicao.x - 30, laranja[p].posicao.y - 30}, RAYWHITE);
             }
         }
 
@@ -1249,6 +1385,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             if (dinheiro[p].poder_ativo)
             {
                 DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+                DrawTextureRec(Dinheiro->texture, Dinheiro->frameRect, (Vector2){dinheiro[p].posicao.x - 30, dinheiro[p].posicao.y - 30}, RAYWHITE);
             }
         }
 
@@ -1257,9 +1394,9 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             if (pocao[p].poder_ativo)
             {
                 DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+                DrawTextureRec(Pocao->texture, Pocao->frameRect, (Vector2){pocao[p].posicao.x - 30, pocao[p].posicao.y - 30}, RAYWHITE);
             }
         }
-
     }
 
     //Criação e Desenho
@@ -1298,7 +1435,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 
 }
 
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune)
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune,  AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao)
 {
     Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2), jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y};
 
