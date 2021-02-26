@@ -411,11 +411,53 @@ int main()
         posicaoAnterior_Boss = boss->posicao;
 
         //Faz Transição de cenário de testes para Cenário 1
-        if (jogador.posicao.x > 2000 && boss[bossAtivo].tipo == 0)
+        switch (cenarioAtual)
         {
-            cenarioAtual += 1;
-            IniciaCenario(&jogador, cenarioAtual);
-
+        case 0:
+            if (jogador.posicao.x > 3000 && boss[bossAtivo].tipo == 0)
+            {
+                cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        case 1:
+            if (jogador.posicao.x > 2495 && boss[bossAtivo].tipo == 0)
+            {
+                cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        case 2:
+            if (jogador.posicao.x > 6035 && boss[bossAtivo].tipo == 0)
+            {
+                cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        case 3:
+            if (jogador.posicao.x > 6035 && boss[bossAtivo].tipo == 0)
+            {
+                cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        case 4:
+            if (jogador.posicao.x > 6035 && boss[bossAtivo].tipo == 0)
+            {
+                cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        case 5:
+            if (jogador.posicao.x > 2485 && boss[bossAtivo].tipo == 0)
+            {
+                //cenarioAtual += 1;
+                IniciaCenario(&jogador, cenarioAtual);
+            }
+            break;
+        
+        default:
+            break;
         }
 
         //Atualiza os dados do jogador
@@ -455,7 +497,6 @@ int main()
         BeginMode2D(camera);
         switch (gamescreen)
         {
-            
             case LOGO:
             switch (state)
             {
@@ -1966,7 +2007,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
     default:
         break;
     }
-    
+
     //Carrega a animação do inimigo Minion
     for (int i = 0; i < tamanhoInimigo; i++)
     {
