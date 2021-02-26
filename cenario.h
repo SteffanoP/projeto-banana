@@ -33,7 +33,9 @@ EnvItem cenarioTeste[] = {
     {{3530, 270, 30, 130}, 1, GREEN},
     {{4000, 270, 30, 130}, 1, GREEN},
     {{4520, 270, 30, 130}, 1, GREEN},
-    {{5040, 270, 30, 130}, 1, GREEN}
+    {{5040, 270, 30, 130}, 1, GREEN},
+    //Blocos invisíveis ao jogador
+    {{1600, 330, 50, 50}, 4, GRAY}
 };
 
 const int tamanhoCenarioTeste = sizeof(cenarioTeste) / sizeof(cenarioTeste[0]);
@@ -47,7 +49,11 @@ EnvItem cenario1[] = {
         {{1600, 650, 70, 70}, 1, YELLOW},
         {{960, 410, 70, 70}, 1, BLUE},
         {{960, 150, 70, 70}, 2, BLACK},
-        {{2520, 370, 140, 200}, 1, ORANGE}
+        {{2520, 370, 140, 200}, 1, ORANGE},
+        //Blocos invisíveis ao jogador
+        {{559, 549, 1, 1}, 4, GRAY},
+        {{1361, 549, 1, 1}, 4, GRAY},
+        {{1899, 549, 1, 1}, 4, GRAY}
 };
 const int tamanhoCenario1 = sizeof(cenario1) / sizeof(cenario1[0]);
 
@@ -76,7 +82,14 @@ EnvItem cenario2[] = {
         {{3760, 210, 70, 70}, 2, BLACK},
         {{4100, 550, 2100, 450}, 1, PURPLE},
         {{4300, 480, 70, 70}, 1, BLUE},
-        {{6060, 370, 140, 200}, 1, ORANGE}
+        {{6060, 370, 140, 200}, 1, ORANGE},
+
+        //Blocos invisíveis ao jogador
+        {{1099, 549, 1, 1}, 4, GRAY}, 
+        {{2299, 549, 1, 1}, 4, BROWN},
+        {{3749, 439, 1, 1}, 4, RED},
+        {{3969, 449, 1, 1}, 4, RED}
+
 };
 const int tamanhoCenario2 = sizeof(cenario2) / sizeof(cenario2[0]);
 
@@ -110,7 +123,12 @@ EnvItem cenario3[] = {
         {{3900, 550, 2300, 450}, 1, PINK},
         {{4000, 480, 210, 70}, 1, BLUE},
         {{4070, 410, 70, 140}, 1, BLUE},
-        {{6060, 370, 140, 200}, 1, ORANGE}
+        {{6060, 370, 140, 200}, 1, ORANGE},
+        //Blocos invisíveis ao jogador
+        {{1051, 549, 1, 1}, 4, GRAY},
+        {{2099, 549, 1, 1}, 4, BROWN},         
+        {{3101, 549, 1, 1}, 4, BROWN}         
+
 };
 const int tamanhoCenario3 = sizeof(cenario3) / sizeof(cenario3[0]);
 
@@ -134,7 +152,12 @@ EnvItem cenario4[] = {
         {{3950, 610, 70, 70}, 1, BLUE},
         {{4300, 540, 1900, 460}, 1, GRAY},
         {{4400, 470, 70, 70}, 1, GREEN},
-        {{6060, 370, 140, 200}, 1, ORANGE}
+        {{6060, 370, 140, 200}, 1, ORANGE},
+        //Blocos invisíveis ao jogador
+        {{1051, 449, 1, 1}, 4, GREEN},
+        {{1899, 449, 1, 1}, 4, BROWN},         
+        {{3550, 449, 1, 1}, 4, BROWN},         
+
 };
 const int tamanhoCenario4 = sizeof(cenario4) / sizeof(cenario4[0]);
 
@@ -164,6 +187,12 @@ EnvItem cenario5[] = {
 
         {{530, 490, 70, 70}, 1, BLUE},
         {{730, 370, 1930, 20}, 1, GRAY},
-        {{2510, 190, 140, 200}, 1, ORANGE}
+        {{2510, 190, 140, 200}, 1, ORANGE},
+
+        //Blocos invisíveis ao jogador
+        {{651, 1349, 1, 1}, 4, BLUE},
+        {{2179, 719, 1, 1}, 4, GREEN},
+        {{ 729, 369, 1, 1}, 4, GRAY},
+        
 };
 const int tamanhoCenario5 = sizeof(cenario5) / sizeof(cenario5[0]);
