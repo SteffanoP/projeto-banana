@@ -277,12 +277,12 @@ int main()
     }
 
     //Configuração Inicial de Cenário
-    int cenarioAtual = 0;
+    int cenarioAtual = 1;
     IniciaCenario(&jogador,cenarioAtual);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
-    camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
+    /*camera.target = jogador.posicao; *///Câmera centralizada inicialmente no jogador
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
@@ -498,6 +498,7 @@ int main()
         switch (gamescreen)
         {
             case LOGO:
+            camera.target = (Vector2){400,280};
             switch (state)
             {
             case 0:
@@ -512,6 +513,7 @@ int main()
             }
             break;
         case INICIO:
+            camera.target = (Vector2){400,280};
             ClearBackground(LIME);
             switch (state)
             {
@@ -524,6 +526,7 @@ int main()
             }
             break;
         case SELECT:
+            camera.target = (Vector2){400,280};
             switch (tela_personagem)
             {
             case 1:
@@ -1340,15 +1343,16 @@ void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnterior_B
 void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
-    for (int i = 0; i < envItemsLength; i++)
+    for (int i = 0; i < envItemsLength; i++){
         DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+    }
 
     for (int i = 0; i < tamanhoInimigo; i++)
     {
         if (inimigo[i].tipo == 1)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
+           /* DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW); */
 
             //Desenho da textura dos minions
             DrawTextureRec(frameInimigoT1[i].texture, frameInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT1[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT1[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
@@ -1356,14 +1360,14 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (inimigo[i].tipo == 2)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
+            /*DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);*/
 
             //Desenho da textura dos gados
             DrawTextureRec(frameInimigoT2[i].texture, frameInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 3)
         {
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
+           /* DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);*/
 
             //Desenho da textura das bananas
             DrawTextureRec(Banana->texture, Banana->frameRect, (Vector2){inimigo[i].posicao.x - 25, inimigo[i].posicao.y - 50}, RAYWHITE);
@@ -1377,7 +1381,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (imune_19[p].poder_ativo)
             {
-                DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+               /* DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);*/
                 DrawTextureRec(imune->texture, imune->frameRect, (Vector2){imune_19[p].posicao.x - 30, imune_19[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1385,7 +1389,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (laranja[p].poder_ativo)
             {
-                DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
+                /*DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);*/
                 DrawTextureRec(Laranja->texture, Laranja->frameRect, (Vector2){laranja[p].posicao.x - 30, laranja[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1394,7 +1398,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (dinheiro[p].poder_ativo)
             {
-                DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+               /* DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);*/
                 DrawTextureRec(Dinheiro->texture, Dinheiro->frameRect, (Vector2){dinheiro[p].posicao.x - 30, dinheiro[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1403,7 +1407,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (pocao[p].poder_ativo)
             {
-                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+               /* DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);*/
                 DrawTextureRec(Pocao->texture, Pocao->frameRect, (Vector2){pocao[p].posicao.x - 30, pocao[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1412,7 +1416,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     //Criação e Desenho
 
     //Desenho da hitbox do jogador
-    DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);
+   /* DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);*/
 
 
     //Desenho da textura do jogador
@@ -1421,29 +1425,18 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     //Desenho da hitbox do boss
     if (boss->tipo > 0)
     {
-        DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
+        /*DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);*/
         DrawTextureRec(Boss->texture, Boss->frameRect, (Vector2){boss->posicao.x - (Boss->posicao.x + boss->tamanho.x), boss->posicao.y - (190)}, RAYWHITE);
     }
 
-    DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
-
-    DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 1650, 475, 20, BLACK);
-
-    DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
-
     for (int i = 0; i < envItemsLength; i++)
     {
-        //Desenho da interrogação dentro do bloco (imune-19)
+        //Desenho da interrogação dentro do bloco POWER-UP
         if (envItems[i].colisao == 2 || envItems[i].colisao == 3)
         {
             DrawText(FormatText("?"),envItems[i].retangulo.x + 17, envItems[i].retangulo.y + 10, 60, WHITE);
         } 
     }
-    DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
-    DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
-
 }
 
 void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune,  AnimacaoPoder *Laranja, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao)
@@ -1751,7 +1744,7 @@ void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, i
     if (jogador->vida > 0)
     {
         camera->offset = (Vector2){width / 2, height / 2};
-        camera->target = jogador->posicao;
+        camera->target = (jogador->posicao);
     }
 }
 
@@ -1873,23 +1866,6 @@ void IniciaCenario(Jogador *jogador, int cenario)
     jogador->poder = 0;
     switch (cenario)
     {
-    case 0:
-        //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
-
-        CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
-        envItemsLength = tamanhoCenarioTeste;
-
-        for (int i = 0; i < tamanho_inimigoTeste; i++)
-        {
-            CarregaInimigos(&(inimigo[i]),&(inimigoTeste[i]));
-        }
-        tamanhoInimigo = tamanho_inimigoTeste;
-
-        //Carrega o Boss do cenário
-        bossAtivo = 0;
-
-        break;
     case 1:
         //Carrega a nova posição do jogador
         jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 1
