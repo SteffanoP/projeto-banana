@@ -618,7 +618,8 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         Vector2 *j = &(jogador->posicao);
         
         //Condição de colisão para pulo e andar encima de plataformas
-        if (objeto->colisao &&                                             
+        if (objeto->colisao > 0 &&
+            objeto->colisao != 4 &&                                             
             objeto->retangulo.x - jogador->tamanho.x/2 <= j->x &&                                      //
             objeto->retangulo.x + objeto->retangulo.width + jogador->tamanho.x/2 >= j->x &&            // Definindo a invasão da área do player com a área do objeto(área de colisão)   
             objeto->retangulo.y >= j->y &&                    
@@ -630,7 +631,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         }
 
         //Condição de colisão em objetos Universais
-        if (objeto->colisao > 0)
+        if (objeto->colisao > 0 && objeto->colisao != 4)
         {
             if (VerificaColisaoBordaS(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, objeto->retangulo, 5))
             {
@@ -750,7 +751,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         }
 
         //Condição de colisão em objetos Universais
-        if (objeto->colisao)
+        if (objeto->colisao > 0)
         {
             if (VerificaColisaoBordasED(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, objeto->retangulo) == 1)
             {
