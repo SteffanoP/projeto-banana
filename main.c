@@ -91,8 +91,6 @@ static Poder pocao[PODER_MAX_REI] = {0}; //A variável inicializa zerada em suas
 
 unsigned int inimigo_cooldown_poder = 0;
 unsigned int inimigo_cooldown_pulo = 0;
-//Protótipo das funções
-
 unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 
 //Protótipo das funções
@@ -105,7 +103,7 @@ void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frame
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
 void AnimacaoBoss(Inimigo *boss, Animacao *Boss);
 void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnteriorBoss);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta, Texture2D chao, Texture2D chao_final, Texture2D interrogacao, Texture2D bandeira, Texture2D cenario_fundo10, Texture2D cenario_fundo20, Texture2D cenario_fundo30, Texture2D cenario_fundo40, Texture2D cenario_fundo50);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
@@ -116,6 +114,7 @@ void IniciaCenario(Jogador *jogador, int cenario);
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
 void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
 
+int cenarioAtual;
 int bossAtivo = 0; //Define qual o tipo de boss que deve estar ativo
 
 Animacao Boss;
@@ -276,7 +275,7 @@ int main()
     }
 
     //Configuração Inicial de Cenário
-    int cenarioAtual = 0;
+    cenarioAtual = 0;
     IniciaCenario(&jogador,cenarioAtual);
 
     //Configurações Iniciais de Câmera
@@ -294,13 +293,24 @@ int main()
     int framesCounter = 0;
 
     //TECLAS para as telas
-
+    
     /*Carregando texturas*/
     Texture2D LOGO_img = LoadTexture("imagens_tela/LOGO_img.png");
     Texture2D INICIO_img = LoadTexture("imagens_tela/INICIO_img.png");
     Texture2D tela_companheiro = LoadTexture("imagens_tela/tela_companheiro.png");
     Texture2D tela_cake = LoadTexture("imagens_tela/tela_cake.png");
     Texture2D tela_dorivac = LoadTexture("imagens_tela/tela_dorivac.png");
+
+    //Carregamento das sprites do cenário
+    Texture2D chao = LoadTexture("blocos_cenario/chao_mario.png");
+    Texture2D chao_final = LoadTexture("blocos_cenario/chao_final.png");
+    Texture2D interrogacao = LoadTexture("blocos_cenario/bloco_mario.png");
+    Texture2D bandeira = LoadTexture("blocos_cenario/Bandeira.png");
+    Texture2D cenario_fundo10 = LoadTexture("blocos_cenario/leitecondensado.jpg.png");
+    Texture2D cenario_fundo20 = LoadTexture("blocos_cenario/banana.jpg.png");
+    Texture2D cenario_fundo30 = LoadTexture("blocos_cenario/laranja (1).png");
+    Texture2D cenario_fundo40 = LoadTexture("blocos_cenario/banco_bananalto.jpg.png");
+    Texture2D cenario_fundo50 = LoadTexture("blocos_cenario/PALACIO_BANANALTO.png");
 
     //--------------------------------------------------------------------------------------
     //O Jogo
@@ -475,7 +485,6 @@ int main()
         BeginMode2D(camera);
         switch (gamescreen)
         {
-            
             case LOGO:
             switch (state)
             {
@@ -521,7 +530,7 @@ int main()
             // Draw
             //----------------------------------------------------------------------------------
 
-            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime);
+            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime, chao, chao_final, interrogacao, bandeira, cenario_fundo10, cenario_fundo20, cenario_fundo30, cenario_fundo40, cenario_fundo50);
 
             //----------------------------------------------------------------------------------
         
@@ -552,6 +561,20 @@ int main()
     UnloadTexture(Banana.texture);
     UnloadTexture(Dinheiro.texture);
     UnloadTexture(Pocao.texture);
+    UnloadTexture(LOGO_img);
+    UnloadTexture(INICIO_img);
+    UnloadTexture(tela_companheiro);
+    UnloadTexture(tela_cake);
+    UnloadTexture(tela_dorivac);
+    UnloadTexture(chao);
+    UnloadTexture(chao_final);
+    UnloadTexture(interrogacao);
+    UnloadTexture(bandeira);
+    UnloadTexture(cenario_fundo10);
+    UnloadTexture(cenario_fundo20);
+    UnloadTexture(cenario_fundo30);
+    UnloadTexture(cenario_fundo40);
+    UnloadTexture(cenario_fundo50);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -589,7 +612,7 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
         jogador->posicao.x = jogador->tamanho.x / 2; //Limites para a esquerda
     }
 
-    colisaoJogador = 0;
+  
     int colisaoObjeto = 0;
     for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
     {
@@ -1315,12 +1338,78 @@ void AnimacaoBossParado(Inimigo *boss, Animacao *Boss, Vector2 posicaoAnterior_B
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, Animacao *Boss, AnimacaoPoder *Laranja, AnimacaoPoder *Banana, AnimacaoPoder *Dinheiro,  AnimacaoPoder *Pocao, float delta, Texture2D chao, Texture2D chao_final, Texture2D interrogacao, Texture2D bandeira, Texture2D cenario_fundo10, Texture2D cenario_fundo20, Texture2D cenario_fundo30, Texture2D cenario_fundo40, Texture2D cenario_fundo50)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
         DrawRectangleRec(envItems[i].retangulo, envItems[i].cor);
+    
+    cenarioAtual = 1;
+    if(cenarioAtual == 1)
+    {
+        DrawTextureRec(cenario_fundo10, cenario1[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+        for (int i = 1; i < 7; i++)
+        {
+            DrawTextureRec(chao, cenario1[i].retangulo, (Vector2){cenario1[i].retangulo.x, cenario1[i].retangulo.y}, RAYWHITE);
+        }
+        DrawTextureRec(interrogacao, cenario1[7].retangulo, (Vector2){960, 150}, RAYWHITE);
+        DrawTextureRec(bandeira, cenario1[8].retangulo, (Vector2){2520, 370}, RAYWHITE);
+    }
 
+    /*switch(cenarioAtual)
+    {
+        case 1: 
+            DrawTextureRec(cenario_fundo10, cenario1[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+            for (int i = 1; i < 7; i++)
+            {
+                DrawTextureRec(chao, cenario1[i].retangulo, (Vector2){cenario1[i].retangulo.x, cenario1[i].retangulo.y}, RAYWHITE);
+            }
+            DrawTextureRec(interrogacao, cenario1[7].retangulo, (Vector2){960, 150}, RAYWHITE);
+            DrawTextureRec(bandeira, cenario1[8].retangulo, (Vector2){2520, 370}, RAYWHITE);
+            break;
+        case 2:
+            DrawTextureRec(cenario_fundo20, cenario2[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+            for (int i = 1; i < 18; i++)
+            {
+                DrawTextureRec(chao, cenario2[i].retangulo, (Vector2){cenario2[i].retangulo.x, cenario2[i].retangulo.y}, RAYWHITE);
+            }
+            DrawTextureRec(interrogacao, cenario2[18].retangulo, (Vector2){650, 70}, RAYWHITE);
+            DrawTextureRec(interrogacao, cenario2[19].retangulo, (Vector2){3760, 210}, RAYWHITE);
+            DrawTextureRec(bandeira, cenario2[20].retangulo, (Vector2){6020, 350}, RAYWHITE);
+            break;
+        case 3:
+            DrawTextureRec(cenario_fundo30, cenario3[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+            for (int i = 1; i < 20; i++)
+            {
+                DrawTextureRec(chao, cenario3[i].retangulo, (Vector2){cenario3[i].retangulo.x, cenario3[i].retangulo.y}, RAYWHITE);
+            }
+            DrawTextureRec(interrogacao, cenario3[20].retangulo, (Vector2){635, 220}, RAYWHITE);
+            DrawTextureRec(interrogacao, cenario3[21].retangulo, (Vector2){3290, 2}, RAYWHITE);
+            DrawTextureRec(bandeira, cenario3[22].retangulo, (Vector2){6060, 370}, RAYWHITE);
+            break;
+        case 4:
+            DrawTextureRec(cenario_fundo40, cenario4[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+            for (int i = 1; i < 11; i++)
+            {
+                DrawTextureRec(chao, cenario4[i].retangulo, (Vector2){cenario4[i].retangulo.x, cenario4[i].retangulo.y}, RAYWHITE);
+            }
+            DrawTextureRec(interrogacao, cenario4[11].retangulo, (Vector2){1290, 210}, RAYWHITE); 
+            DrawTextureRec(interrogacao, cenario4[12].retangulo, (Vector2){4720, 70}, RAYWHITE);
+            DrawTextureRec(bandeira, cenario4[13].retangulo, (Vector2){6150, 370}, RAYWHITE);
+            break;
+        case 5:
+            DrawTextureRec(cenario_fundo50, cenario5[0].retangulo, (Vector2){0, 0}, RAYWHITE);
+            for (int i = 1; i < 19; i++)
+            {
+                DrawTextureRec(chao, cenario5[i].retangulo, (Vector2){cenario5[i].retangulo.x, cenario5[i].retangulo.y}, RAYWHITE);
+            }
+            DrawTextureRec(interrogacao, cenario5[19].retangulo, (Vector2){2720, 420}, RAYWHITE);
+            DrawTextureRec(bandeira, cenario5[20].retangulo, (Vector2){2510, 190}, RAYWHITE);
+            break;
+        default:
+            break;
+    }*/
+    
     for (int i = 0; i < tamanhoInimigo; i++)
     {
         if (inimigo[i].tipo == 1)
@@ -1403,13 +1492,6 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         DrawTextureRec(Boss->texture, Boss->frameRect, (Vector2){boss->posicao.x - (Boss->posicao.x + boss->tamanho.x), boss->posicao.y - (190)}, RAYWHITE);
     }
 
-    DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
-
-    DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 1650, 475, 20, BLACK);
-
-    DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
 
     for (int i = 0; i < envItemsLength; i++)
     {
