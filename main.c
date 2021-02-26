@@ -118,6 +118,9 @@ void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
 
 int bossAtivo = 0; //Define qual o tipo de boss que deve estar ativo
 
+Animacao Boss;
+Texture2D spritesboss[4];
+
 int main()
 {
     // Inicialização do Jogo
@@ -171,34 +174,14 @@ int main()
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
 
-    Animacao Boss;
+    Vector2 posicaoAnterior_Boss;
     Boss.framesCounter = 0;
     Boss.currentFrame = 0;
     Boss.framesSpeed = 18;
-    Texture2D spritesboss[4];
     spritesboss[0] = LoadTexture("sprites/dudu-bananinha.png"); //Carregamento da sprite sheet
     spritesboss[1] = LoadTexture("sprites/fabinho-bananinha.png"); //Carregamento da sprite sheet
     spritesboss[2] = LoadTexture("sprites/tchutchuca.png"); //Carregamento da sprite sheet
     spritesboss[3] = LoadTexture("sprites/rei-bananinha.png"); //Carregamento da sprite sheet
-    if (bossAtivo == 1)
-    {
-        Boss.texture = (Texture2D)spritesboss[0];
-    } 
-    else if (bossAtivo == 2)
-    {
-        Boss.texture = (Texture2D)spritesboss[1];
-    }
-    else if (bossAtivo == 3)
-    {
-        Boss.texture = (Texture2D)spritesboss[2];
-    }
-    else if (bossAtivo == 3)
-    {
-        Boss.texture = (Texture2D)spritesboss[3];
-    }
-    Boss.frameWidth = Boss.texture.width / 3; //Largura da sprite
-    Boss.frameHeight = Boss.texture.height / 3; //Altura da sprite
-    Boss.frameRect = (Rectangle){2*Boss.frameWidth, Boss.frameHeight, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
 
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
@@ -424,6 +407,7 @@ int main()
         case INGAME:
         
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
+        posicaoAnterior_Boss = boss->posicao;
 
         //Faz Transição de cenário de testes para Cenário 1
         if (jogador.posicao.x > 2000 && boss[bossAtivo].tipo == 0)
@@ -472,6 +456,9 @@ int main()
 
         //Atualiza a animação do jogador quando o jogador está em movimento
         AnimacaoJogadorMovimento(&jogador, &personagem, deltaTime);
+
+        //Atualiza a animação do boss quando o boss está em movimento
+        AnimacaoBoss(&boss[bossAtivo],&Boss);
 
         //Atualiza os dados do poder
         UpdatePoder(imune_19, &imune, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime, spriteImune, &Laranja, &Dinheiro, &Pocao);
@@ -540,6 +527,7 @@ int main()
         
             //Atualiza a animação quando o jogador está parado
             AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
+            AnimacaoBossParado(&boss[bossAtivo],&Boss, posicaoAnterior_Boss);
             break;
         }
         EndMode2D();
@@ -1409,9 +1397,10 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     DrawTextureRec(personagem->texture, personagem->frameRect, (Vector2){jogador->posicao.x - (personagem->posicao.x + jogador->tamanho.x), jogador->posicao.y - (personagem->posicao.y + jogador->tamanho.y)}, RAYWHITE);
     
     //Desenho da hitbox do boss
-    if (boss->vida > 0)
+    if (boss->tipo > 0)
     {
         DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
+        DrawTextureRec(Boss->texture, Boss->frameRect, (Vector2){boss->posicao.x - (Boss->posicao.x + boss->tamanho.x), boss->posicao.y - (190)}, RAYWHITE);
     }
 
     DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
@@ -1913,7 +1902,13 @@ void IniciaCenario(Jogador *jogador, int cenario)
 
         //Carrega o Boss do cenário
         bossAtivo = 1;
-        
+
+        //Carrega a textura do boss
+        Boss.texture = (Texture2D)spritesboss[0];
+        Boss.frameWidth = Boss.texture.width / 3;                                                               //Largura da sprite
+        Boss.frameHeight = Boss.texture.height / 3;                                                             //Altura da sprite
+        Boss.frameRect = (Rectangle){2 * Boss.frameWidth, 0.0f, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
+
         break;
     case 3:
         //Carrega a nova posição do jogador
@@ -1931,6 +1926,12 @@ void IniciaCenario(Jogador *jogador, int cenario)
 
         //Carrega o Boss do cenário
         bossAtivo = 2;
+
+        //Carrega a textura do boss
+        Boss.texture = (Texture2D)spritesboss[1];
+        Boss.frameWidth = Boss.texture.width / 3;                                                   //Largura da sprite
+        Boss.frameHeight = Boss.texture.height / 3;                                                 //Altura da sprite
+        Boss.frameRect = (Rectangle){2 * Boss.frameWidth, 0.0f, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
 
         break;
     case 4:
@@ -1950,10 +1951,16 @@ void IniciaCenario(Jogador *jogador, int cenario)
         //Carrega o Boss do cenário
         bossAtivo = 3;
 
+        //Carrega a textura do boss
+        Boss.texture = (Texture2D)spritesboss[2];
+        Boss.frameWidth = Boss.texture.width / 3;                                                   //Largura da sprite
+        Boss.frameHeight = Boss.texture.height / 3;                                                 //Altura da sprite
+        Boss.frameRect = (Rectangle){2 * Boss.frameWidth, 0.0f, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
+
         break;
     case 5:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){0, 1150}; //Posição Inicial Cenário 4
+        jogador->posicao = (Vector2){0, 1150}; //Posição Inicial Cenário 5
 
         //Carrega os objetos do cenário
         CarregaObjetos(envItems, cenario5, tamanhoCenario5);
@@ -1967,6 +1974,12 @@ void IniciaCenario(Jogador *jogador, int cenario)
 
         //Carrega o Boss do cenário
         bossAtivo = 4;
+
+        //Carrega a textura do boss
+        Boss.texture = (Texture2D)spritesboss[3];
+        Boss.frameWidth = Boss.texture.width / 3;                                                   //Largura da sprite
+        Boss.frameHeight = Boss.texture.height / 3;                                                 //Altura da sprite
+        Boss.frameRect = (Rectangle){2 * Boss.frameWidth, 0.0f, Boss.frameWidth, Boss.frameHeight}; //Sprite inicial
 
         break;
 
