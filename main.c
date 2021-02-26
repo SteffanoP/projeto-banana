@@ -121,6 +121,9 @@ int bossAtivo = 0; //Define qual o tipo de boss que deve estar ativo
 Animacao Boss;
 Texture2D spritesboss[4];
 
+static Animacao frameInimigoT1[30];
+static Animacao frameInimigoT2[30];
+
 int main()
 {
     // Inicialização do Jogo
@@ -131,9 +134,7 @@ int main()
     updateplayer = 1;
 
     //Configurações iniciais da animação dos inimigos
-    Animacao frameInimigoT1[tamanhoInimigo];
     Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
-    Animacao frameInimigoT2[tamanhoInimigo];
     Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
 
     //Configurações Iniciais do jogador
@@ -415,27 +416,6 @@ int main()
             cenarioAtual += 1;
             IniciaCenario(&jogador, cenarioAtual);
 
-            //Carrega a animação do inimigo Minion
-            for (int i = 0; i < tamanhoInimigo; i++)
-            {
-                if (inimigo[i].tipo == 1)
-                {
-                    frameInimigoT1[i].currentFrame = 0;
-                    frameInimigoT1[i].framesCounter = 0;
-                    frameInimigoT1[i].framesSpeed = 13;
-                }
-            }
-
-            //Carrega a animação do inimigo Gado
-            for (int i = 0; i < tamanhoInimigo; i++)
-            {
-                if (inimigo[i].tipo == 2)
-                {
-                    frameInimigoT2[i].currentFrame = 0;
-                    frameInimigoT2[i].framesCounter = 0;
-                    frameInimigoT2[i].framesSpeed = 13;
-                }
-            }
         }
 
         //Atualiza os dados do jogador
@@ -1985,6 +1965,28 @@ void IniciaCenario(Jogador *jogador, int cenario)
 
     default:
         break;
+    }
+    
+    //Carrega a animação do inimigo Minion
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 1)
+        {
+            frameInimigoT1[i].currentFrame = 0;
+            frameInimigoT1[i].framesCounter = 0;
+            frameInimigoT1[i].framesSpeed = 13;
+        }
+    }
+
+    //Carrega a animação do inimigo Gado
+    for (int i = 0; i < tamanhoInimigo; i++)
+    {
+        if (inimigo[i].tipo == 2)
+        {
+            frameInimigoT2[i].currentFrame = 0;
+            frameInimigoT2[i].framesCounter = 0;
+            frameInimigoT2[i].framesSpeed = 13;
+        }
     }
 }
 
