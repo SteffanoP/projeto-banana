@@ -6,9 +6,9 @@
 
 #define NOME_JOGO "O JOGO"
 
-#define GRAVIDADE 500
-#define JOGADOR_PULO_VELOCIDADE 500.0f
-#define JOGADOR_MOVIMENTO_VELOCIDADE 500.0f
+#define GRAVIDADE 650
+#define JOGADOR_PULO_VELOCIDADE 450.0f
+#define JOGADOR_MOVIMENTO_VELOCIDADE 300.0f
 
 #define TAMANHO_JOGADOR_X 40 //40
 #define TAMANHO_JOGADOR_Y 132 //132
@@ -50,7 +50,7 @@
 #define TAMANHO_DUDU_Y 132
 
 #define RANGE_DUDU 100 //Distância entre o jogador e o Dudu para o ataque do Dudu
-#define VELOCIDADE_DUDU_ATAQUE 50.0f //Velocidade em que Dudu realiza o ataque
+#define VELOCIDADE_DUDU_ATAQUE 200.0f //Velocidade em que Dudu realiza o ataque
 
 #define TAMANHO_BANANA_X 40
 #define TAMANHO_BANANA_Y 40
