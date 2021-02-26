@@ -476,15 +476,15 @@ int main()
         break;
         case INGAME:
 
-        // Draw
-        //----------------------------------------------------------------------------------
+            // Draw
+            //----------------------------------------------------------------------------------
 
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), deltaTime);
+            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), deltaTime);
 
-        //----------------------------------------------------------------------------------
-      
-        //Atualiza a animação quando o jogador está parado
-        AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
+            //----------------------------------------------------------------------------------
+        
+            //Atualiza a animação quando o jogador está parado
+            AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
             break;
 
         }
@@ -1288,14 +1288,10 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     for (int i = 0; i < envItemsLength; i++)
     {
         //Desenho da interrogação dentro do bloco (imune-19)
-        if (envItems[i].colisao == 2)
+        if (envItems[i].colisao == 2 || envItems[i].colisao == 3)
         {
             DrawText(FormatText("?"),envItems[i].retangulo.x + 17, envItems[i].retangulo.y + 10, 60, WHITE);
         } 
-        else if (envItems[i].colisao == 3)  //Desenho da exclamação dentro do bloco (poção-52)
-        {
-            DrawText(FormatText("!"),envItems[i].retangulo.x + 23, envItems[i].retangulo.y + 5, 50, WHITE);
-        }
     }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
@@ -1726,6 +1722,7 @@ bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
 
 void IniciaCenario(Jogador *jogador, int cenario)
 {
+    jogador->poder = 0;
     switch (cenario)
     {
     case 0:
