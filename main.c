@@ -107,7 +107,7 @@ void IniciaCenario(Jogador *jogador, int cenario);
 void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
 void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
 
-int bossAtivo = 1; //Define qual o tipo de boss que deve estar ativo
+int bossAtivo = 0; //Define qual o tipo de boss que deve estar ativo
 
 int main()
 {
@@ -144,20 +144,13 @@ int main()
     
     //Configurações iniciais Boss
     Inimigo boss[] = {
-        {1, {0}, {3430, 280}, 0, 0, 0, 0, 0},
-        {2, {0}, {3930, 280}, 0, 0, 0, 0, 0},
-        {3, {0}, {4300, 280}, 0, 0, 0, 0, 0},
-        {4, {0}, {4970, 280}, 0, 0, 0, 0, 0}
+        {},
+        {1, {0}, {5800, 450}, 0, 0, 0, 0, 0},
+        {2, {0}, {4800, 450}, 0, 0, 0, 0, 0},
+        {3, {0}, {6000, 440}, 0, 0, 0, 0, 0},
+        {4, {0}, {2450, 350}, 0, 0, 0, 0, 0}
     };
     const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
-
-    for (int i = 0; i < tamanhoBoss; i++)
-    {
-        if (boss[i].tipo == bossAtivo)
-        {
-            bossAtivo = i;
-        }
-    }
 
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
@@ -247,7 +240,8 @@ int main()
     gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
 
     //Configuração Inicial de Cenário
-    IniciaCenario(&jogador,5);
+    int cenarioAtual = 0;
+    IniciaCenario(&jogador,cenarioAtual);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
@@ -272,9 +266,10 @@ int main()
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
 
         //Faz Transição de cenário de testes para Cenário 1
-        if (jogador.posicao.x > 2000)
+        if (jogador.posicao.x > 2000 && boss[bossAtivo].tipo == 0)
         {
-            //IniciaCenario(&jogador, 4);
+            cenarioAtual += 1;
+            IniciaCenario(&jogador, cenarioAtual);
         }
 
         //Atualiza os dados do jogador
@@ -628,7 +623,6 @@ void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItems
         {
             boss->tipo = 0; //Jogador mata o boss
             boss->vida = 0;
-            bossAtivo = 0;
         }
     }
 
@@ -1338,6 +1332,9 @@ void IniciaCenario(Jogador *jogador, int cenario)
         }
         tamanhoInimigo = tamanho_inimigoTeste;
 
+        //Carrega o Boss do cenário
+        bossAtivo = 0;
+
         break;
     case 1:
         //Carrega a nova posição do jogador
@@ -1352,6 +1349,9 @@ void IniciaCenario(Jogador *jogador, int cenario)
             CarregaInimigos(&(inimigo[i]),&(inimigoCenario1[i]));
         }
         tamanhoInimigo = tamanho_inimigoCenario1;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 0;
         
         break;
     case 2:
@@ -1367,6 +1367,9 @@ void IniciaCenario(Jogador *jogador, int cenario)
             CarregaInimigos(&(inimigo[i]),&(inimigoCenario2[i]));
         }
         tamanhoInimigo = tamanho_inimigoCenario2;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 1;
         
         break;
     case 3:
@@ -1383,6 +1386,9 @@ void IniciaCenario(Jogador *jogador, int cenario)
         }
         tamanhoInimigo = tamanho_inimigoCenario3;
 
+        //Carrega o Boss do cenário
+        bossAtivo = 2;
+
         break;
     case 4:
         //Carrega a nova posição do jogador
@@ -1397,7 +1403,10 @@ void IniciaCenario(Jogador *jogador, int cenario)
             CarregaInimigos(&(inimigo[i]),&(inimigoCenario4[i]));
         }
         tamanhoInimigo = tamanho_inimigoCenario4;
-        
+
+        //Carrega o Boss do cenário
+        bossAtivo = 3;
+
         break;
     case 5:
         //Carrega a nova posição do jogador
@@ -1412,6 +1421,9 @@ void IniciaCenario(Jogador *jogador, int cenario)
             CarregaInimigos(&(inimigo[i]),&(inimigoCenario5[i]));
         }
         tamanhoInimigo = tamanho_inimigoCenario5;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 4;
 
         break;
 
