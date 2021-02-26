@@ -127,6 +127,12 @@ int main()
 
     updateplayer = 1;
 
+    //Configurações iniciais da animação dos inimigos
+    Animacao frameInimigoT1[tamanhoInimigo];
+    Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
+    Animacao frameInimigoT2[tamanhoInimigo];
+    Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
+
     //Configurações Iniciais do jogador
     Jogador jogador = {0};
     jogador.tamanho = (Vector2){TAMANHO_JOGADOR_X,TAMANHO_JOGADOR_Y};
@@ -229,30 +235,7 @@ int main()
         }
     }
 
-    //Configurações iniciais da animação dos inimigos
-    Animacao frameInimigoT1[tamanhoInimigo];
-    Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
-    for (int i = 0; i < tamanhoInimigo; i++)
-    {
-        if (inimigo[i].tipo == 1)
-        {
-            frameInimigoT1[i].currentFrame = 0;
-            frameInimigoT1[i].framesCounter = 0;
-            frameInimigoT1[i].framesSpeed = 13;
-        }
-    } 
-    Animacao frameInimigoT2[tamanhoInimigo];
-    Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
-    for (int i = 0; i < tamanhoInimigo; i++)
-    {
-        if (inimigo[i].tipo == 2)
-        {
-            frameInimigoT2[i].currentFrame = 0;
-            frameInimigoT2[i].framesCounter = 0;
-            frameInimigoT2[i].framesSpeed = 13;
-        }
-    }
-//Configurações iniciais da animação do poder "IMUNE_19"
+    //Configurações iniciais da animação do poder "IMUNE_19"
     IMUNE_19 imune;
     Texture2D spriteImune = LoadTexture("sprites/seringas.png"); //Carregamento da sprite sheet
     imune.texture = spriteImune;
@@ -447,6 +430,28 @@ int main()
         {
             cenarioAtual += 1;
             IniciaCenario(&jogador, cenarioAtual);
+
+            //Carrega a animação do inimigo Minion
+            for (int i = 0; i < tamanhoInimigo; i++)
+            {
+                if (inimigo[i].tipo == 1)
+                {
+                    frameInimigoT1[i].currentFrame = 0;
+                    frameInimigoT1[i].framesCounter = 0;
+                    frameInimigoT1[i].framesSpeed = 13;
+                }
+            }
+
+            //Carrega a animação do inimigo Gado
+            for (int i = 0; i < tamanhoInimigo; i++)
+            {
+                if (inimigo[i].tipo == 2)
+                {
+                    frameInimigoT2[i].currentFrame = 0;
+                    frameInimigoT2[i].framesCounter = 0;
+                    frameInimigoT2[i].framesSpeed = 13;
+                }
+            }
         }
 
         //Atualiza os dados do jogador
@@ -526,15 +531,15 @@ int main()
         break;
         case INGAME:
 
-        // Draw
-        //----------------------------------------------------------------------------------
+            // Draw
+            //----------------------------------------------------------------------------------
 
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime);
+            Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), &Boss, &Laranja, &Banana, &Dinheiro, &Pocao, deltaTime);
 
-        //----------------------------------------------------------------------------------
-      
-        //Atualiza a animação quando o jogador está parado
-        AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
+            //----------------------------------------------------------------------------------
+        
+            //Atualiza a animação quando o jogador está parado
+            AnimacaoJogadorParado(&jogador, &personagem, deltaTime);
             break;
         }
         EndMode2D();
@@ -1420,14 +1425,10 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     for (int i = 0; i < envItemsLength; i++)
     {
         //Desenho da interrogação dentro do bloco (imune-19)
-        if (envItems[i].colisao == 2)
+        if (envItems[i].colisao == 2 || envItems[i].colisao == 3)
         {
-            DrawText(FormatText("?"),envItems[i].retangulo.x + 10, envItems[i].retangulo.y + 5, 50, WHITE);
+            DrawText(FormatText("?"),envItems[i].retangulo.x + 17, envItems[i].retangulo.y + 10, 60, WHITE);
         } 
-        else if (envItems[i].colisao == 3)  //Desenho da exclamação dentro do bloco (poção-52)
-        {
-            DrawText(FormatText("!"),envItems[i].retangulo.x + 23, envItems[i].retangulo.y + 5, 50, WHITE);
-        }
     }
     DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
     DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
@@ -1858,6 +1859,7 @@ bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
 
 void IniciaCenario(Jogador *jogador, int cenario)
 {
+    jogador->poder = 0;
     switch (cenario)
     {
     case 0:
