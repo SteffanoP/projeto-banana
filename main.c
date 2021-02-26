@@ -50,13 +50,6 @@ typedef struct IMUNE_19
     Rectangle frameRect;
 } IMUNE_19;
 
-typedef struct EnvItem
-{
-    Rectangle retangulo;
-    int colisao;
-    Color cor;
-} EnvItem;
-
 typedef struct Animacao
 {
     Vector2 posicao;
@@ -166,16 +159,6 @@ int main()
     Texture2D spritesPersonagem_cake = LoadTexture("sprites/dr-cake.png");
     Texture2D spritesPersonagem_comp = LoadTexture("sprites/companheiro-da-silva.png"); //Carregamento da sprite sheet 
 
-    //Configurações Iniciais dos inimigos
-    Inimigo inimigo[] = {
-        {1, {0}, {1650, 280}, 0, 0, 0, YELLOW},
-        {1, {0}, {1750, 280}, 0, 0, 0, YELLOW},
-        {1, {0}, {1850, 280}, 0, 0, 0, YELLOW},
-        {2, {0}, {2050, 280}, 0, 1, 0, ORANGE},
-        {2, {0}, {2150, 280}, 0, 1, 0, ORANGE}
-    };
-    const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
-
     //Preenchimento dos valores do inimigo
     for (int i = 0; i < tamanhoBoss; i++)
     {
@@ -271,26 +254,6 @@ int main()
         pocao[p].cor = BLUE;
     }
 
-    //Configurações iniciais da animação dos minions
-    Minions minions;
-    Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
-    minions.texture = (Texture2D)spritesMinion;
-    minions.frameWidth = minions.texture.width / 2; //Largura da sprite
-    minions.frameHeight = minions.texture.height / 2; //Altura da sprite
-    minions.frameRect = (Rectangle){0.0f, 0.0f, minions.frameWidth, minions.frameHeight}; //Sprite inicial
-    minions.posicao.x = 146 - TAMANHO_MINION_X; //Posição x do personagem em relação à posição x do inimigo tipo 1
-    minions.posicao.y = 241 - TAMANHO_MINION_Y; //Posição y do personagem em relação à posição y do inimigo tipo 1
-
-    //Configurações iniciais da animação dos gados
-    Gados gados;
-    Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
-    gados.texture = (Texture2D)spritesGado;
-    gados.frameWidth = gados.texture.width / 2; //Largura da sprite
-    gados.frameHeight = gados.texture.height / 2; //Altura da sprite
-    gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
-    gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
-    gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
-
     //Configuração Inicial de Cenário
     int cenarioAtual = 0;
     IniciaCenario(&jogador,cenarioAtual);
@@ -300,11 +263,11 @@ int main()
     camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
-    camera.zoom = 0.5f;
+    camera.zoom = 1.0f;
 
     time(&sc); //Tempo no começo do jogo
 
-GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "empresa"
+    GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "empresa"
     int state = 0; //serve para diferenciar se o jogo está carregando a textura preta de transição o jogo ou outros estados
     float alpha = 0.0; //serve para mudar da textura preta de transicao para as outras texturas do jogo
     int framesCounter = 0;
@@ -451,7 +414,7 @@ GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "em
         AnimacaoJogadorMovimento(&jogador, &personagem, deltaTime);
 
         //Atualiza os dados do poder
-        UpdatePoder(imune_19, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime);
+        UpdatePoder(imune_19, &imune, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime, spriteImune);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -1334,8 +1297,8 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 
 }
 
-
-void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta){
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune)
+{
     Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2), jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y};
 
     //Acionamento do poder IMUNE_19
@@ -1762,7 +1725,7 @@ void IniciaCenario(Jogador *jogador, int cenario)
     {
     case 0:
         //Carrega a nova posição do jogador
-        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário de Testes
+        jogador->posicao = (Vector2){400, 280}; //Posição Inicial Cenário de Testes
 
         CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
         envItemsLength = tamanhoCenarioTeste;
