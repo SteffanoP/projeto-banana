@@ -1,6 +1,8 @@
 #include "raylib.h"
 #include "libraries/defines.c"
 #include "time.h"
+#include "cenario.h"
+#include "inimigo.h"
 
 bool colisaoJogador;
 
@@ -22,27 +24,6 @@ typedef struct Jogador
     int poder;
 } Jogador;
 
-/* Sobre os inimigos:
-tipo: Tipo de inimigos
-tipo = 1 = minion
-tipo = 2 = gado
-tamanho: Tamanho do inimigo no cenário
-posicao: Posição do Inimigo no cenário
-velocidade: velocidade de movimentação
-direcao_movimento: direção em que se movimenta
-vida: quantidade de vidas do inimigo
-cor: Cor do inimigo*/
-typedef struct Inimigo
-{
-    int tipo;
-    Vector2 tamanho;
-    Vector2 posicao;
-    float velocidade;
-    bool direcao_movimento;
-    int vida;
-    Color cor;
-} Inimigo;
-
 /* Sobre os poderes:
 posicao: posicao em relação ao jogador
 velocidade: velocidade da movimentação
@@ -55,7 +36,7 @@ typedef struct Poder
     Vector2 posicao;
     float raio;
     bool poder_ativo;
-    bool direcao_movimento;
+    int direcao_movimento;
     Color cor;
 } Poder;
 
@@ -104,21 +85,36 @@ time_t s;
 time_t sc;
 
 static Poder imune_19[PODER_MAX_PERSONAGEM] = {0}; //A variável inicializa zerada em suas posições
+static Poder laranja[PODER_MAX_FABIO] = {0}; //A variável inicializa zerada em suas posições
+static Poder dinheiro[PODER_MAX_TCHUTCHUCA] = {0}; //A variável inicializa zerada em suas posições
+static Poder pocao[PODER_MAX_REI] = {0}; //A variável inicializa zerada em suas posições
+
+unsigned int inimigo_cooldown_poder = 0;
+unsigned int inimigo_cooldown_pulo = 0;
+//Protótipo das funções
 
 unsigned int jogador_tempo_poder_pocao52 = 0; //Variável inicializa zerada
 
 //Protótipo das funções
 void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int tamanhoInimigos, int envItemsLength, float delta);
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune);
+void UpdateBoss(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta);
+void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune);
 void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float deltaTime);
 void AnimacaoInimigo(Inimigo *inimigo, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, int tamanhoInimigos, float deltaTime);
 void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta);
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune);
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *frameInimigoT1, Animacao *frameInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, float delta);
 void UpdateCameraCenter(Camera2D *camera, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, int width, int height);
 int VerificaColisaoBordasED(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto);
 bool VerificaColisaoBordaS(Vector2 entidade, float tamanho_entidade_x, float tamanho_entidade_y, Rectangle objeto, int range);
 int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float tamanho_gado_y, Rectangle jogador, float range);
+bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range);
+bool VerificaColisaoPoderPoder(Poder *poder1, Poder *poder2);
+void IniciaCenario(Jogador *jogador, int cenario);
+void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario);
+void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo);
+
+int bossAtivo = 0; //Define qual o tipo de boss que deve estar ativo
 
 int main()
 {
@@ -148,6 +144,17 @@ int main()
     personagem.frameRect = (Rectangle){2*personagem.frameWidth, 0.0f, personagem.frameWidth, personagem.frameHeight}; //Sprite inicial
     personagem.posicao.x = 116 - jogador.tamanho.x; //Posiçâo x do personagem em relação à posição x do jogador
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
+    
+    //Configurações iniciais Boss
+    Inimigo boss[] = {
+        {},
+        {1, {0}, {5800, 450}, 0, 0, 0, 0, 0},
+        {2, {0}, {4800, 450}, 0, 0, 0, 0, 0},
+        {3, {0}, {6000, 440}, 0, 0, 0, 0, 0},
+        {4, {0}, {2450, 350}, 0, 0, 0, 0, 0}
+    };
+    const int tamanhoBoss = sizeof(boss) / sizeof(boss[0]);
+
     personagem.poderCounter = 0;
     personagem.poderCurrentFrame = 0;
     personagem.framesSpeed = 12;
@@ -170,19 +177,37 @@ int main()
     const int tamanhoInimigo = sizeof(inimigo) / sizeof(inimigo[0]);
 
     //Preenchimento dos valores do inimigo
-    for (int i = 0; i < tamanhoInimigo; i++)
+    for (int i = 0; i < tamanhoBoss; i++)
     {
-        if (inimigo[i].tipo == 1)
+        if (boss[i].tipo == 1)
         {
-            inimigo[i].tamanho = (Vector2){TAMANHO_MINION_X,TAMANHO_MINION_Y};
-            inimigo[i].vida = 1;
-            inimigo[i].cor = YELLOW;
+            boss[i].tamanho = (Vector2){TAMANHO_DUDU_X,TAMANHO_DUDU_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
         }
-        else if (inimigo[i].tipo == 2)
+        if (boss[i].tipo == 2)
         {
-            inimigo[i].tamanho = (Vector2){TAMANHO_GADO_X,TAMANHO_GADO_Y};
-            inimigo[i].vida = 2;
-            inimigo[i].cor = ORANGE;
+            boss[i].tamanho = (Vector2){TAMANHO_FABIO_X,TAMANHO_FABIO_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 3)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_TCHUTCHUCA_X,TAMANHO_TCHUTCHUCA_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
+        }
+        if (boss[i].tipo == 4)
+        {
+            boss[i].tamanho = (Vector2){TAMANHO_REI_X,TAMANHO_REI_Y};
+            boss[i].vida = 1;
+            boss[i].cor = BLUE;
         }
     }
 
@@ -222,31 +247,60 @@ int main()
         imune_19[p].cor = BLACK;
     }
 
-    //Configurações Iniciais dos Elementos do Cenário
-    EnvItem envItems[] = {
-        {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-        {{0, 400, 3000, 200}, 1, GRAY},
-        {{300, 200, 400, 10}, 1, GRAY},
-        {{250, 300, 100, 10}, 1, GRAY},
-        {{650, 300, 100, 10}, 1, GRAY},
-        {{900, 350,  50, 50}, 1, PURPLE},
-        {{1050, 311,  50, 50}, 1, PURPLE},
-        {{1200, 308,  50, 50}, 1, PURPLE},
-        {{1350, 330,  50, 50}, 1, PURPLE},
-        {{1450, 340,  30, 60}, 1, GREEN},
-        {{1970, 340,  30, 60}, 1, GREEN},
-        {{2490, 340,  30, 60}, 1, GREEN},
-        {{2700, 200,  50, 50}, 2, BLACK}, //bloco de poder imune-19
-        {{2800, 200,  50, 50}, 3, BLACK} // bloco de poder poção-52
-    };
-    int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
+    //Configurações iniciais do poder "LARANJA!"
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        laranja[p].posicao = (Vector2){0,0};
+        laranja[p].raio = 10;
+        laranja[p].cor = ORANGE;
+    }
+
+    //Configurações iniciais do poder "Dinheiro"
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        dinheiro[p].posicao = (Vector2){0,0};
+        dinheiro[p].raio = 10;
+        dinheiro[p].cor = ORANGE;
+    }
+
+    //Configurações iniciais do poder "Poção"
+    for (int p = 0; p < PODER_MAX_REI; p++)
+    {
+        pocao[p].posicao = (Vector2){0,0};
+        pocao[p].raio = 10;
+        pocao[p].cor = BLUE;
+    }
+
+    //Configurações iniciais da animação dos minions
+    Minions minions;
+    Texture2D spritesMinion = LoadTexture("sprites/minion.png"); //Carregamento da sprite sheet
+    minions.texture = (Texture2D)spritesMinion;
+    minions.frameWidth = minions.texture.width / 2; //Largura da sprite
+    minions.frameHeight = minions.texture.height / 2; //Altura da sprite
+    minions.frameRect = (Rectangle){0.0f, 0.0f, minions.frameWidth, minions.frameHeight}; //Sprite inicial
+    minions.posicao.x = 146 - TAMANHO_MINION_X; //Posição x do personagem em relação à posição x do inimigo tipo 1
+    minions.posicao.y = 241 - TAMANHO_MINION_Y; //Posição y do personagem em relação à posição y do inimigo tipo 1
+
+    //Configurações iniciais da animação dos gados
+    Gados gados;
+    Texture2D spritesGado = LoadTexture("sprites/gado.png"); //Carregamento da sprite sheet
+    gados.texture = (Texture2D)spritesGado;
+    gados.frameWidth = gados.texture.width / 2; //Largura da sprite
+    gados.frameHeight = gados.texture.height / 2; //Altura da sprite
+    gados.frameRect = (Rectangle){0.0f, gados.frameHeight, gados.frameWidth, gados.frameHeight}; //Sprite inicial
+    gados.posicao.x = 283 - TAMANHO_GADO_X; //Posição x do personagem em relação à posição x do inimigo tipo 2
+    gados.posicao.y = 287 - TAMANHO_GADO_Y; //Posição y do personagem em relação à posição y do inimigo tipo 2
+
+    //Configuração Inicial de Cenário
+    int cenarioAtual = 0;
+    IniciaCenario(&jogador,cenarioAtual);
 
     //Configurações Iniciais de Câmera
     Camera2D camera = {0};
     camera.target = jogador.posicao; //Câmera centralizada inicialmente no jogador
     camera.offset = (Vector2){screenWidth / 2, screenHeight / 2};
     camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
+    camera.zoom = 0.5f;
 
     time(&sc); //Tempo no começo do jogo
 
@@ -276,7 +330,7 @@ GameScreen gamescreen = LOGO; // A primeira tela é sempre a tela de LOGO da "em
         time(&s); //Tempo enquanto o jogo está acontecendo
         framesCounter++;
 
-switch (gamescreen)
+        switch (gamescreen)
         {
         case LOGO:
             // o logo tem uma transição com uma tela preta depois
@@ -306,7 +360,7 @@ switch (gamescreen)
                 }
             }
             break;
-        case INICIO:
+            case INICIO:
             if (state == 0)
             { //transição
                 if (alpha < 1.0)
@@ -364,13 +418,18 @@ switch (gamescreen)
 
                 gamescreen = INGAME;
                 state = 0;
-
             }
             break;
         case INGAME:
         
         jogador.posicaoAnterior = jogador.posicao; //Atualiza a posição anterior do jogador
 
+        //Faz Transição de cenário de testes para Cenário 1
+        if (jogador.posicao.x > 2000 && boss[bossAtivo].tipo == 0)
+        {
+            cenarioAtual += 1;
+            IniciaCenario(&jogador, cenarioAtual);
+        }
 
         //Atualiza os dados do jogador
         if(updateplayer == 1)
@@ -385,14 +444,14 @@ switch (gamescreen)
             AnimacaoInimigo(&(inimigo[i]), &(frameInimigoT1[i]), &(frameInimigoT2[i]), spritesMinion, spritesGado, tamanhoInimigo, deltaTime); //Atualiza a animação do inimigo
         }
 
+        //Atualiza os dados do Boss
+        UpdateBoss(&(boss[bossAtivo]), envItems, &jogador, envItemsLength, deltaTime);
+
         //Atualiza a animação do jogador quando o jogador está em movimento
         AnimacaoJogadorMovimento(&jogador, &personagem, deltaTime);
 
         //Atualiza os dados do poder
-        if (jogador.poder > 0)
-        {
-            UpdatePoder(imune_19, &imune, &jogador, envItems, envItemsLength, deltaTime, spriteImune);       
-        }
+        UpdatePoder(imune_19, &jogador, &(boss[bossAtivo]), envItems, envItemsLength, deltaTime);
 
         //Atualiza a Câmera focada no jogador
         UpdateCameraCenter(&camera, &jogador, envItems, envItemsLength, deltaTime, screenWidth, screenHeight);
@@ -452,7 +511,7 @@ switch (gamescreen)
         // Draw
         //----------------------------------------------------------------------------------
 
-        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune);
+        Draw(camera, envItems, envItemsLength, tamanhoInimigo, inimigo, &jogador, &personagem, frameInimigoT1, frameInimigoT2, spritesMinion, spritesGado, &imune, &(boss[bossAtivo]), deltaTime);
 
         //----------------------------------------------------------------------------------
       
@@ -510,14 +569,6 @@ void UpdatePlayer(Jogador *jogador, EnvItem *envItems, int envItemsLength, float
     } else if (jogador->posicao.x < jogador->tamanho.x / 2)
     {
         jogador->posicao.x = jogador->tamanho.x / 2; //Limites para a esquerda
-    }
-    
-    if ((jogador->posicao.y) > TAMANHO_Y_CENARIO)  //Limites na vertical
-    {
-        jogador->posicao.y = TAMANHO_Y_CENARIO; 
-    } else if (jogador->posicao.y < jogador->tamanho.y)
-    {
-        jogador->posicao.y = jogador->tamanho.y;
     }
 
     colisaoJogador = 0;
@@ -676,7 +727,7 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     //Verifica a colisão entre o Poder e o Inimigo
     for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
     {
-        if (inimigo->tipo > 0)
+        if (inimigo->tipo > 0 && inimigo->tipo != 3)
         {
             //Desenho do inimigo
             Rectangle inimigoRect = {inimigo->posicao.x - inimigo->tamanho.x / 2, inimigo->posicao.y - inimigo->tamanho.y, inimigo->tamanho.x, inimigo->tamanho.y};
@@ -695,7 +746,11 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
         //Verifica se borda superior do inimigo encosta em objeto jogador
         if (VerificaColisaoBordaS(inimigo->posicao, inimigo->tamanho.x, inimigo->tamanho.y, ret_jogador, 5))
         {
-            inimigo->tipo = 0; //Jogador mata o inimigo
+            //Verifica se inimigo não é do tipo banana
+            if (inimigo->tipo != 3)
+            {
+                inimigo->tipo = 0; //Jogador mata o inimigo
+            }
         }
 
         if (jogador->poder != 2) // Caso o poder do jogador não seja a "poção-52"
@@ -712,6 +767,101 @@ void UpdateInimigo(Inimigo *inimigo, EnvItem *envItems, Jogador *jogador, int ta
     {
         inimigo->posicao.y += inimigo->velocidade * delta; //Aumentar a posição do Y do inimigo
         inimigo->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+    }
+}
+
+void UpdateBoss(Inimigo *boss, EnvItem *envItems, Jogador *jogador, int envItemsLength, float delta)
+{
+    Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2),jogador->posicao.y - jogador->tamanho.y,jogador->tamanho.x,jogador->tamanho.y};
+    Rectangle ret_boss = {boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y, boss->tamanho.x, boss->tamanho.y};
+
+    if (boss->tipo == 1)
+    {
+        if (VerificaRangeDudu(boss->posicao, boss->tamanho, ret_jogador, RANGE_DUDU))
+        {
+            boss->posicao.x -= VELOCIDADE_DUDU_ATAQUE * delta;
+        }
+    }
+
+    if (boss->tipo == 2)
+    {
+        //Condição de Fábio pular
+        if (boss->podePular && (inimigo_cooldown_pulo + TEMPO_COOLDOWN_PULO_FABIO <= t))
+        {
+            boss->velocidade = -JOGADOR_PULO_VELOCIDADE;
+            boss->podePular = false;
+            inimigo_cooldown_pulo = t;
+        }
+    }
+    
+    int colisaoObjeto = 0;
+    for (int i = 0; i < envItemsLength; i++) //Preechimento da área dos pixels dos objetos colidiveis
+    {
+        EnvItem *objeto = envItems + i;
+        Vector2 *j = &(boss->posicao);
+
+        //Condição de colisão para andar encima de plataformas
+        if (objeto->colisao &&
+            objeto->retangulo.x - boss->tamanho.x / 2 <= j->x &&                           
+            objeto->retangulo.x + objeto->retangulo.width + boss->tamanho.x / 2 >= j->x && // Definindo a invasão da área do boss com a área do objeto(área de colisão)
+            objeto->retangulo.y >= j->y &&
+            objeto->retangulo.y < j->y + boss->velocidade * delta)
+        {
+            colisaoObjeto = 1;
+            boss->velocidade = 0.0f; //Reduzindo a velocidade do player para 0, para freiar ele
+            j->y = objeto->retangulo.y; //Atualiza a variável do movimento
+        }
+
+        //Condição de colisão em objetos Universais
+        if (objeto->colisao)
+        {
+            if (VerificaColisaoBordasED(boss->posicao, boss->tamanho.x, boss->tamanho.y, objeto->retangulo) == 1)
+            {
+                boss->direcao_movimento = 1;
+            }
+            else if (VerificaColisaoBordasED(boss->posicao, boss->tamanho.x, boss->tamanho.y, objeto->retangulo) == 2)
+            {
+                boss->direcao_movimento = 0;
+            }
+        }
+    }
+
+    //Verifica a colisão entre o Poder e o Inimigo
+    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+    {
+        if (boss->tipo > 0)
+        {           
+            if (CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, ret_boss) && imune_19[p].poder_ativo)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado quando colide
+            }
+        }
+    }
+
+    //Verifica colisão entre boss e jogador
+    if (boss->tipo > 0 && jogador->vida > 0)
+    {
+        //Verifica se jogador encosta nas bordas do objeto boss
+        if (VerificaColisaoBordasED(jogador->posicao, jogador->tamanho.x, jogador->tamanho.y, ret_boss) != 0)
+        {
+            jogador->vida = 0; //Jogador encosta em boss e perde vida
+        }
+        //Verifica se borda superior do boss encosta em objeto jogador
+        else if (VerificaColisaoBordaS(boss->posicao, boss->tamanho.x, boss->tamanho.y, ret_jogador, 5))
+        {
+            boss->tipo = 0; //Jogador mata o boss
+            boss->vida = 0;
+        }
+    }
+
+    if (!colisaoObjeto) //Se não há colisão com objeto
+    {
+        boss->posicao.y += boss->velocidade * delta; //Aumentar a posição do Y do boss
+        boss->velocidade += GRAVIDADE * delta;          //Vai sofrer com a Gravidade
+    }
+    else
+    {
+        boss->podePular = true;
     }
 }
 
@@ -1076,7 +1226,7 @@ void AnimacaoJogadorParado(Jogador *jogador, Animacao *personagem, float delta)
     }
 }
 
-void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *framesInimigoT1, Animacao *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune)
+void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoInimigo, Inimigo *inimigo, Jogador *jogador, Animacao *personagem, Animacao *framesInimigoT1, Animacao *framesInimigoT2, Texture2D spritesMinion, Texture2D spritesGado, IMUNE_19 *imune, Inimigo *boss, float delta)
 {
     //Desenho dos Retângulos referentes aos obstáculos de EnvItems
     for (int i = 0; i < envItemsLength; i++)
@@ -1100,24 +1250,64 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             //Desenho da textura dos gados
             DrawTextureRec(framesInimigoT2[i].texture, framesInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (framesInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (framesInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
-    }
-
-    //Desenho circular do poder "IMUNE_19"
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
-    {
-        if (imune_19[p].poder_ativo)
+        if (inimigo[i].tipo == 3)
         {
-            DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
-            DrawTextureRec(imune->texture, imune->frameRect, (Vector2){imune_19[p].posicao.x - 30, imune_19[p].posicao.y - 30}, RAYWHITE);
+            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
         }
+        
     }
 
-    //Criação e Desenho do jogador
+    //Desenho circular dos poderes
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        if (p < PODER_MAX_PERSONAGEM)
+        {
+            if (imune_19[p].poder_ativo)
+            {
+                DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+                DrawTextureRec(imune->texture, imune->frameRect, (Vector2){imune_19[p].posicao.x - 30, imune_19[p].posicao.y - 30}, RAYWHITE);
+            }
+        }
+        if (p < PODER_MAX_FABIO)
+        {
+            if (laranja[p].poder_ativo)
+            {
+                DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
+            }
+        }
+
+        if (p < PODER_MAX_TCHUTCHUCA)
+        {
+            if (dinheiro[p].poder_ativo)
+            {
+                DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+            }
+        }
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].poder_ativo)
+            {
+                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+            }
+        }
+
+    }
+
+    //Criação e Desenho
 
     //Desenho da hitbox do jogador
     DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);
+
+
     //Desenho da textura do jogador
     DrawTextureRec(personagem->texture, personagem->frameRect, (Vector2){jogador->posicao.x - (personagem->posicao.x + jogador->tamanho.x), jogador->posicao.y - (personagem->posicao.y + jogador->tamanho.y)}, RAYWHITE);
+    
+    //Desenho da hitbox do boss
+    if (boss->vida > 0)
+    {
+        DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
+    }
 
     DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
@@ -1144,7 +1334,9 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
 
 }
 
-void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *envItems, int envItemsLength, float delta, Texture2D spriteImune){
+
+void UpdatePoder(Poder *imune_19, Jogador *jogador, Inimigo *boss, EnvItem *envItems, int envItemsLength, float delta){
+    Rectangle ret_jogador = {jogador->posicao.x - (jogador->tamanho.x / 2), jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y};
 
     //Acionamento do poder IMUNE_19
     if (IsKeyPressed(KEY_SPACE) && jogador->poder == 1) {                                                               
@@ -1168,37 +1360,269 @@ void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *en
             }
         }
     }
-    
-    //Movimentação do poder
-    for (int p = 0; p < PODER_MAX_PERSONAGEM; p++)
+
+    //Condição de Fábio atirar LARANJAS!
+    if ((boss->tipo == 2) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_FABIO <= t))
     {
-        if (imune_19[p].direcao_movimento == 1)  //Considerando a direção do poder para a DIREITA:
+        for (int p = 0; p < PODER_MAX_FABIO; p++)
         {
-            imune_19[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na DIREITA
-        } else if (imune_19[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
-        {
-            imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
-        }
-
-        imune->posicao = imune_19[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
-
-        //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
-        for (int o = 0; o < envItemsLength; o++)
-        {
-            if (envItems[o].colisao //Se houver um objeto colidível
-                && CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, envItems[o].retangulo))  //e a colisão for entre o poder
-            {                                                                                               // (círculo) e um retângulo
-                imune_19[p].poder_ativo = false; //O poder é dasativado ("desaparece" do cenário)                                                 
+            if (!laranja[p].poder_ativo)
+            {
+                laranja[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/2)};
+                laranja[p].direcao_movimento = 0;
+                laranja[p].poder_ativo = true;
+                break;
             }
         }
-        
-        //Limite da área de movimento do poder
-        if (imune_19[p].posicao.x < imune_19[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+        inimigo_cooldown_poder = t;
+    }
+
+    //Condição de Tchutchuca atirar dinheiro!
+    if ((boss->tipo == 3) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_TCHUTCHUCA <= t))
+    {
+        for (int i = 0; i < 5; i++)
         {
-            imune_19[p].poder_ativo = false; //Poder é desativado
-        } else if (imune_19[p].posicao.x + imune_19[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            for (int p = 0; p < PODER_MAX_TCHUTCHUCA; p++)
+            {
+                if (!dinheiro[p].poder_ativo)
+                {   
+                    switch (i)
+                    {
+                    case 0: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        break;
+                    case 1: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 2: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x, boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 3: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - boss->tamanho.y};
+                        break;
+                    case 4: 
+                        dinheiro[p].posicao = (Vector2){boss->posicao.x + (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y / 2)};
+                        break;
+                    
+                    default:
+                        break;
+                    }
+                    dinheiro[p].direcao_movimento = i;
+                    dinheiro[p].poder_ativo = true;
+                    break;
+                }
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+    
+    //Condição do rei de atirar poções
+    if ((boss->tipo == 4) && (inimigo_cooldown_poder + TEMPO_COOLDOWN_PODER_REI <= t))
+    {
+        for (int p = 0; p < PODER_MAX_REI; p++)
         {
-            imune_19[p].poder_ativo = false; //Poder é desativado
+            if (!pocao[p].poder_ativo)
+            {
+                pocao[p].posicao = (Vector2){boss->posicao.x - (boss->tamanho.x/2), boss->posicao.y - (boss->tamanho.y/4)};
+                pocao[p].direcao_movimento = 0;
+                pocao[p].poder_ativo = true;
+                break;
+            }
+        }
+        inimigo_cooldown_poder = t;
+    }
+
+    //Movimentação do poder
+    /*Aqui há uma economia no for, veja que o 'for' é utilizado para o maior valor de p 
+     *e existe um 'if' que separa o loop para o personagem e o boss fábio
+     */
+    for (int p = 0; p < PODER_MAX_FABIO; p++)
+    {
+        if (p < PODER_MAX_PERSONAGEM)
+        {
+            if (imune_19[p].direcao_movimento == 1)  //Considerando a direção do poder para a DIREITA:
+            {
+                imune_19[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na DIREITA
+            } else if (imune_19[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                imune_19[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+          
+            imune->posicao = imune_19[p].posicao; //Posição y do personagem em relação à posição y do inimigo tipo 2
+          
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(imune_19[p].posicao, imune_19[p].raio, envItems[o].retangulo))  //e a colisão for entre o poder
+                {                                                                                               // (círculo) e um retângulo
+                    imune_19[p].poder_ativo = false; //O poder é desativado ("desaparece" do cenário)                                                                                               
+                }
+            }
+            
+            //Limite da área de movimento do poder
+            if (imune_19[p].posicao.x < imune_19[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado
+            } else if (imune_19[p].posicao.x + imune_19[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                imune_19[p].poder_ativo = false; //Poder é desativado
+            }
+        }
+
+      
+        if (p < PODER_MAX_FABIO)
+        {
+            if (laranja[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                laranja[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                       //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(laranja[p].posicao, laranja[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                             // (círculo) e um retângulo
+                    laranja[p].poder_ativo = false;                                                          //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (laranja[p].posicao.x < laranja[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                laranja[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (laranja[p].posicao.x + laranja[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                laranja[p].poder_ativo = false; //Poder é desativado
+            }
+        }
+
+        if (p < PODER_MAX_TCHUTCHUCA)
+        {
+            switch (dinheiro[p].direcao_movimento)
+            {
+            case 0:
+                dinheiro[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            case 1:
+                dinheiro[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; 
+                break;
+            case 2:
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; 
+                break;
+            case 3:
+                dinheiro[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                dinheiro[p].posicao.y -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            case 4:
+                dinheiro[p].posicao.x += PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+                break;
+            
+            default:
+                break;
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                     //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(dinheiro[p].posicao, dinheiro[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                           // (círculo) e um retângulo
+                    dinheiro[p].poder_ativo = false;                                                         //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (dinheiro[p].posicao.x < dinheiro[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                dinheiro[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (dinheiro[p].posicao.x + dinheiro[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                dinheiro[p].poder_ativo = false; //Poder é desativado
+            }
+          
+            if (dinheiro[p].posicao.y < 0) //Limite até o teto do cenário
+            {
+                dinheiro[p].poder_ativo = false;
+            }
+        } 
+
+        if (p < PODER_MAX_REI)
+        {
+            if (pocao[p].direcao_movimento == 0) //Considerando a direção do poder para a ESQUERDA:
+            {
+                pocao[p].posicao.x -= PODER_MOVIMENTO_VELOCIDADE * delta; //Ele permanece na ESQUERDA
+            }
+
+            //Colisão do poder com os objetos do cenário (inimigos não contam aqui)
+            for (int o = 0; o < envItemsLength; o++)
+            {
+                if (envItems[o].colisao                                                                     //Se houver um objeto colidível
+                    && CheckCollisionCircleRec(pocao[p].posicao, pocao[p].raio, envItems[o].retangulo)) //e a colisão for entre o poder
+                {                                                                                           // (círculo) e um retângulo
+                    pocao[p].poder_ativo = false;                                                         //O poder é dasativado ("desaparece" do cenário)
+                }
+            }
+
+            //Limite da área de movimento do poder
+            if (pocao[p].posicao.x < pocao[p].raio) //Limite até o fim do cenário (lado ESQUERDO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+            else if (pocao[p].posicao.x + pocao[p].raio > TAMANHO_X_CENARIO) //Limite até o fim do cenário (lado DIREITO)
+            {
+                pocao[p].poder_ativo = false; //Poder é desativado
+            }
+        }
+
+        for (int i = 0; i < PODER_MAX_PERSONAGEM; i++)
+        {
+            switch (boss->tipo)
+            {
+            case 2:
+                //Verificação se há colisão de poder com poder
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(laranja[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    laranja[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre laranja e jogador
+                if (CheckCollisionCircleRec(laranja[p].posicao,laranja[p].raio,ret_jogador) && laranja[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            case 3:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(dinheiro[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    dinheiro[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre dinheiro e jogador
+                if (CheckCollisionCircleRec(dinheiro[p].posicao,dinheiro[p].raio,ret_jogador) && dinheiro[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            case 4:
+                if (VerificaColisaoPoderPoder(&(imune_19[i]), &(pocao[p])))
+                {
+                    imune_19[i].poder_ativo = false;
+                    pocao[p].poder_ativo = false;
+                }
+
+                //Verifica a colisão entre poção e jogador
+                if (CheckCollisionCircleRec(pocao[p].posicao,pocao[p].raio,ret_jogador) && pocao[p].poder_ativo)
+                    jogador->vida = 0;
+                
+                break;
+            default:
+                break;
+            }
         }
     }
 
@@ -1206,6 +1630,7 @@ void UpdatePoder(Poder *imune_19, IMUNE_19 *imune, Jogador *jogador, EnvItem *en
     if ((jogador->poder == 2) && (jogador_tempo_poder_pocao52 + DURACAO_PODER_POCAO52 <= t)) // Caso o power-up esteja ativo e o tempo de uso
     {                                                                                        //seja menor ou igual ao tempo decorrido de jogo
         jogador->poder = 0; // Poder é desativado
+
     }
 }
 
@@ -1297,4 +1722,190 @@ int VerificaRangeGado(Vector2 posicao_inicial, float tamanho_gado_x, float taman
     }
 
     return 0;
+}
+
+bool VerificaRangeDudu(Vector2 posicao_inicial, Vector2 tamanho, Rectangle ret_jogador, float range) {
+    const float ponto_inicial_range_y = posicao_inicial.y - 1; //Pega a posição inferior do retângulo do gadinho
+    const float ponto_inicial_range_x_esquerda = posicao_inicial.x - (tamanho.x / 2);
+    
+    //Verifica a reta que sai do ponto até o range
+    for (float ponto = 0; ponto <= range; ponto++)
+    {
+        //Verifica se há colisão no range a esquerda do boss
+        if (CheckCollisionPointRec((Vector2){ponto_inicial_range_x_esquerda - ponto, ponto_inicial_range_y}, ret_jogador))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+bool VerificaColisaoPoderPoder(Poder * poder1, Poder * poder2)
+{
+    if (poder1->poder_ativo && poder2->poder_ativo)
+    {
+        if (CheckCollisionCircles(poder1->posicao, poder1->raio, poder2->posicao, poder2->raio))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+//Funções referentes ao cenário
+
+void IniciaCenario(Jogador *jogador, int cenario)
+{
+    switch (cenario)
+    {
+    case 0:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário de Testes
+
+        CarregaObjetos(envItems, cenarioTeste, tamanhoCenarioTeste);
+        envItemsLength = tamanhoCenarioTeste;
+
+        for (int i = 0; i < tamanho_inimigoTeste; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoTeste[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoTeste;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 0;
+
+        break;
+    case 1:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 1
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario1, tamanhoCenario1);
+        envItemsLength = tamanhoCenario1;
+
+        for (int i = 0; i < tamanho_inimigoCenario1; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario1[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario1;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 0;
+        
+        break;
+    case 2:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 2
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario2, tamanhoCenario2);
+        envItemsLength = tamanhoCenario2;
+
+        for (int i = 0; i < tamanhoCenario2; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario2[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario2;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 1;
+        
+        break;
+    case 3:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 280}; //Posição Inicial Cenário 3
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario3, tamanhoCenario3);
+        envItemsLength = tamanhoCenario3;
+
+        for (int i = 0; i < tamanhoCenario3; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario3[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario3;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 2;
+
+        break;
+    case 4:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 120}; //Posição Inicial Cenário 4
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario4, tamanhoCenario4);
+        envItemsLength = tamanhoCenario4;
+
+        for (int i = 0; i < tamanhoCenario4; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario4[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario4;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 3;
+
+        break;
+    case 5:
+        //Carrega a nova posição do jogador
+        jogador->posicao = (Vector2){0, 1150}; //Posição Inicial Cenário 4
+
+        //Carrega os objetos do cenário
+        CarregaObjetos(envItems, cenario5, tamanhoCenario5);
+        envItemsLength = tamanhoCenario5;
+
+        for (int i = 0; i < tamanhoCenario5; i++)
+        {
+            CarregaInimigos(&(inimigo[i]),&(inimigoCenario5[i]));
+        }
+        tamanhoInimigo = tamanho_inimigoCenario5;
+
+        //Carrega o Boss do cenário
+        bossAtivo = 4;
+
+        break;
+
+    default:
+        break;
+    }
+}
+
+void CarregaObjetos(EnvItem *cenario, EnvItem *loadCenario, int tamanhoLoadCenario)
+{
+    for (int i = 0; i < tamanhoLoadCenario; i++)
+    {
+        cenario[i].colisao = loadCenario[i].colisao;
+        cenario[i].cor = loadCenario[i].cor;
+        cenario[i].retangulo = loadCenario[i].retangulo;
+    }
+}
+
+void CarregaInimigos(Inimigo *inimigo, InimigoData *loadInimigo) {
+    //Carrega os dados de loadInimigo para inimigo
+    inimigo->tipo = loadInimigo->tipo;
+    inimigo->posicao = loadInimigo->posicao;
+    inimigo->direcao_movimento = loadInimigo->direcao_movimento;
+
+    //Preenche os valores de inimigo que valem de acordo com seu tipo
+    if (inimigo->tipo == 1)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_MINION_X, TAMANHO_MINION_Y};
+        inimigo->vida = 1;
+        inimigo->cor = YELLOW;
+    }
+    else if (inimigo->tipo == 2)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_GADO_X, TAMANHO_GADO_Y};
+        inimigo->vida = 1;
+        inimigo->cor = ORANGE;
+    }
+    else if (inimigo->tipo == 3)
+    {
+        inimigo->tamanho = (Vector2){TAMANHO_BANANA_X, TAMANHO_BANANA_Y};
+        inimigo->vida = 1;
+        inimigo->cor = DARKBLUE;
+    }  
 }
