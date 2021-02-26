@@ -160,7 +160,7 @@ int main()
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
     personagem.poderCounter = 0;
     personagem.poderCurrentFrame = 0;
-    personagem.framesSpeed = 12;
+    personagem.framesSpeed = 20;
     personagem.framesCounter = 0;
     personagem.currentFrame = 0;
     int tela_personagem = 1;
@@ -920,10 +920,16 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float delt
         if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem ->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
         {
             personagem->framesCounter = 0;
-            personagem->framesSpeed += 0.5;
-            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.1;
-            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.1;
-            
+            personagem->framesSpeed += 0.8;
+            if((float)s > (float)sc + 30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 3*30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 2*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 5*30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 3*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 7*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.3;
+
             //Jogador
             if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
             {
@@ -1210,7 +1216,7 @@ void AnimacaoBoss(Inimigo *boss, Animacao *Boss)
     if (Boss->framesCounter % 2 == 0) Boss->currentFrame = 1;
     else Boss->currentFrame = 2; //Controle da alternância dos passos
 
-    if ((Boss->framesCounter >= (t/Boss->framesSpeed)) && Boss->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    if ((Boss->framesCounter >= (t/Boss->framesSpeed)) && boss->velocidade > 0.0f) //Altera as FPS do jogo para a desejada para a movimentação do jogador
     {
         Boss->framesCounter = 0;
         Boss->framesSpeed += 0.4;
