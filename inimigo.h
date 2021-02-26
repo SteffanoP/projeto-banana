@@ -49,14 +49,14 @@ InimigoData inimigoCenario1[] = {
     {1, {860, 450}, 0},
     {1, {710, 450}, 0},
     {1, {2200, 450}, 1},
-    {1, {1050, 450}, 1},
+    {1, {1050, 450}, 1}
     
 };
 const int tamanho_inimigoCenario1 = sizeof(inimigoCenario1) / sizeof(inimigoCenario1[0]);
 
 //Dados dos inimigos do cenário 2
 InimigoData inimigoCenario2[] = {
-     {1, {1320, 450}, 0},
+    {1, {1320, 450}, 0},
     {1, {3970, 420}, 0},
     {1, {4500, 450}, 0},
     {1, {4800, 450}, 0},
@@ -69,7 +69,7 @@ InimigoData inimigoCenario2[] = {
     {3, {5150, 450}, 0},
     {3, {5300, 450}, 0},
     {3, {5450, 450}, 0},
-    {3, {5600, 450}, 0},
+    {3, {5600, 450}, 0}
 };
 const int tamanho_inimigoCenario2 = sizeof(inimigoCenario2) / sizeof(inimigoCenario2[0]);
 
@@ -85,7 +85,7 @@ InimigoData inimigoCenario3[] = {
     {1, {4220, 450}, 1},
     {2, {4320, 450}, 1},
     {2, {4500, 450}, 1},
-    {1, {4600, 450}, 1},
+    {1, {4600, 450}, 1}
 
 };
 const int tamanho_inimigoCenario3 = sizeof(inimigoCenario3) / sizeof(inimigoCenario3[0]);
@@ -111,7 +111,7 @@ InimigoData inimigoCenario4[] = {
     {2, {4800, 440}, 0},
     {1, {4920, 440}, 0},
     {2, {4800, 150}, 0},
-    {1, {4720, 150}, 0},
+    {1, {4720, 150}, 0}
     
 };
 const int tamanho_inimigoCenario4 = sizeof(inimigoCenario4) / sizeof(inimigoCenario4[0]);
@@ -132,7 +132,7 @@ InimigoData inimigoCenario5[] = {
     {2, {1450, 330}, 0},
 
     {1, {1700, 330}, 0},
-    {2, {195, 330}, 0},
+    {2, {195, 330}, 0}
     
 
 };

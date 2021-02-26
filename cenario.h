@@ -47,7 +47,7 @@ EnvItem cenario1[] = {
         {{1600, 650, 70, 70}, 1, YELLOW},
         {{960, 410, 70, 70}, 1, BLUE},
         {{960, 150, 70, 70}, 2, BLACK},
-        {{2520, 370, 140, 200}, 1, ORANGE},
+        {{2520, 370, 140, 200}, 1, ORANGE}
 };
 const int tamanhoCenario1 = sizeof(cenario1) / sizeof(cenario1[0]);
 
@@ -76,7 +76,7 @@ EnvItem cenario2[] = {
         {{3760, 210, 70, 70}, 2, BLACK},
         {{4100, 550, 2100, 450}, 1, PURPLE},
         {{4300, 480, 70, 70}, 1, BLUE},
-        {{6060, 370, 140, 200}, 1, ORANGE},
+        {{6060, 370, 140, 200}, 1, ORANGE}
 };
 const int tamanhoCenario2 = sizeof(cenario2) / sizeof(cenario2[0]);
 
@@ -110,7 +110,7 @@ EnvItem cenario3[] = {
         {{3900, 550, 2300, 450}, 1, PINK},
         {{4000, 480, 210, 70}, 1, BLUE},
         {{4070, 410, 70, 140}, 1, BLUE},
-        {{6060, 370, 140, 200}, 1, ORANGE},
+        {{6060, 370, 140, 200}, 1, ORANGE}
 };
 const int tamanhoCenario3 = sizeof(cenario3) / sizeof(cenario3[0]);
 
@@ -134,7 +134,7 @@ EnvItem cenario4[] = {
         {{3950, 610, 70, 70}, 1, BLUE},
         {{4300, 540, 1900, 460}, 1, GRAY},
         {{4400, 470, 70, 70}, 1, GREEN},
-        {{6060, 370, 140, 200}, 1, ORANGE},
+        {{6060, 370, 140, 200}, 1, ORANGE}
 };
 const int tamanhoCenario4 = sizeof(cenario4) / sizeof(cenario4[0]);
 
@@ -164,6 +164,6 @@ EnvItem cenario5[] = {
 
         {{530, 490, 70, 70}, 1, BLUE},
         {{730, 370, 1930, 20}, 1, GRAY},
-        {{2510, 190, 140, 200}, 1, ORANGE},
+        {{2510, 190, 140, 200}, 1, ORANGE}
 };
 const int tamanhoCenario5 = sizeof(cenario5) / sizeof(cenario5[0]);
