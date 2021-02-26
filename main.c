@@ -160,7 +160,7 @@ int main()
     personagem.posicao.y = 190 - jogador.tamanho.y; //Posiçâo y do personagem em relação à posição y do jogador
     personagem.poderCounter = 0;
     personagem.poderCurrentFrame = 0;
-    personagem.framesSpeed = 12;
+    personagem.framesSpeed = 20;
     personagem.framesCounter = 0;
     personagem.currentFrame = 0;
     int tela_personagem = 1;
@@ -277,7 +277,7 @@ int main()
     }
 
     //Configuração Inicial de Cenário
-    int cenarioAtual = 0;
+    int cenarioAtual = 1;
     IniciaCenario(&jogador,cenarioAtual);
 
     //Configurações Iniciais de Câmera
@@ -917,10 +917,16 @@ void AnimacaoJogadorMovimento(Jogador *jogador, Animacao *personagem, float delt
         if ((personagem->framesCounter >= (t/personagem->framesSpeed)) && personagem ->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
         {
             personagem->framesCounter = 0;
-            personagem->framesSpeed += 0.5;
-            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.1;
-            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.1;
-            
+            personagem->framesSpeed += 0.8;
+            if((float)s > (float)sc + 30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 3*30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 2*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 5*30) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 3*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 7*60) personagem->framesSpeed += 0.3;
+            if((float)s > (float)sc + 4*60) personagem->framesSpeed += 0.3;
+
             //Jogador
             if (IsKeyDown(KEY_LEFT) && jogador->podePular == true && personagem->currentFrame == 1 && jogador->vida > 0) //Passo 1 esquerda
             {
@@ -1207,7 +1213,7 @@ void AnimacaoBoss(Inimigo *boss, Animacao *Boss)
     if (Boss->framesCounter % 2 == 0) Boss->currentFrame = 1;
     else Boss->currentFrame = 2; //Controle da alternância dos passos
 
-    if ((Boss->framesCounter >= (t/Boss->framesSpeed)) && Boss->framesCounter % 2 == 1) //Altera as FPS do jogo para a desejada para a movimentação do jogador
+    if ((Boss->framesCounter >= (t/Boss->framesSpeed)) && boss->velocidade > 0.0f) //Altera as FPS do jogo para a desejada para a movimentação do jogador
     {
         Boss->framesCounter = 0;
         Boss->framesSpeed += 0.4;
@@ -1348,7 +1354,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (inimigo[i].tipo == 1)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
+            //DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, YELLOW);
 
             //Desenho da textura dos minions
             DrawTextureRec(frameInimigoT1[i].texture, frameInimigoT1[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT1[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT1[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
@@ -1356,14 +1362,14 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         if (inimigo[i].tipo == 2)
         {
             //Desenho da hitbox do inimigo
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
+            //DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, ORANGE);
 
             //Desenho da textura dos gados
             DrawTextureRec(frameInimigoT2[i].texture, frameInimigoT2[i].frameRect, (Vector2){inimigo[i].posicao.x - (frameInimigoT2[i].posicao.x - inimigo[i].tamanho.x), inimigo[i].posicao.y - (frameInimigoT2[i].posicao.y - inimigo[i].tamanho.y)}, RAYWHITE);
         }
         if (inimigo[i].tipo == 3)
         {
-            DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
+            //DrawRectangleLines(inimigo[i].posicao.x - inimigo[i].tamanho.x / 2, inimigo[i].posicao.y - inimigo[i].tamanho.y, inimigo[i].tamanho.x, inimigo[i].tamanho.y, inimigo[i].cor);
 
             //Desenho da textura das bananas
             DrawTextureRec(Banana->texture, Banana->frameRect, (Vector2){inimigo[i].posicao.x - 25, inimigo[i].posicao.y - 50}, RAYWHITE);
@@ -1377,7 +1383,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (imune_19[p].poder_ativo)
             {
-                DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
+                //DrawCircleV(imune_19[p].posicao, imune_19[p].raio, BLACK);
                 DrawTextureRec(imune->texture, imune->frameRect, (Vector2){imune_19[p].posicao.x - 30, imune_19[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1385,7 +1391,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (laranja[p].poder_ativo)
             {
-                DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
+                //DrawCircleV(laranja[p].posicao, laranja[p].raio, ORANGE);
                 DrawTextureRec(Laranja->texture, Laranja->frameRect, (Vector2){laranja[p].posicao.x - 30, laranja[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1394,7 +1400,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (dinheiro[p].poder_ativo)
             {
-                DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
+                //DrawCircleV(dinheiro[p].posicao, dinheiro[p].raio, DARKGREEN);
                 DrawTextureRec(Dinheiro->texture, Dinheiro->frameRect, (Vector2){dinheiro[p].posicao.x - 30, dinheiro[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1403,7 +1409,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
         {
             if (pocao[p].poder_ativo)
             {
-                DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
+                //DrawCircleV(pocao[p].posicao, pocao[p].raio, pocao[p].cor);
                 DrawTextureRec(Pocao->texture, Pocao->frameRect, (Vector2){pocao[p].posicao.x - 30, pocao[p].posicao.y - 30}, RAYWHITE);
             }
         }
@@ -1412,7 +1418,7 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     //Criação e Desenho
 
     //Desenho da hitbox do jogador
-    DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);
+    //DrawRectangleLines(jogador->posicao.x - jogador->tamanho.x / 2, jogador->posicao.y - jogador->tamanho.y, jogador->tamanho.x, jogador->tamanho.y, RED);
 
 
     //Desenho da textura do jogador
@@ -1421,17 +1427,17 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
     //Desenho da hitbox do boss
     if (boss->tipo > 0)
     {
-        DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
+        //DrawRectangleLines(boss->posicao.x - (boss->tamanho.x / 2), boss->posicao.y - (boss->tamanho.y), boss->tamanho.x, boss->tamanho.y, boss->cor);
         DrawTextureRec(Boss->texture, Boss->frameRect, (Vector2){boss->posicao.x - (Boss->posicao.x + boss->tamanho.x), boss->posicao.y - (190)}, RAYWHITE);
     }
 
-    DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
+    //DrawText(FormatText("Colisão : %01i", colisaoJogador), 1000, 450, 20, BLACK);
 
-    DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 1650, 475, 20, BLACK);
+    //DrawText(FormatText("Exemplo de Inimigo"), 1650, 450, 20, BLACK);
+    //DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 1650, 475, 20, BLACK);
 
-    DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
-    DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
+    //DrawText(FormatText("Exemplo de Gado"), 2050, 450, 20, BLACK);
+    //DrawText(FormatText("Vida Jogador: %01i",jogador->vida), 2050, 475, 20, BLACK);
 
     for (int i = 0; i < envItemsLength; i++)
     {
@@ -1441,8 +1447,8 @@ void Draw(Camera2D camera, EnvItem *envItems, int envItemsLength, int tamanhoIni
             DrawText(FormatText("?"),envItems[i].retangulo.x + 17, envItems[i].retangulo.y + 10, 60, WHITE);
         } 
     }
-    DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
-    DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
+    //DrawText(FormatText("Exemplo de Bloco de Poder"), 2550, 450, 20, BLACK);
+    //DrawText(FormatText("Poder do Jogador: %01i",jogador->poder), 2550, 475, 20, BLACK);
 
 }
 
