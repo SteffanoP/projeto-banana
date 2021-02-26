@@ -15,31 +15,6 @@ EnvItem envItems[40] = {0};
 int envItemsLength = sizeof(envItems) / sizeof(envItems[0]);
 
 //Variáveis de armazenamento de cenário:
-EnvItem cenarioTeste[] = {
-    {{0, 0, TAMANHO_X_CENARIO, TAMANHO_Y_CENARIO}, 0, SKYBLUE}, //Background
-    {{0, 400, 5070, 200}, 1, GRAY},
-    {{300, 200, 400, 10}, 1, GRAY},
-    {{250, 300, 100, 10}, 1, GRAY},
-    {{650, 300, 100, 10}, 1, GRAY},
-    {{900, 350, 50, 50}, 1, PURPLE},
-    {{1050, 311, 50, 50}, 1, PURPLE},
-    {{1200, 308, 50, 50}, 1, PURPLE},
-    {{1350, 330, 50, 50}, 1, PURPLE},
-    {{1450, 340, 30, 60}, 1, GREEN},
-    {{1970, 340, 30, 60}, 1, GREEN},
-    {{2490, 340, 30, 60}, 1, GREEN},
-    {{2700, 200, 50, 50}, 2, BLACK},
-    {{3010, 340, 30, 60}, 1, GREEN},
-    {{3530, 270, 30, 130}, 1, GREEN},
-    {{4000, 270, 30, 130}, 1, GREEN},
-    {{4520, 270, 30, 130}, 1, GREEN},
-    {{5040, 270, 30, 130}, 1, GREEN},
-    //Blocos invisíveis ao jogador
-    {{1600, 330, 50, 50}, 4, GRAY}
-};
-
-const int tamanhoCenarioTeste = sizeof(cenarioTeste) / sizeof(cenarioTeste[0]);
-
 EnvItem cenario1[] = {
         {{0, 0, 2700, 1000}, 0, SKYBLUE},//background
         {{0, 550, 350, 450}, 1, GRAY},
@@ -65,7 +40,7 @@ EnvItem cenario2[] = {
         {{2300, 550, 680, 450}, 1, BROWN},        
         {{360, 450, 180, 20}, 1, GREEN},
         {{650, 350, 180, 20}, 1, RED},
-        {{650, 70, 70, 70}, 2, BLACK},
+        {{650, 70, 70, 70}, 3, BLACK}, //bloco poder poção-52
         {{1520, 480, 70, 70}, 1, PINK},
         {{1700, 360, 70, 70}, 1, PURPLE},
         {{1920, 270, 180, 20}, 1, GRAY},
@@ -79,7 +54,7 @@ EnvItem cenario2[] = {
         {{3250, 410, 70, 70}, 1, YELLOW},
         {{3500, 550, 150, 450}, 1, GREEN},
         {{3750, 440, 220, 20}, 1, RED},
-        {{3760, 210, 70, 70}, 2, BLACK},
+        {{3760, 210, 70, 70}, 3, BLACK}, //bloco poder poção-52
         {{4100, 550, 2100, 450}, 1, PURPLE},
         {{4300, 480, 70, 70}, 1, BLUE},
         {{6060, 370, 140, 200}, 1, ORANGE},
@@ -102,7 +77,7 @@ EnvItem cenario3[] = {
         {{1150, 430, 180, 20}, 1, GREEN},
         {{800, 310, 180, 20}, 1, RED},
         {{890, 140, 1000, 20}, 1, PINK},
-        {{635, 220, 70, 70}, 1, BLACK},
+        {{635, 220, 70, 70}, 1, BLACK}, 
         {{565, 220, 70, 70}, 1, PURPLE},
         {{705, 220, 70, 70}, 1, PURPLE},
       
@@ -117,7 +92,7 @@ EnvItem cenario3[] = {
         {{3250, 210, 170, 20}, 1, BLUE},
         
         {{3220, 2, 210, 70}, 1, PURPLE},
-        {{3290, 2, 70, 70}, 2, BLACK},
+        {{3290, 2, 70, 70}, 2, BLACK}, //bloco poder imune-19
 
         {{3550, 310, 70, 70}, 1, WHITE},
         {{3900, 550, 2300, 450}, 1, PINK},
@@ -139,7 +114,7 @@ EnvItem cenario4[] = {
         {{1900, 450, 1650, 550}, 1, BROWN},         
         {{0, 150, 300, 300}, 1, BLUE},
         {{1300, 450, 70, 70}, 1, YELLOW},
-        {{1290, 210, 70, 70}, 2, BLACK},
+        {{1290, 210, 70, 70}, 2, BLACK}, //bloco poder imune-19
         {{1600, 550, 70, 70}, 1, GRAY},
 
         //PARTE 2
@@ -147,7 +122,7 @@ EnvItem cenario4[] = {
         {{4670, 350, 170, 20}, 1, RED},
 
         {{4650, 70, 210, 70}, 1, PURPLE},
-        {{4720, 70, 70, 70}, 2, BLACK},
+        {{4720, 70, 70, 70}, 3, BLACK}, //bloco poder poção-52
 
         {{3950, 610, 70, 70}, 1, BLUE},
         {{4300, 540, 1900, 460}, 1, GRAY},
@@ -177,7 +152,7 @@ EnvItem cenario5[] = {
         //PARTE 2
         {{2180, 720, 720, 70}, 1, GREEN},
         {{2540, 650, 360, 70}, 1, GREEN},
-        {{2720, 420, 70, 70}, 2, BLACK},
+        {{2720, 420, 70, 70}, 2, BLACK}, //bloco poder imune-19
         //ESCADA
         {{0, 890, 620, 70}, 1, WHITE},
         {{0, 820, 550, 70}, 1, WHITE},
