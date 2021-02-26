@@ -13,9 +13,11 @@
 #define TAMANHO_JOGADOR_X 40 //40
 #define TAMANHO_JOGADOR_Y 132 //132
 
-//Constante Poder
+//Constante Poder "Imune-19"
 #define PODER_MAX_PERSONAGEM 10
 #define PODER_MOVIMENTO_VELOCIDADE 700
+//Contante Poder "Poção-52"
+#define DURACAO_PODER_POCAO52 8500 //milissegundos
 
 
 //Cenário de testes
