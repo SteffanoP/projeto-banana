@@ -1,6 +1,6 @@
 # projeto-banana
 
-**projeto-banana** é um jogo baseado na biblioteca `raylib.h` que se trata de uma releitura de _Super Mario Bros._, apresentamos a jornada de um herói pela República das Bananas, a qual está sendo aterrorizada pelo Rei Bananinha e sua família.
+**projeto-banana** é um jogo baseado na biblioteca [`raylib.h`](https://github.com/raysan5/raylib) que se trata de uma releitura de _Super Mario Bros._, apresentamos a jornada de um herói pela República das Bananas, a qual está sendo aterrorizada pelo Rei Bananinha e sua família.
 
 ## A ideia do jogo
 
