@@ -1,5 +1,7 @@
 # projeto-banana
 
+[![UFRPE Devs badge](https://raw.githubusercontent.com/ufrpe-devs/comunidade/main/media/ufrpe-devs-badge.svg)](https://github.com/ufrpe-devs/comunidade)
+
 **projeto-banana** é um jogo baseado na biblioteca [`raylib.h`](https://github.com/raysan5/raylib) que se trata de uma releitura de _Super Mario Bros._, apresentamos a jornada de um herói pela República das Bananas, a qual está sendo aterrorizada pelo Rei Bananinha e sua família.
 
 ## A ideia do jogo
